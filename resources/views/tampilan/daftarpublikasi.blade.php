@@ -223,24 +223,17 @@
             <table class="w-full text-sm border-collapse">
                 <thead class="bg-gray-100 text-gray-800 text-xs border-y">
                     <tr class="border-y">
-                        <th class="px-3 py-2">No</th>
-                        <th class="px-3 py-2">Nama Publikasi/Laporan</th>
-                        <th class="px-3 py-2">Nama Kegiatan</th>
-                        <th class="px-3 py-2">PIC</th>
-                        <th class="px-3 py-2">Tahapan</th>
-                        <th class="px-3 py-2">Publikasi</th>
+                        <th class="px-3 py-2" rowspan="2">No</th>
+                        <th class="px-3 py-2" rowspan="2">Nama Publikasi/Laporan</th>
+                        <th class="px-3 py-2" rowspan="2">Nama Kegiatan</th>
+                        <th class="px-3 py-2" rowspan="2">PIC</th>
+                        <th class="px-3 py-2" rowspan="2">Jenis</th>
                         <th class="px-3 py-2" colspan="4">Rencana Kegiatan</th>
                         <th class="px-3 py-2" colspan="4">Realisasi Kegiatan</th>
-                        <th class="px-3 py-2">Aksi</th>
+                        <th class="px-3 py-2" rowspan="2">Aksi</th>
                     </tr>
 
                     <tr class="bg-gray-100 text-xs whitespace-nowrap">
-                        <th class="px-3 py-2"></th>
-                        <th class="px-3 py-2"></th>
-                        <th class="px-3 py-2"></th>
-                        <th class="px-3 py-2"></th>
-                        <th class="px-3 py-2"></th>
-                        <th class="px-3 py-2"></th>
                         <th class="px-3 py-2 text-blue-800">Triwulan I</th>
                         <th class="px-3 py-2 text-blue-800">Triwulan II</th>
                         <th class="px-3 py-2 text-blue-800">Triwulan III</th>
@@ -249,57 +242,234 @@
                         <th class="px-3 py-2 text-emerald-800">Triwulan II</th>
                         <th class="px-3 py-2 text-emerald-800">Triwulan III</th>
                         <th class="px-3 py-2 text-emerald-800">Triwulan IV</th>
-                        <th class="px-3 py-2"></th>
                     </tr>
                 </thead>
                 <tbody id="publication-table-body">
                     @if($publications->count())
                         @foreach($publications as $index => $publication)
                         <tr>
-                            <td class="px-4 py-4 align-top">{{ $index + 1 }}</td>
-                            <td class="px-4 py-4 align-top font-semibold text-gray-700">{{ $publication->publication_report }}</td>
-                            <td class="px-4 py-4 align-top font-semibold text-gray-700">{{ $publication->publication_name }}</td>
-                            <td class="px-4 py-4 align-top font-semibold text-gray-700">{{ $publication->publication_pic }}</td>
-                            <td class="px-4 py-4 align-top">
-                                <div class="text-sm font-medium text-gray-700"> {{ array_sum($publication->rekapFinals) }}/{{ array_sum($publication->rekapPlans) }} Tahapan</div>
+                            <td class="px-4 py-4 align-top" rowspan="2">{{ $index + 1 }}</td>
+                            <td class="px-4 py-4 align-top font-semibold text-gray-700" rowspan="2">
+                                {{ $publication->publication_report }}
+                            </td>
+                            <td class="px-4 py-4 align-top font-semibold text-gray-700" rowspan="2">
+                                {{ $publication->publication_name }}
+                            </td>
+                            <td class="px-4 py-4 align-top font-semibold text-gray-700" rowspan="2">
+                                {{ $publication->publication_pic }}
+                            </td>
+                            
+                            <!-- TAHAPAN -->
+                            <td class="px-4 py-4 align-top bg-blue-50">
+                                <div class="text-sm font-medium text-gray-700">
+                                    {{ array_sum($publication->rekapFinals) }}/{{ array_sum($publication->rekapPlans) }} Tahapan
+                                </div>
                                 <div class="flex items-center gap-2 mt-1">
-                                <span class="px-2 py-0.5 text-xs bg-gray-100 border rounded-full">{{ $publication->progressKumulatif }}% selesai</span>
+                                    <span class="px-2 py-0.5 text-xs bg-blue-100 border rounded-full">
+                                        {{ round($publication->progressKumulatif) }}% selesai
+                                    </span>
                                 </div>
                             </td>
 
-                            <td class="px-4 py-4 align-top text-center">
-                                @if($publication->files->count() > 0)
-                                    <div class="relative group inline-block">
-                                        <div class="px-3 py-1 rounded-full bg-purple-600 text-white inline-block cursor-pointer hover:bg-purple-700 transition">
-                                            📎 {{ $publication->files->count() }} File
+                            @for($q = 1; $q <= 4; $q++)
+                                <td class="px-4 py-4 text-center bg-blue-50">
+                                    @if(($publication->rekapPlans[$q] ?? 0) > 0)
+                                        <div class="relative group inline-block">
+                                            <div class="px-3 py-1 rounded-full bg-blue-900 text-white inline-block cursor-pointer hover:bg-blue-800 transition text-xs">
+                                                {{ $publication->rekapPlans[$q] }} Rencana
+                                            </div>
+                                            <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64 text-sm text-gray-700 z-50">
+                                                <p class="font-semibold text-gray-800 mb-1">Daftar Rencana:</p>
+                                                <ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto">
+                                                    @foreach($publication->listPlans[$q] as $item)
+                                                        <li>{{ $item }}</li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
                                         </div>
-                                        
-                                        <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block 
-                                                    bg-white border border-gray-200 shadow-xl rounded-lg p-3 w-72 text-sm 
-                                                    text-gray-700 z-50">
-                                            <p class="font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4">
-                                                    <path fill-rule="evenodd" d="M2 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4Zm10.5 5.707a.5.5 0 0 0-.146-.353l-1-1a.5.5 0 0 0-.708 0L9.354 9.646a.5.5 0 0 1-.708 0L6.354 7.354a.5.5 0 0 0-.708 0l-2 2a.5.5 0 0 0-.146.353V12a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5V9.707ZM12 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z" clip-rule="evenodd" />
-                                                </svg>
-                                                Daftar File Publikasi:
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            {{ number_format($publication->progressTriwulan[$q] ?? 0, 0) }}% selesai
+                                        </p>
+                                    @else
+                                        <div class="px-3 py-1 text-black inline-block text-xs"> - </div>
+                                        <p class="text-xs text-gray-500 mt-1">0% Direncanakan</p>
+                                    @endif
+                                </td>
+                            @endfor
+
+                            <!-- Realisasi Tahapan Q1-Q4 -->
+                            @for($q = 1; $q <= 4; $q++)
+                                <td class="px-4 py-4 text-center bg-blue-50">
+                                    @if(($publication->rekapFinals[$q] ?? 0) > 0)
+                                        <div class="relative inline-block group">
+                                            <div class="px-3 py-1 rounded-full bg-emerald-600 text-white inline-block cursor-pointer text-xs">
+                                                {{ $publication->rekapFinals[$q] }} Selesai
+                                            </div>
+                                            <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64 text-sm text-gray-700 z-50">
+                                                <p class="font-semibold text-gray-800 mb-1">Daftar Realisasi:</p>
+                                                <ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto">
+                                                    @foreach($publication->listFinals[$q] ?? [] as $item)
+                                                        <li>{{ $item }}</li>
+                                                    @endforeach
+                                                </ul>
+
+                                                @if(($publication->lintasTriwulan[$q] ?? 0) > 0)
+                                                    <div class="mt-2 pt-2 border-t border-gray-200">
+                                                        <p class="text-xs text-orange-500 font-medium">
+                                                            +{{ $publication->lintasTriwulan[$q] }} lintas triwulan:
+                                                        </p>
+                                                        <ul class="list-disc pl-4 text-xs">
+                                                            @foreach($publication->listLintas[$q] ?? [] as $lintas)
+                                                                <li>
+                                                                    {{ $lintas['plan_name'] }} 
+                                                                    (Q{{ $lintas['from_quarter'] }} → Q{{ $lintas['to_quarter'] }})
+                                                                </li>
+                                                            @endforeach
+                                                        </ul>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        @if(($publication->lintasTriwulan[$q] ?? 0) > 0)
+                                            <p class="text-xs text-orange-500 mt-1">
+                                                +{{ $publication->lintasTriwulan[$q] }} lintas triwulan
                                             </p>
-                                            <ul class="space-y-1.5 max-h-48 overflow-y-auto">
-                                                @foreach($publication->files as $file)
-                                                    <li class="flex items-start gap-2 text-xs hover:bg-gray-50 p-1.5 rounded">
-                                                        <span class="text-base">{{ $file->file_icon }}</span>
-                                                        <div class="flex-1 min-w-0">
-                                                            <p class="font-medium truncate">{{ $file->file_name }}</p>
-                                                            <p class="text-gray-500">{{ $file->file_size_human }}</p>
-                                                        </div>
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        </div>
-                                    </div>
-                                @else
-                                    <span class="text-gray-400 text-sm">Belum ada file</span>
+                                        @endif
+                                    @else
+                                        <div class="px-3 py-1 text-black inline-block text-xs"> - </div>
+                                    @endif
+                                </td>
+                            @endfor
+
+                            <!-- Aksi (rowspan 2) -->
+                            <td class="px-4 py-4 text-center" rowspan="2">
+                                <a href="{{ route('steps.index', $publication->slug_publication) }}" 
+                                class="flex gap-1 sm:text-xs px-3 py-1 text-sm text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg mb-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">
+                                        <path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" />
+                                        <path fill-rule="evenodd" d="M1.38 8.28a.87.87 0 0 1 0-.566 7.003 7.003 0 0 1 13.238.006.87.87 0 0 1 0 .566A7.003 7.003 0 0 1 1.379 8.28ZM11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" clip-rule="evenodd" />
+                                    </svg>
+                                    Detail
+                                </a>
+
+                                @if(auth()->check() && in_array(auth()->user()->role, ['ketua_tim', 'admin']))
+                                    <button onclick="openEditModal('{{ $publication->slug_publication }}', '{{ $publication->publication_report }}', '{{ $publication->publication_name }}', '{{ $publication->publication_pic }}')"
+                                        class="flex gap-1 sm:text-xs px-3 py-1 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg mb-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13l-3.247.974.974-3.247a4.5 4.5 0 011.13-1.897l10.32-10.32z" />
+                                        </svg>
+                                        Edit
+                                    </button>
+
+                                    <form action="{{ route('publications.destroy', $publication->slug_publication) }}" method="POST" 
+                                        onsubmit="return confirm('Yakin hapus publikasi ini?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" 
+                                            class="flex gap-1 sm:text-xs px-3 py-1 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg mb-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">
+                                                <path fill-rule="evenodd" d="M5 3.25V4H2.75a.75.75 0 0 0 0 1.5h.3l.815 8.15A1.5 1.5 0 0 0 5.357 15h5.285a1.5 1.5 0 0 0 1.493-1.35l.815-8.15h.3a.75.75 0 0 0 0-1.5H11v-.75A2.25 2.25 0 0 0 8.75 1h-1.5A2.25 2.25 0 0 0 5 3.25Zm2.25-.75a.75.75 0 0 0-.75.75V4h3v-.75a.75.75 0 0 0-.75-.75h-1.5ZM6.05 6a.75.75 0 0 1 .787.713l.275 5.5a.75.75 0 0 1-1.498.075l-.275-5.5A.75.75 0 0 1 6.05 6Zm3.9 0a.75.75 0 0 1 .712.787l-.275 5.5a.75.75 0 0 1-1.498-.075l.275-5.5a.75.75 0 0 1 .786-.711Z" clip-rule="evenodd"/>
+                                            </svg>
+                                            Hapus
+                                        </button>
+                                    </form>
                                 @endif
                             </td>
+                        </tr>
+
+                        <!-- ROW 2: FILE PUBLIKASI -->
+                        <tr class="border-t border-gray-200">
+                            <!-- Publikasi Output -->
+                            <td class="px-4 py-4 align-top bg-purple-50">
+                                <div class="text-sm font-medium text-gray-700">
+                                    {{ array_sum($publication->rekapPubFinals) }}/{{ array_sum($publication->rekapPubPlans) }} Output
+                                </div>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="px-2 py-0.5 text-xs bg-purple-100 border rounded-full">
+                                        {{ round($publication->progressPubKumulatif) }}% selesai
+                                    </span>
+                                </div>
+                            </td>
+
+                            <!-- Rencana Publikasi Q1-Q4 -->
+                            @for($q = 1; $q <= 4; $q++)
+                                <td class="px-4 py-4 text-center bg-purple-50">
+                                    @if(($publication->rekapPubPlans[$q] ?? 0) > 0)
+                                        <div class="relative group inline-block">
+                                            <div class="px-3 py-1 rounded-full bg-purple-700 text-white inline-block cursor-pointer hover:bg-purple-600 transition text-xs">
+                                                {{ $publication->rekapPubPlans[$q] }} Output
+                                            </div>
+                                            <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64 text-sm text-gray-700 z-50">
+                                                <p class="font-semibold text-gray-800 mb-1">Daftar Output:</p>
+                                                <ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto">
+                                                    @foreach($publication->listPubPlans[$q] as $item)
+                                                        <li>{{ $item }}</li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            {{ number_format($publication->progressPubTriwulan[$q] ?? 0, 0) }}% selesai
+                                        </p>
+                                    @else
+                                        <div class="px-3 py-1 text-black inline-block text-xs"> - </div>
+                                        <p class="text-xs text-gray-500 mt-1">0% Direncanakan</p>
+                                    @endif
+                                </td>
+                            @endfor
+
+                            <!-- Realisasi Publikasi Q1-Q4 -->
+                            @for($q = 1; $q <= 4; $q++)
+                                <td class="px-4 py-4 text-center bg-purple-50">
+                                    @if(($publication->rekapPubFinals[$q] ?? 0) > 0)
+                                        <div class="relative inline-block group">
+                                            <div class="px-3 py-1 rounded-full bg-green-600 text-white inline-block cursor-pointer text-xs">
+                                                {{ $publication->rekapPubFinals[$q] }} Terbit
+                                            </div>
+                                            <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64 text-sm text-gray-700 z-50">
+                                                <p class="font-semibold text-gray-800 mb-1">Daftar Terbit:</p>
+                                                <ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto">
+                                                    @foreach($publication->listPubFinals[$q] ?? [] as $item)
+                                                        <li>{{ $item }}</li>
+                                                    @endforeach
+                                                </ul>
+
+                                                @if(($publication->lintasPubTriwulan[$q] ?? 0) > 0)
+                                                    <div class="mt-2 pt-2 border-t border-gray-200">
+                                                        <p class="text-xs text-orange-500 font-medium">
+                                                            +{{ $publication->lintasPubTriwulan[$q] }} lintas triwulan:
+                                                        </p>
+                                                        <ul class="list-disc pl-4 text-xs">
+                                                            @foreach($publication->listPubLintas[$q] ?? [] as $lintas)
+                                                                <li>
+                                                                    {{ $lintas['plan_name'] }} 
+                                                                    (Q{{ $lintas['from_quarter'] }} → Q{{ $lintas['to_quarter'] }})
+                                                                </li>
+                                                            @endforeach
+                                                        </ul>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        @if(($publication->lintasPubTriwulan[$q] ?? 0) > 0)
+                                            <p class="text-xs text-orange-500 mt-1">
+                                                +{{ $publication->lintasPubTriwulan[$q] }} lintas triwulan
+                                            </p>
+                                        @endif
+                                    @else
+                                        <div class="px-3 py-1 text-black inline-block text-xs"> - </div>
+                                    @endif
+                                </td>
+                            @endfor
+                        </tr>
+                        @endforeach
+                    @else
+                        <tr>
+                            <td colspan="15" class="text-center text-gray-500 py-4">Tidak ada data ditemukan</td>
+                        </tr>
+                    @endif
 
                             <!-- Rencana Triwulan I -->
                             <td class="px-4 py-4 text-center">
@@ -637,7 +807,51 @@
                                 @endif
                             </td>
                         </tr>
-                        @endforeach
+                        @if(isset($publication->publicationPlans) && $publication->publicationPlans->count() > 0)
+                            <div class="relative group inline-block">
+                                <div class="px-3 py-1 rounded-full bg-purple-600 text-white inline-block cursor-pointer hover:bg-purple-700 transition">
+                                    📎 {{ $publication->publicationPlans->count() }} Output
+                                </div>
+                                
+                                <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block 
+                                            bg-white border border-gray-200 shadow-xl rounded-lg p-3 w-72 text-sm 
+                                            text-gray-700 z-50">
+                                    <p class="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4">
+                                            <path fill-rule="evenodd" d="M2 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4Zm10.5 5.707a.5.5 0 0 0-.146-.353l-1-1a.5.5 0 0 0-.708 0L9.354 9.646a.5.5 0 0 1-.708 0L6.354 7.354a.5.5 0 0 0-.708 0l-2 2a.5.5 0 0 0-.146.353V12a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5V9.707ZM12 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z" clip-rule="evenodd" />
+                                        </svg>
+                                        Daftar Output Publikasi:
+                                    </p>
+                                    <ul class="space-y-1.5 max-h-48 overflow-y-auto">
+                                        @foreach($publication->publicationPlans as $pp)
+                                            <li class="flex items-start gap-2 text-xs hover:bg-gray-50 p-1.5 rounded">
+                                                <span class="text-base">
+                                                    @if($pp->publicationFinal)
+                                                        ✅
+                                                    @else
+                                                        📝
+                                                    @endif
+                                                </span>
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="font-medium truncate">{{ $pp->plan_name }}</p>
+                                                    <p class="text-gray-500">
+                                                        @if($pp->plan_date)
+                                                            Rencana: {{ $pp->plan_date->format('d M Y') }}
+                                                        @endif
+                                                        @if($pp->publicationFinal && $pp->publicationFinal->actual_date)
+                                                            <br>Terbit: {{ $pp->publicationFinal->actual_date->format('d M Y') }}
+                                                        @endif
+                                                    </p>
+                                                </div>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        @else
+                            <span class="text-gray-400 text-sm">Belum ada output</span>
+                        @endif
+
                     @else
                     <tr>
                         <td colspan="14" class="text-center text-gray-500 py-4">Tidak ada data ditemukan</td>
@@ -1071,14 +1285,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Tambahkan function baru untuk generate kolom publikasi
 function generatePublicationColumn(item) {
-    const filesCount = item.filesCount || 0;
-    const filesList = item.filesList || [];
+    const pubPlansCount = item.publicationPlansCount || 0;
+    const pubPlansList = item.publicationPlansList || [];
     
-    if (filesCount > 0) {
-        const filesListHtml = filesList.map(fileName => `
+    if (pubPlansCount > 0) {
+        const plansListHtml = pubPlansList.map(pp => `
             <li class="flex items-start gap-2 text-xs hover:bg-gray-50 p-1.5 rounded">
-                <span class="text-base">📎</span>
-                <p class="font-medium truncate">${fileName}</p>
+                <span class="text-base">${pp.hasFinal ? '✅' : '📝'}</span>
+                <div class="flex-1 min-w-0">
+                    <p class="font-medium truncate">${pp.name}</p>
+                    <p class="text-gray-500">
+                        ${pp.planDate ? 'Rencana: ' + pp.planDate : ''}
+                        ${pp.actualDate ? '<br>Terbit: ' + pp.actualDate : ''}
+                    </p>
+                </div>
             </li>
         `).join('');
         
@@ -1086,7 +1306,7 @@ function generatePublicationColumn(item) {
             <td class="px-4 py-4 align-top text-center">
                 <div class="relative group inline-block">
                     <div class="px-3 py-1 rounded-full bg-purple-600 text-white inline-block cursor-pointer hover:bg-purple-700 transition">
-                        📎 ${filesCount} File
+                        📎 ${pubPlansCount} Output
                     </div>
                     <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block 
                                 bg-white border border-gray-200 shadow-xl rounded-lg p-3 w-72 text-sm 
@@ -1095,10 +1315,10 @@ function generatePublicationColumn(item) {
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4">
                                 <path fill-rule="evenodd" d="M2 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4Zm10.5 5.707a.5.5 0 0 0-.146-.353l-1-1a.5.5 0 0 0-.708 0L9.354 9.646a.5.5 0 0 1-.708 0L6.354 7.354a.5.5 0 0 0-.708 0l-2 2a.5.5 0 0 0-.146.353V12a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5V9.707ZM12 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z" clip-rule="evenodd" />
                             </svg>
-                            Daftar File Publikasi:
+                            Daftar Output:
                         </p>
                         <ul class="space-y-1.5 max-h-48 overflow-y-auto">
-                            ${filesListHtml}
+                            ${plansListHtml}
                         </ul>
                     </div>
                 </div>
@@ -1107,7 +1327,7 @@ function generatePublicationColumn(item) {
     } else {
         return `
             <td class="px-4 py-4 align-top text-center">
-                <span class="text-gray-400 text-sm">Belum ada file</span>
+                <span class="text-gray-400 text-sm">Belum ada output</span>
             </td>
         `;
     }
