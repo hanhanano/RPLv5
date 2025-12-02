@@ -10,6 +10,7 @@ use App\Http\Controllers\StepsController;
 use App\Http\Controllers\PublicationController;
 use App\Http\Controllers\PublicationExportController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\PublicationOutputController;
 use App\Models\Publication;
 
 /*
@@ -29,9 +30,7 @@ Route::get('/dashboard', [PublicationController::class, 'index'])
     ->middleware('auth');
 
 // Laporan
-Route::get('/laporan', function () {
-    return view('/tampilan/laporan');
-})->name('laporan');
+Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan');
 
 // ----- Publications -----
 // Export
@@ -69,9 +68,14 @@ Route::delete('/plans/{plan}', [StepsPlanController::class, 'destroy'])->name('p
 Route::get('/export/publication/{slug_publication}', [PublicationExportController::class, 'export'])->name('publication.export');
 
 // ----- Auth -----
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/login', [AuthController::class, 'showLoginForm'])
+    ->name('login')
+    ->middleware('guest'); 
+
+Route::post('/login', [AuthController::class, 'login'])
+    ->name('login.post');
+
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Ubah password
 Route::get('/change-password', [AuthController::class, 'showChangePasswordForm'])->name('password.change');
@@ -102,3 +106,19 @@ Route::get('/publication-files/{file}/download', [PublicationController::class, 
 Route::get('/publications/{publication}/download-all', [PublicationController::class, 'downloadAllFiles'])
     ->name('publications.downloadAllFiles')
     ->middleware('auth');
+
+// Route untuk melihat halaman kelola output
+Route::get('/publications/{slug}/outputs', [PublicationOutputController::class, 'index'])
+    ->name('outputs.index');
+
+// Route untuk update output (upload file & tanggal rilis)
+Route::put('/publication-plans/{id}', [PublicationOutputController::class, 'update'])
+    ->name('outputs.update');
+
+// Simpan Output Baru
+Route::post('/publications/{slug}/outputs', [PublicationOutputController::class, 'store'])
+    ->name('outputs.store');
+
+// Hapus Output
+Route::delete('/publication-plans/{id}', [PublicationOutputController::class, 'destroy'])
+    ->name('outputs.destroy');

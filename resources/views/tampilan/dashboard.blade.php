@@ -235,15 +235,180 @@
 }
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-    
-// Fungsi untuk download chart sebagai image
-function downloadChart(chartId, filename) {
-    const canvas = document.getElementById(chartId);
-    const url = canvas.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.download = filename;
-    link.href = url;
-    link.click();
-}
+    // Fungsi Print
+    function downloadChart(chartId, filename) {
+        const canvas = document.getElementById(chartId);
+        const url = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = url;
+        link.click();
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        
+        // Chart status publikasi
+        const ctxKinerja = document.getElementById('kinerjaChart');
+        if (ctxKinerja) {
+            new Chart(ctxKinerja, {
+                type: 'bar',
+                data: {
+                    labels: @json($dataGrafikPublikasi['labels']), 
+                    datasets: [{
+                        label: 'Jumlah',
+                        data: @json($dataGrafikPublikasi['data']), 
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], 
+                        borderRadius: 4,
+                        barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false } 
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { display: true, drawBorder: false }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chart Rencana vs Realisasi
+        const ctxTahapan = document.getElementById('tahapanChart');
+        if (ctxTahapan) {
+            new Chart(ctxTahapan, {
+                type: 'bar',
+                data: {
+                    labels: @json($dataGrafikBatang['labels']), 
+                    datasets: [
+                        {
+                            label: 'Rencana',
+                            data: @json($dataGrafikBatang['rencana']), 
+                            backgroundColor: '#1e40af', 
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Realisasi',
+                            data: @json($dataGrafikBatang['realisasi']),
+                            backgroundColor: '#10b981',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { display: false } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // Chart Proporsi
+        const ctxRing = document.getElementById('ringChart');
+        if (ctxRing) {
+            new Chart(ctxRing, {
+                type: 'doughnut',
+                data: {
+                    labels: @json($dataGrafikRing['labels']),
+                    datasets: [{
+                        data: @json($dataGrafikRing['data']),
+                        backgroundColor: ['#10b981', '#e5e7eb'], 
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Grafik Kinerja per tim
+        const ctxTim = document.getElementById('timChart');
+        if (ctxTim) {
+            const timData = @json($dataGrafikPerTim);
+
+            const sisaRencana = timData.plans.map((plan, i) => {
+                const totalSelesai = timData.tepat_waktu[i] + timData.terlambat[i];
+                return Math.max(0, plan - totalSelesai);
+            });
+
+            new Chart(ctxTim, {
+                type: 'bar',
+                data: {
+                    labels: timData.labels,
+                    datasets: [
+                        {
+                            label: 'Tepat Waktu',
+                            data: timData.tepat_waktu,
+                            backgroundColor: '#4472C4', 
+                            barPercentage: 0.6,
+                        },
+                        {
+                            label: 'Terlambat',
+                            data: timData.terlambat,
+                            backgroundColor: '#ED7D31', 
+                            barPercentage: 0.6,
+                        },
+                        {
+                            label: 'Sisa Target', 
+                            data: sisaRencana,
+                            backgroundColor: '#cdcbcbff', 
+                            barPercentage: 0.6,
+                        }
+                        
+                    ]
+                },
+                options: {
+                    indexAxis: 'y', 
+                    responsive: true,
+                    maintainAspectRatio: false,
+
+                    interaction: {
+                        mode: 'index', 
+                        axis: 'y', 
+                        intersect: false 
+                    },
+
+                    scales: {
+                        x: {
+                            stacked: true, 
+                            grid: { display: true } 
+                        },
+                        y: {
+                            stacked: true, 
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { usePointStyle: true, boxWidth: 8 }
+                        },
+                        tooltip: {
+                            position: 'nearest'
+                        }
+                    }
+                }
+            });
+        }
+    });
 </script>

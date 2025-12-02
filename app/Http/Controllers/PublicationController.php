@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Publication;
 use App\Models\StepsPlan;
+use App\Models\StepsFinal;
 use Illuminate\Support\Str;
 use App\Models\PublicationFile;
 use Illuminate\Support\Facades\Storage;
@@ -27,7 +28,7 @@ class PublicationController extends Controller
         ]);
 
         $user = auth()->user();
-    
+
         if ($user && in_array($user->role, ['ketua_tim', 'operator'])) {
             $query->where('publication_pic', $user->team);
         }
@@ -47,41 +48,61 @@ class PublicationController extends Controller
             $listFinals = [1 => [], 2 => [], 3 => [], 4 => []];
             $listLintas = [1 => [], 2 => [], 3 => [], 4 => []];
 
+            // Hitung total tahapan per quarter (untuk kumulatif)
             foreach ($publication->stepsPlans as $plan) {
                 $q = getQuarter($plan->plan_start_date);
                 
                 if ($q) {
-                    $rekapPlans[$q]++;
-                    $listPlans[$q][] = $plan->plan_name;
+                    // KUMULATIF: tambahkan ke quarter ini dan semua quarter setelahnya
+                    for ($i = $q; $i <= 4; $i++) {
+                        $rekapPlans[$i]++;
+                        $listPlans[$i][] = $plan->plan_name;
+                    }
                 }
                 
                 if ($plan->stepsFinals) {
                     $fq = getQuarter($plan->stepsFinals->actual_started);
-                    if ($q) {
-                        $rekapFinals[$q]++;
-                        $listFinals[$q][] = $plan->plan_name;
+                    
+                    if ($fq) {
+                        // KUMULATIF: tambahkan ke quarter ini dan semua quarter setelahnya
+                        for ($i = $fq; $i <= 4; $i++) {
+                            $rekapFinals[$i]++;
+                            $listFinals[$i][] = $plan->plan_name;
+                        }
 
-                        if ($fq && $fq <= $q) {
-                            $tepatWaktu[$q]++;
+                        // Cek tepat waktu atau terlambat
+                        if ($q && $fq <= $q) {
+                            // Tepat waktu: tambahkan ke quarter realisasi dan setelahnya
+                            for ($i = $fq; $i <= 4; $i++) {
+                                $tepatWaktu[$i]++;
+                            }
                         } else {
-                            $terlambat[$q]++;
-                            $lintasTriwulan[$q]++;
-                            
-                            $listLintas[$q][] = [
-                                'plan_name' => $plan->plan_name,
-                                'from_quarter' => $q,
-                                'to_quarter' => $fq,
-                                'delay' => getDelayQuarters($q, $fq)
-                            ];
+                            // Terlambat: tambahkan ke quarter realisasi dan setelahnya
+                            for ($i = $fq; $i <= 4; $i++) {
+                                $terlambat[$i]++;
+                                $lintasTriwulan[$i]++;
+                                
+                                // Detail lintas triwulan hanya ditambahkan sekali di quarter realisasi
+                                if ($i == $fq) {
+                                    $listLintas[$i][] = [
+                                        'plan_name' => $plan->plan_name,
+                                        'from_quarter' => $q,
+                                        'to_quarter' => $fq,
+                                        'delay' => getDelayQuarters($q, $fq)
+                                    ];
+                                }
+                            }
                         }
                     }
                 }        
-            }
+        }
 
+            // Hitung progress kumulatif (tetap sama)
             $totalPlans = array_sum($rekapPlans);
             $totalFinals = array_sum($rekapFinals);
             $progressKumulatif = ($totalPlans > 0) ? ($totalFinals / $totalPlans) * 100 : 0;
 
+            // Progress per triwulan (kumulatif)
             $progressTriwulan = [];
             foreach ([1, 2, 3, 4] as $q) {
                 if ($rekapPlans[$q] > 0) {
@@ -103,6 +124,7 @@ class PublicationController extends Controller
             $publication->listLintas = $listLintas;
         }
 
+        // Hitung chart data (kumulatif)
         $chartPlans = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
         $chartFinals = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
         $chartTepatWaktu = [1 => 0, 2 => 0, 3 => 0, 4 => 0]; 
@@ -127,10 +149,11 @@ class PublicationController extends Controller
                 ];
             }
             
-            $chartPerTim[$pic]['plans'] += array_sum($publication->rekapPlans);
-            $chartPerTim[$pic]['finals'] += array_sum($publication->rekapFinals);
-            $chartPerTim[$pic]['tepat_waktu'] += array_sum($publication->tepatWaktu);
-            $chartPerTim[$pic]['terlambat'] += array_sum($publication->terlambat);
+            // Gunakan data Triwulan 4 (kumulatif maksimal)
+            $chartPerTim[$pic]['plans'] += $publication->rekapPlans[4];
+            $chartPerTim[$pic]['finals'] += $publication->rekapFinals[4];
+            $chartPerTim[$pic]['tepat_waktu'] += $publication->tepatWaktu[4];
+            $chartPerTim[$pic]['terlambat'] += $publication->terlambat[4];
         }
         
         $dataGrafikBatang = [
@@ -153,8 +176,8 @@ class PublicationController extends Controller
         $dataRingSummary = [
             'publikasiSelesai' => $rekapPublikasiTahunan['sudahSelesai'] ?? 0,
             'totalPublikasi' => $rekapPublikasiTahunan['total'] ?? 0,
-            'tahapanSelesai' => array_sum($dataGrafikBatang['realisasi']),
-            'totalTahapan' => array_sum($dataGrafikBatang['rencana']),
+            'tahapanSelesai' => $chartFinals[4], // Gunakan kumulatif Q4
+            'totalTahapan' => $chartPlans[4], // Gunakan kumulatif Q4
         ];
 
         $dataGrafikRing = [

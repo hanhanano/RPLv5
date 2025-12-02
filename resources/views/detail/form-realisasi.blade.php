@@ -54,13 +54,11 @@
                 </div>
                 <label class="block text-sm font-medium text-gray-700">Kendala</label>
                 <textarea name="struggles[{{ $i }}][struggle_desc]" rows="3" required
-                    class="w-full border rounded px-3 py-2">{{ old("struggles.$i.struggle_desc", $s->struggle_desc) }}
-                </textarea>
+                    class="w-full border rounded px-3 py-2">{{ old("struggles.$i.struggle_desc", $s->struggle_desc) }}</textarea>
 
                 <label class="block text-sm font-medium text-gray-700">Solusi</label>
                 <textarea name="struggles[{{ $i }}][solution_desc]" rows="3" required
-                    class="w-full border rounded px-3 py-2">{{ old("struggles.$i.solution_desc", $s->solution_desc) }}
-                </textarea>
+                    class="w-full border rounded px-3 py-2">{{ old("struggles.$i.solution_desc", $s->solution_desc) }}</textarea>
 
                 <label class="block text-sm font-medium text-gray-700">Bukti Solusi</label>
                 <input type="file" name="struggles[{{ $i }}][solution_doc]" accept=".png,.jpg,.jpeg,.pdf"
@@ -84,14 +82,12 @@
                 <label class="block text-sm font-medium text-gray-700">Kendala</label>
                 <textarea name="struggles[0][struggle_desc]" rows="3" required
                     class="w-full border rounded px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    placeholder="Kendala yang terjadi selama realisasi">{{ old('struggles.0.struggle_desc', optional($struggle)->struggle_desc ?? '')  }}
-                </textarea>
+                    placeholder="Kendala yang terjadi selama realisasi">{{ old('struggles.0.struggle_desc', optional($struggle)->struggle_desc ?? '')  }}</textarea>
 
                 <label class="block text-sm font-medium text-gray-700">Solusi</label>
                 <textarea name="struggles[0][solution_desc]" rows="3" required
                     class="w-full border rounded px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    placeholder="Solusi untuk mengatasi kendala">{{ old('struggles.0.solution_desc', optional($struggle)->solution_desc ?? '')  }}
-                </textarea>
+                    placeholder="Solusi untuk mengatasi kendala">{{ old('struggles.0.solution_desc', optional($struggle)->solution_desc ?? '')  }}</textarea>
 
                 <label class="block text-sm font-medium text-gray-700">Bukti Solusi</label>
                 <input type="file" name="struggles[0][solution_doc]" accept=".png,.jpg,.jpeg,.pdf"

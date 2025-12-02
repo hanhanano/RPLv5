@@ -21,7 +21,7 @@
 
                 <!-- Desktop Navigation -->
                 <div class="hidden md:flex items-center space-x-2">
-                    <a href="/" 
+                    <a href="/dashboard" 
                        class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
                               {{ request()->is('/') ? 'bg-white/20 text-white shadow-lg' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">

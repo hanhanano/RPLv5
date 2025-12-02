@@ -22,7 +22,7 @@
             <div class="p-6">
                 <!-- Header -->
                 <div class="flex items-center justify-between mb-6 pt-4">
-                    <a href="/" 
+                    <a href="/dashboard" 
                         class="flex gap-1 rounded-md text-sm px-2 py-2 sm:text-xs hover:bg-emerald-600 hover:text-white bg-white border shadow rounded-lg"> 
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">
                             <path fill-rule="evenodd" d="M14 8a.75.75 0 0 1-.75.75H4.56l3.22 3.22a.75.75 0 1 1-1.06 1.06l-4.5-4.5a.75.75 0 0 1 0-1.06l4.5-4.5a.75.75 0 0 1 1.06 1.06L4.56 7.25h8.69A.75.75 0 0 1 14 8Z" clip-rule="evenodd" />
@@ -70,7 +70,7 @@
                     </div>
 
                     <!-- Upload Form -->
-                    @if(auth()->check() && in_array(auth()->user()->role, ['ketua_tim', 'admin', 'anggota']))
+                    @if(auth()->check() && in_array(auth()->user()->role, ['ketua_tim', 'admin', 'operator']))
                     <form action="{{ route('publications.uploadFiles', $publication->slug_publication) }}" 
                         method="POST" 
                         enctype="multipart/form-data"
@@ -498,13 +498,16 @@
                                     </p>
 
                                     <p class="text-sm text-gray-600">Dokumen</p>
-                                        @if ($plan->plan_doc)
-                                            <a href="{{ Storage::url($plan->plan_doc) }}" target="_black" class="text-blue-600 hover:underline text-sm break-all">
-                                                {{-- {{ $plan->plan_doc }} --}} 📄 Bukti Rencana
-                                            </a>
-                                        @else
-                                            <p class="text-xs italic text-gray-500">Tidak ada dokumen</p>
-                                        @endif
+                                    @if ($plan->plan_doc)
+                                        @php 
+                                            $cleanPlanDoc = str_replace(['public/', 'public\\'], '', $plan->plan_doc); 
+                                        @endphp
+                                        <a href="{{ asset('storage/' . $cleanPlanDoc) }}" target="_blank" class="text-blue-600 hover:underline text-sm break-all flex items-center gap-1">
+                                            📄 Bukti Rencana
+                                        </a>
+                                    @else
+                                        <p class="text-xs italic text-gray-500">Tidak ada dokumen</p>
+                                    @endif
                                 </div>
                                 <!-- Realisasi -->
                                 <div>
@@ -533,7 +536,10 @@
                                             <p class="text-sm">Kendala: {{ $s->struggle_desc }}</p>
                                             <p class="text-sm">Solusi: {{ $s->solution_desc }}</p>
                                             @if($s->solution_doc)
-                                                <a href="{{ asset('storage/'.$s->solution_doc) }}" target="_blank" class="text-blue-600 hover:underline text-sm break-all">
+                                                @php 
+                                                    $cleanSolDoc = str_replace(['public/', 'public\\'], '', $s->solution_doc); 
+                                                @endphp
+                                                <a href="{{ asset('storage/' . $cleanSolDoc) }}" target="_blank" class="text-blue-600 hover:underline text-sm break-all flex items-center gap-1 mt-1">
                                                     📄 Bukti Solusi
                                                 </a>
                                             @endif
@@ -556,7 +562,10 @@
                                     <p class="text-sm text-gray-600">Bukti Pendukung Solusi</p>
                                     <div class="flex flex-col gap-1">
                                         @if (optional($final)->final_doc)
-                                            <a href="{{ Storage::url($final->final_doc) }}" target="_blank" class="text-blue-600 hover:underline text-sm break-all">
+                                            @php
+                                                $cleanFinalDoc = str_replace(['public/', 'public\\'], '', $final->final_doc);
+                                            @endphp
+                                            <a href="{{ asset('storage/' . $cleanFinalDoc) }}" target="_blank" class="text-blue-600 hover:underline text-sm break-all flex items-center gap-1">
                                                 📄 Dokumen Realisasi
                                             </a>
                                         @else
@@ -605,7 +614,7 @@
                                             </div> 
                                         </div>
                                     @endif
-                                    @if(auth()->user()->role === 'ketua_tim' || 'operator' || 'admin')
+                                    @if(auth()->check() && in_array(auth()->user()->role, ['ketua_tim', 'admin', 'operator']))
                                         <button @click="editMode = true"
                                             class="text-xs sm:text-sm flex gap-1 px-4 py-2  rounded-lg bg-gray-200 text-gray-700 hover:bg-emerald-600 hover:text-white">
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">

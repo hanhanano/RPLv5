@@ -64,4 +64,10 @@ class Publication extends Model
         return $this->hasMany(PublicationFile::class, 'publication_id', 'publication_id')
                     ->orderBy('created_at', 'desc'); 
     }
+
+    // Publication memiliki banyak Output
+    public function publicationPlans()
+    {
+        return $this->hasMany(PublicationPlan::class, 'publication_id', 'publication_id');
+    }
 }

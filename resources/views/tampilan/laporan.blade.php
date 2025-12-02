@@ -27,8 +27,12 @@
         <x-navbar></x-navbar>
     </div>
 
-    <main class = "pt-24">
-        <h3 class="italic text-gray-500 text-sm text-center">Maaf Halaman Ini Belum Tersedia</h3>
+    <main class="pt-24 px-4 max-w-7xl mx-auto">
+        
+        <h1 class="text-2xl font-bold text-blue-900 mb-6">Halaman Laporan</h1>
+
+        @include('tampilan.daftarpublikasi')
+        
     </main>
 </body>
 </html>
