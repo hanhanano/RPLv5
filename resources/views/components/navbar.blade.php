@@ -23,7 +23,7 @@
                 <div class="hidden md:flex items-center space-x-2">
                     <a href="/dashboard" 
                        class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                              {{ request()->is('/') ? 'bg-white/20 text-white shadow-lg' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+                              {{ request()->is('/dashboard') ? 'bg-white/20 text-white shadow-lg' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
                             <path fill-rule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clip-rule="evenodd" />
                         </svg>
@@ -38,6 +38,14 @@
                         </svg>
                         Laporan
                     </a>
+
+                    @if(auth()->check() && in_array(auth()->user()->role, ['ketua_tim', 'admin']))
+                        <a href="{{ route('target.index') }}" 
+                            class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                              {{ request()->is('target.index') ? 'bg-white/20 text-white shadow-lg' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+                            Target Kinerja
+                        </a>
+                    @endif
                 </div>
 
                 <!-- User Menu Desktop -->
