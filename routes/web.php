@@ -11,6 +11,7 @@ use App\Http\Controllers\PublicationController;
 use App\Http\Controllers\PublicationExportController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\PublicationOutputController;
+use App\Http\Controllers\TeamTargetController;
 use App\Models\Publication;
 
 /*
@@ -31,6 +32,19 @@ Route::get('/dashboard', [PublicationController::class, 'index'])
 
 // Laporan
 Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan');
+
+// Halaman Target Kinerja
+Route::get('/target-kinerja', [TeamTargetController::class, 'index'])
+    ->middleware('auth')
+    ->name('target.index');
+
+// Simpan Target Kinerja
+Route::post('/target-kinerja', [TeamTargetController::class, 'store'])
+    ->middleware('auth')
+    ->name('target.store');
+
+Route::put('/target-kinerja/{id}', [TeamTargetController::class, 'update'])->middleware('auth')->name('target.update');
+Route::delete('/target-kinerja/{id}', [TeamTargetController::class, 'destroy'])->middleware('auth')->name('target.destroy');
 
 // ----- Publications -----
 // Export

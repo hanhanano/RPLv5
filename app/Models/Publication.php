@@ -70,4 +70,12 @@ class Publication extends Model
     {
         return $this->hasMany(PublicationPlan::class, 'publication_id', 'publication_id');
     }
+
+    // Relasi One-to-One ke TeamTarget
+    public function teamTarget()
+    {
+        // Parameter ke-2: foreign_key di table team_targets (publication_id)
+        // Parameter ke-3: local_key di table ini (publication_id)
+        return $this->hasOne(TeamTarget::class, 'publication_id', 'publication_id');
+    }
 }

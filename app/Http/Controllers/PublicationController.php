@@ -24,7 +24,8 @@ class PublicationController extends Controller
         $query = Publication::with([
             'user',
             'stepsPlans.stepsFinals.struggles',
-            'files'
+            'files',
+            'teamTarget'
         ]);
 
         $user = auth()->user();
@@ -53,7 +54,6 @@ class PublicationController extends Controller
                 $q = getQuarter($plan->plan_start_date);
                 
                 if ($q) {
-                    // KUMULATIF: tambahkan ke quarter ini dan semua quarter setelahnya
                     for ($i = $q; $i <= 4; $i++) {
                         $rekapPlans[$i]++;
                         $listPlans[$i][] = $plan->plan_name;
@@ -64,7 +64,6 @@ class PublicationController extends Controller
                     $fq = getQuarter($plan->stepsFinals->actual_started);
                     
                     if ($fq) {
-                        // KUMULATIF: tambahkan ke quarter ini dan semua quarter setelahnya
                         for ($i = $fq; $i <= 4; $i++) {
                             $rekapFinals[$i]++;
                             $listFinals[$i][] = $plan->plan_name;
@@ -95,7 +94,7 @@ class PublicationController extends Controller
                         }
                     }
                 }        
-        }
+            }
 
             // Hitung progress kumulatif (tetap sama)
             $totalPlans = array_sum($rekapPlans);
@@ -235,102 +234,6 @@ class PublicationController extends Controller
             'dataGrafikPerTim'
         ));
     }
-
-    // private function getStatistikPerTriwulan($triwulan)
-    // {
-    //     $publications = Publication::with([
-    //         'user',
-    //         'stepsPlans.stepsFinals'
-    //     ])->get();
-
-    //     // $totalPublikasi = $publications->count();
-    //     // $belumBerlangsungPublikasi = 0;
-    //     // $sedangBerlangsungPublikasi = 0;
-    //     // $sudahSelesaiPublikasi = 0;
-
-    //     $totalTahapan = 0;
-    //     $belumBerlangsungTahapan = 0;
-    //     $sedangBerlangsungTahapan = 0;
-    //     $sudahSelesaiTahapan = 0;
-    //     $tertundaTahapan = 0;
-
-    //     foreach ($publications as $publication) {
-    //         $rekapPlans = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
-    //         $rekapFinals = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
-
-    //         // Reset per publikasi
-    //         $belumTahapan = 0;
-    //         $berlangsungTahapan = 0;
-    //         $selesaiTahapan = 0;
-
-    //         foreach ($publication->stepsPlans as $plan) {
-    //             // Belum berlangsung
-    //             if (empty($plan->plan_start_date) && empty($plan->plan_end_date)) {
-    //                 $belumTahapan++;
-    //                 $belumBerlangsungTahapan++;
-    //                 continue;
-    //             }
-
-    //             $q = getQuarter($plan->plan_start_date);
-
-    //             if ($q == $triwulan) {
-    //                 $totalTahapan++;
-    //                 $rekapPlans[$q]++;
-
-    //                 // Sudah selesai
-    //                 if ($plan->stepsFinals) {
-    //                     $selesaiTahapan++;
-    //                     $fq = getQuarter($plan->stepsFinals->actual_started);
-    //                     if ($fq && $fq != $q) {
-    //                         $tertundaTahapan++;
-    //                     } else {
-    //                         $sudahSelesaiTahapan++;
-    //                     }
-    //                 }
-    //                 // Sedang berlangsung
-    //                 else {
-    //                     $berlangsungTahapan++;
-    //                     $sedangBerlangsungTahapan++;
-    //                 }
-    //             }
-    //         }
-
-    //         // Hitung progres publikasi di triwulan ini
-    //         // $totalPlans = array_sum($rekapPlans);
-    //         // $totalFinals = array_sum($rekapFinals);
-    //         // $progressTriwulan = ($totalPlans > 0) ? ($totalFinals / $totalPlans) * 100 : 0;
-
-    //         // Status publikasi
-    //         // if ($selesaiTahapan > 0 && $berlangsungTahapan == 0 && $belumTahapan == 0) {
-    //         //     $sudahSelesaiPublikasi++;
-    //         // } elseif ($berlangsungTahapan > 0) {
-    //         //     $sedangBerlangsungPublikasi++;
-    //         // } elseif ($belumTahapan > 0 && $berlangsungTahapan == 0 && $selesaiTahapan == 0) {
-    //         //     $belumBerlangsungPublikasi++;
-    //         // }
-    //     }
-
-    //     $persentaseRealisasi = ($totalTahapan > 0) 
-    //         ? round(($sudahSelesaiTahapan / $totalTahapan) * 100) 
-    //         : 0;
-
-    //     return response()->json([
-    //         // 'publikasi' => [
-    //         //     'total' => $totalPublikasi,
-    //         //     'belumBerlangsung' => $belumBerlangsungPublikasi,
-    //         //     'sedangBerlangsung' => $sedangBerlangsungPublikasi,
-    //         //     'sudahSelesai' => $sudahSelesaiPublikasi,
-    //         // ],
-    //         'tahapan' => [
-    //             'total' => $totalTahapan,
-    //             'belumBerlangsung' => $belumBerlangsungTahapan,
-    //             'sedangBerlangsung' => $sedangBerlangsungTahapan,
-    //             'sudahSelesai' => $sudahSelesaiTahapan,
-    //             'tertunda' => $tertundaTahapan,
-    //             'persentaseRealisasi' => $persentaseRealisasi,
-    //         ]
-    //     ]);
-    // }
 
     private function getStatistikPerTriwulan($triwulan)
     {
@@ -506,97 +409,97 @@ class PublicationController extends Controller
         return view('publications.create', compact('users'));
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'publication_name'   => 'required|string|max:255|min:3|regex:/^[^<>`]+$/',
-            'publication_report' => 'required|string|max:255|min:3|regex:/^[^<>`]+$/',
-            'publication_pic'    => 'required|string|max:255|min:3|regex:/^[^<>`]+$/',
-            'publication_report_other' => 'nullable|string|max:255|min:3|regex:/^[^<>`]+$/',
-            'is_monthly' => 'nullable|boolean',
-            'months' => 'nullable|array',
-            'months.*' => 'integer|between:1,12',
-        ],
-        [
-            'publication_name.regex' => 'Nama publikasi tidak boleh mengandung karakter aneh seperti <, >, atau `.',
-            'publication_report.regex' => 'Laporan publikasi tidak boleh mengandung karakter aneh seperti <, >, atau `.',
-            'publication_pic.regex' => 'PIC tidak boleh mengandung karakter aneh seperti <, >, atau `.',
-        ]);
+    // public function store(Request $request)
+    // {
+    //     $request->validate([
+    //         'publication_name'   => 'required|string|max:255|min:3|regex:/^[^<>`]+$/',
+    //         'publication_report' => 'required|string|max:255|min:3|regex:/^[^<>`]+$/',
+    //         'publication_pic'    => 'required|string|max:255|min:3|regex:/^[^<>`]+$/',
+    //         'publication_report_other' => 'nullable|string|max:255|min:3|regex:/^[^<>`]+$/',
+    //         'is_monthly' => 'nullable|boolean',
+    //         'months' => 'nullable|array',
+    //         'months.*' => 'integer|between:1,12',
+    //     ],
+    //     [
+    //         'publication_name.regex' => 'Nama publikasi tidak boleh mengandung karakter aneh seperti <, >, atau `.',
+    //         'publication_report.regex' => 'Laporan publikasi tidak boleh mengandung karakter aneh seperti <, >, atau `.',
+    //         'publication_pic.regex' => 'PIC tidak boleh mengandung karakter aneh seperti <, >, atau `.',
+    //     ]);
 
-        $user = auth()->user();
+    //     $user = auth()->user();
     
-        if (in_array($user->role, ['ketua_tim', 'operator'])) {
-            if ($request->publication_pic !== $user->team) {
-                return redirect()->back()
-                    ->withInput()
-                    ->with('error', 'Anda tidak memiliki akses untuk membuat publikasi pada tim ini.');
-            }
-        }
+    //     if (in_array($user->role, ['ketua_tim', 'operator'])) {
+    //         if ($request->publication_pic !== $user->team) {
+    //             return redirect()->back()
+    //                 ->withInput()
+    //                 ->with('error', 'Anda tidak memiliki akses untuk membuat publikasi pada tim ini.');
+    //         }
+    //     }
 
-        $publicationReport = $request->publication_report === 'other'
-            ? $request->publication_report_other
-            : $request->publication_report;
+    //     $publicationReport = $request->publication_report === 'other'
+    //         ? $request->publication_report_other
+    //         : $request->publication_report;
 
-        \DB::beginTransaction();
+    //     \DB::beginTransaction();
 
-        try {
-            if ($request->has('is_monthly') && $request->has('months') && is_array($request->months)) {
-                \Log::info('Creating ' . count($request->months) . ' monthly publications', [
-                    'user' => $user->name,
-                    'team' => $user->team,
-                    'pic' => $request->publication_pic,
-                    'months' => $request->months
-                ]);
+    //     try {
+    //         if ($request->has('is_monthly') && $request->has('months') && is_array($request->months)) {
+    //             \Log::info('Creating ' . count($request->months) . ' monthly publications', [
+    //                 'user' => $user->name,
+    //                 'team' => $user->team,
+    //                 'pic' => $request->publication_pic,
+    //                 'months' => $request->months
+    //             ]);
                 
-                $this->generateMonthlyPublications(
-                    $request->publication_name,
-                    $publicationReport,
-                    $request->publication_pic,
-                    $request->months
-                );
+    //             $this->generateMonthlyPublications(
+    //                 $request->publication_name,
+    //                 $publicationReport,
+    //                 $request->publication_pic,
+    //                 $request->months
+    //             );
                 
-                $successMessage = count($request->months) . ' publikasi bulanan berhasil ditambahkan!';
-            } else {
-                \Log::info('Creating single publication', [
-                    'user' => $user->name,
-                    'team' => $user->team,
-                    'pic' => $request->publication_pic,
-                    'name' => $request->publication_name
-                ]);
+    //             $successMessage = count($request->months) . ' publikasi bulanan berhasil ditambahkan!';
+    //         } else {
+    //             \Log::info('Creating single publication', [
+    //                 'user' => $user->name,
+    //                 'team' => $user->team,
+    //                 'pic' => $request->publication_pic,
+    //                 'name' => $request->publication_name
+    //             ]);
 
-                \DB::table('publications')->insert([
-                    'publication_name'   => $request->publication_name,
-                    'publication_report' => $publicationReport,
-                    'publication_pic'    => $request->publication_pic,
-                    'fk_user_id'         => Auth::id(),
-                    'is_monthly'         => 0,
-                    'slug_publication'   => \Str::uuid(),
-                    'created_at'         => now(),
-                    'updated_at'         => now(),
-                ]);
+    //             \DB::table('publications')->insert([
+    //                 'publication_name'   => $request->publication_name,
+    //                 'publication_report' => $publicationReport,
+    //                 'publication_pic'    => $request->publication_pic,
+    //                 'fk_user_id'         => Auth::id(),
+    //                 'is_monthly'         => 0,
+    //                 'slug_publication'   => \Str::uuid(),
+    //                 'created_at'         => now(),
+    //                 'updated_at'         => now(),
+    //             ]);
 
-                \Log::info('Single publication created successfully');
-                $successMessage = 'Publikasi berhasil ditambahkan!';
-            }
+    //             \Log::info('Single publication created successfully');
+    //             $successMessage = 'Publikasi berhasil ditambahkan!';
+    //         }
 
-            \DB::commit();
+    //         \DB::commit();
             
-            return redirect()->route('daftarpublikasi')
-                ->with('success', $successMessage);
+    //         return redirect()->route('daftarpublikasi')
+    //             ->with('success', $successMessage);
             
-        } catch (\Exception $e) {
-            \DB::rollBack();
-            \Log::error('Error creating publication: ' . $e->getMessage(), [
-                'user' => $user->name,
-                'team' => $user->team,
-                'trace' => $e->getTraceAsString()
-            ]);
+    //     } catch (\Exception $e) {
+    //         \DB::rollBack();
+    //         \Log::error('Error creating publication: ' . $e->getMessage(), [
+    //             'user' => $user->name,
+    //             'team' => $user->team,
+    //             'trace' => $e->getTraceAsString()
+    //         ]);
             
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Gagal menambahkan publikasi: ' . $e->getMessage());
-        }
-    }
+    //         return redirect()->back()
+    //             ->withInput()
+    //             ->with('error', 'Gagal menambahkan publikasi: ' . $e->getMessage());
+    //     }
+    // }
 
     public function update(Request $request, Publication $publication)
     {        
@@ -671,7 +574,8 @@ class PublicationController extends Controller
         ->with([
             'user',
             'stepsPlans.stepsFinals.struggles',
-            'files'
+            'files',
+            'teamTarget'
         ])
         ->get();
 
@@ -736,15 +640,28 @@ class PublicationController extends Controller
                 'publication_report' => $pub->publication_report,
                 'publication_name' => $pub->publication_name,
                 'publication_pic' => $pub->publication_pic,
+                
                 'rekapPlans' => $pub->rekapPlans,
                 'rekapFinals' => $pub->rekapFinals,
+                'filesCount' => $pub->files->count(),
+
+                'target_q1_plan' => $pub->teamTarget->q1_plan ?? 0,
+                'target_q2_plan' => $pub->teamTarget->q2_plan ?? 0,
+                'target_q3_plan' => $pub->teamTarget->q3_plan ?? 0,
+                'target_q4_plan' => $pub->teamTarget->q4_plan ?? 0,
+                'target_q1_real' => $pub->teamTarget->q1_real ?? 0,
+                'target_q2_real' => $pub->teamTarget->q2_real ?? 0,
+                'target_q3_real' => $pub->teamTarget->q3_real ?? 0,
+                'target_q4_real' => $pub->teamTarget->q4_real ?? 0,
+                'target_output_plan' => $pub->teamTarget->output_plan ?? 0,
+                'target_output_real' => $pub->teamTarget->output_real ?? 0,
+
                 'lintasTriwulan' => $pub->lintasTriwulan,
                 'progressKumulatif' => $pub->progressKumulatif,
                 'progressTriwulan' => $pub->progressTriwulan,
                 'listPlans' => $pub->listPlans,     
                 'listFinals' => $pub->listFinals,   
                 'listLintas' => $pub->listLintas,   
-                'filesCount' => $pub->files->count(), 
                 'filesList' => $pub->files->pluck('file_name')->toArray(),
             ];
         }));
