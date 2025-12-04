@@ -13,13 +13,24 @@
             <label class="block text-xs font-bold text-gray-700 mb-1">Nama Tim</label>
             <select name="team_name" required
                 class="w-full rounded text-xs border-gray-300 px-2 py-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-sm">
-                <option value="">-- Pilih Tim --</option>
-                <option value="Umum">Tim Umum</option>
-                <option value="Produksi">Tim Produksi</option>
-                <option value="Distribusi">Tim Distribusi</option>
-                <option value="Neraca">Tim Neraca</option>
-                <option value="Sosial">Tim Sosial</option>
-                <option value="IPDS">Tim IPDS</option>
+                
+                {{-- LOGIKA PEMBATASAN TIM --}}
+                @php
+                    $user = auth()->user();
+                    $teams = ['Umum', 'Produksi', 'Distribusi', 'Neraca', 'Sosial', 'IPDS'];
+                @endphp
+
+                @if($user->role === 'ketua_tim')
+                    {{-- Jika Ketua Tim: Hanya tampilkan timnya sendiri & otomatis selected --}}
+                    <option value="{{ $user->team }}" selected>Tim {{ $user->team }}</option>
+                @else
+                    {{-- Jika Admin: Tampilkan semua pilihan --}}
+                    <option value="">-- Pilih Tim --</option>
+                    @foreach($teams as $team)
+                        <option value="{{ $team }}">Tim {{ $team }}</option>
+                    @endforeach
+                @endif
+
             </select>
         </div>
 
@@ -62,8 +73,8 @@
             class="w-full rounded text-xs border-gray-300 px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-sm">
     </div>
 
-    {{-- BARIS 3: OPSI BULANAN (COMPACT VERSION) --}}
-    <div class="bg-emerald-50 px-3 py-2 rounded border border-emerald-100">
+    {{-- BARIS 3: OPSI BULANAN --}}
+    <div class="monthly-options-wrapper bg-emerald-50 px-3 py-2 rounded border border-emerald-100">
         <div class="flex items-center justify-between">
             <label class="flex items-center cursor-pointer">
                 <input type="checkbox" name="is_monthly" value="1" x-model="isMonthly"
@@ -73,7 +84,7 @@
             
             <button type="button" x-show="isMonthly"
                     @click="selectAll = !selectAll; $el.closest('div').parentElement.querySelectorAll('input[type=checkbox][name^=months]').forEach(cb => cb.checked = selectAll)"
-                    class="text-[10px] text-emerald-600 hover:text-emerald-800 underline uppercase font-bold">
+                    class="text-[10px] text-emerald-600 hover:text-emerald-800 underline font-bold">
                 <span x-text="selectAll ? 'Bersihkan' : 'Pilih Semua'"></span>
             </button>
         </div>
@@ -140,6 +151,5 @@
                 </div>
             </div>
         </div>
-
     </div>
 </div>

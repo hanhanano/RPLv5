@@ -451,7 +451,22 @@
                         <label class="block text-sm font-medium text-gray-700">PIC</label>
                         <select id="edit_pic" name="publication_pic" required class="px-2 py-2 w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm">
                             <option value="">-- Pilih PIC --</option>
-                            @foreach($teams as $team) <option value="{{ $team }}">Tim {{ $team }}</option> @endforeach
+                            {{-- LOGIKA PEMBATASAN TIM --}}
+                                @php
+                                    $user = auth()->user();
+                                    $teams = ['Umum', 'Produksi', 'Distribusi', 'Neraca', 'Sosial', 'IPDS'];
+                                @endphp
+
+                                @if($user->role === 'ketua_tim')
+                                    {{-- Jika Ketua Tim: Hanya tampilkan timnya sendiri & otomatis selected --}}
+                                    <option value="{{ $user->team }}" selected>Tim {{ $user->team }}</option>
+                                @else
+                                    {{-- Jika Admin: Tampilkan semua pilihan --}}
+                                    <option value="">-- Pilih Tim --</option>
+                                    @foreach($teams as $team)
+                                        <option value="{{ $team }}">Tim {{ $team }}</option>
+                                    @endforeach
+                                @endif
                         </select>
                     </div>
                     <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg mt-3">Update</button>

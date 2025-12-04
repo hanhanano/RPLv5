@@ -101,25 +101,25 @@ Route::get('/admin/search', [AdminController::class, 'search'])->name('admin.sea
 Route::post('/admin/store', [AdminController::class, 'store'])->name('admin.store');
 Route::delete('/admin/{id}', [AdminController::class, 'destroy'])->name('admin.destroy');
 
-// Upload files publikasi
-Route::post('/publications/{publication}/upload-files', [PublicationController::class, 'uploadFiles'])
-    ->name('publications.uploadFiles')
-    ->middleware('auth');
+// // Upload files publikasi
+// Route::post('/publications/{publication}/upload-files', [PublicationController::class, 'uploadFiles'])
+//     ->name('publications.uploadFiles')
+//     ->middleware('auth');
 
-// Delete file publikasi
-Route::delete('/publication-files/{file}', [PublicationController::class, 'deleteFile'])
-    ->name('publications.deleteFile')
-    ->middleware('auth');
+// // Delete file publikasi
+// Route::delete('/publication-files/{file}', [PublicationController::class, 'deleteFile'])
+//     ->name('publications.deleteFile')
+//     ->middleware('auth');
 
-// Download single file
-Route::get('/publication-files/{file}/download', [PublicationController::class, 'downloadFile'])
-    ->name('publications.downloadFile')
-    ->middleware('auth');
+// // Download single file
+// Route::get('/publication-files/{file}/download', [PublicationController::class, 'downloadFile'])
+//     ->name('publications.downloadFile')
+//     ->middleware('auth');
 
-// Download all files as ZIP
-Route::get('/publications/{publication}/download-all', [PublicationController::class, 'downloadAllFiles'])
-    ->name('publications.downloadAllFiles')
-    ->middleware('auth');
+// // Download all files as ZIP
+// Route::get('/publications/{publication}/download-all', [PublicationController::class, 'downloadAllFiles'])
+//     ->name('publications.downloadAllFiles')
+//     ->middleware('auth');
 
 // Route untuk melihat halaman kelola output
 Route::get('/publications/{slug}/outputs', [PublicationOutputController::class, 'index'])

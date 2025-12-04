@@ -184,18 +184,55 @@ class TeamTargetController extends Controller
     }
     
     // ... Function Update & Destroy tetap ada ...
-    public function update(Request $request, $id) {
-         $target = TeamTarget::findOrFail($id);
-         $target->update($request->except(['_token', '_method'])); 
-         
-         if($target->publication) {
-             $target->publication->update([
-                 'publication_name' => $request->activity_name,
-                 'publication_report' => $request->report_name // (jika ada input ini di form edit)
-             ]);
-         }
-         
-         return redirect()->back()->with('success', 'Data berhasil diupdate');
+    public function update(Request $request, $id) 
+    {
+        // 1. Tentukan Nama Laporan (Sama seperti logika di STORE)
+        // Ambil dari select, jika 'other' ambil dari input manual
+        $reportName = ($request->report_name_select === 'other') 
+            ? $request->report_name_manual 
+            : $request->report_name_select;
+
+        // Validasi sederhana agar tidak Error SQL Column cannot be null
+        if (empty($reportName)) {
+            // Jika kosong, kita coba ambil data lama agar aman, atau set default
+            $targetLama = TeamTarget::find($id);
+            $reportName = $targetLama->report_name ?? '-'; 
+        }
+
+        $target = TeamTarget::findOrFail($id);
+
+        // 2. Update Data Target
+        // Kita tidak bisa pakai $request->except() mentah-mentah karena nama field beda
+        $target->update([
+            'team_name'     => $request->team_name,
+            'activity_name' => $request->activity_name,
+            'report_name'   => $reportName, // <--- Ini yang bikin error 500 sebelumnya jika tidak diset
+            
+            // Update Angka (Gunakan input(), jika null dianggap data lama atau 0)
+            'q1_plan' => $request->input('q1_plan', 0), 
+            'q2_plan' => $request->input('q2_plan', 0),
+            'q3_plan' => $request->input('q3_plan', 0), 
+            'q4_plan' => $request->input('q4_plan', 0),
+            
+            'q1_real' => $request->input('q1_real', 0), 
+            'q2_real' => $request->input('q2_real', 0),
+            'q3_real' => $request->input('q3_real', 0), 
+            'q4_real' => $request->input('q4_real', 0),
+            
+            'output_plan' => $request->input('output_plan', 0),
+            'output_real' => $request->input('output_real', 0),
+        ]); 
+        
+        // 3. Update Publikasi Terkait (Jika Ada)
+        if($target->publication) {
+            $target->publication->update([
+                'publication_name'   => $request->activity_name,
+                'publication_report' => $reportName, // Update nama laporan di publikasi juga
+                'publication_pic'    => $request->team_name,
+            ]);
+        }
+        
+        return redirect()->back()->with('success', 'Data berhasil diupdate');
     }
 
     public function destroy($id) {

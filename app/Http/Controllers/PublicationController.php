@@ -667,148 +667,148 @@ class PublicationController extends Controller
         }));
     }
 
-    public function uploadFiles(Request $request, Publication $publication)
-    {
-        $request->validate([
-            'files' => 'required|array|max:10',
-            'files.*' => 'required|file|mimes:pdf,xlsx,xls,docx,doc,zip|max:10240',
-        ], [
-            'files.required' => 'Pilih minimal 1 file untuk diupload',
-            'files.*.mimes' => 'File harus berformat: PDF, Excel, Word, atau ZIP',
-            'files.*.max' => 'Ukuran file maksimal 10MB',
-        ]);
+    // public function uploadFiles(Request $request, Publication $publication)
+    // {
+    //     $request->validate([
+    //         'files' => 'required|array|max:10',
+    //         'files.*' => 'required|file|mimes:pdf,xlsx,xls,docx,doc,zip|max:10240',
+    //     ], [
+    //         'files.required' => 'Pilih minimal 1 file untuk diupload',
+    //         'files.*.mimes' => 'File harus berformat: PDF, Excel, Word, atau ZIP',
+    //         'files.*.max' => 'Ukuran file maksimal 10MB',
+    //     ]);
 
-        try {
-            $uploadedCount = 0;
+    //     try {
+    //         $uploadedCount = 0;
 
-            foreach ($request->file('files') as $file) {
-                $originalName = $file->getClientOriginalName();
-                $extension = $file->getClientOriginalExtension();
-                $fileSize = $file->getSize();
-                $fileName = time() . '_' . uniqid() . '_' . $originalName;
+    //         foreach ($request->file('files') as $file) {
+    //             $originalName = $file->getClientOriginalName();
+    //             $extension = $file->getClientOriginalExtension();
+    //             $fileSize = $file->getSize();
+    //             $fileName = time() . '_' . uniqid() . '_' . $originalName;
 
-                $filePath = $file->storeAs(
-                    'publications/' . $publication->slug_publication,
-                    $fileName,
-                    'public'
-                );
+    //             $filePath = $file->storeAs(
+    //                 'publications/' . $publication->slug_publication,
+    //                 $fileName,
+    //                 'public'
+    //             );
 
-                // Simpan ke database
-                PublicationFile::create([
-                    'publication_id' => $publication->publication_id,
-                    'file_name' => $originalName, 
-                    'file_path' => $filePath,
-                    'file_type' => $extension,
-                    'file_size' => $fileSize,
-                ]);
+    //             // Simpan ke database
+    //             PublicationFile::create([
+    //                 'publication_id' => $publication->publication_id,
+    //                 'file_name' => $originalName, 
+    //                 'file_path' => $filePath,
+    //                 'file_type' => $extension,
+    //                 'file_size' => $fileSize,
+    //             ]);
 
-                $uploadedCount++;
-            }
+    //             $uploadedCount++;
+    //         }
 
-            return redirect()->back()
-                ->with('success', "Berhasil mengupload {$uploadedCount} file publikasi!");
+    //         return redirect()->back()
+    //             ->with('success', "Berhasil mengupload {$uploadedCount} file publikasi!");
 
-        } catch (\Exception $e) {
-            \Log::error('Error uploading files: ' . $e->getMessage());
-            return redirect()->back()
-                ->with('error', 'Gagal mengupload file: ' . $e->getMessage());
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         \Log::error('Error uploading files: ' . $e->getMessage());
+    //         return redirect()->back()
+    //             ->with('error', 'Gagal mengupload file: ' . $e->getMessage());
+    //     }
+    // }
 
     // Hapus file publikasi
-    public function deleteFile(PublicationFile $file)
-    {
-        try {
-            if (Storage::disk('public')->exists($file->file_path)) {
-                Storage::disk('public')->delete($file->file_path);
-            }
+    // public function deleteFile(PublicationFile $file)
+    // {
+    //     try {
+    //         if (Storage::disk('public')->exists($file->file_path)) {
+    //             Storage::disk('public')->delete($file->file_path);
+    //         }
 
-            $file->delete();
+    //         $file->delete();
 
-            if (request()->expectsJson() || request()->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'File berhasil dihapus!'
-                ]);
-            }
+    //         if (request()->expectsJson() || request()->ajax()) {
+    //             return response()->json([
+    //                 'success' => true,
+    //                 'message' => 'File berhasil dihapus!'
+    //             ]);
+    //         }
 
-            return redirect()->back()
-                ->with('success', 'File berhasil dihapus!');
+    //         return redirect()->back()
+    //             ->with('success', 'File berhasil dihapus!');
 
-        } catch (\Exception $e) {
-            \Log::error('Error deleting file: ' . $e->getMessage());
+    //     } catch (\Exception $e) {
+    //         \Log::error('Error deleting file: ' . $e->getMessage());
             
-            if (request()->expectsJson() || request()->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Gagal menghapus file: ' . $e->getMessage()
-                ], 500);
-            }
+    //         if (request()->expectsJson() || request()->ajax()) {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'Gagal menghapus file: ' . $e->getMessage()
+    //             ], 500);
+    //         }
 
-            return redirect()->back()
-                ->with('error', 'Gagal menghapus file');
-        }
-    }
+    //         return redirect()->back()
+    //             ->with('error', 'Gagal menghapus file');
+    //     }
+    // }
 
     // Download file publikasi
-    public function downloadFile(PublicationFile $file)
-    {
-        try {
-            $filePath = storage_path('app/public/' . $file->file_path);
+    // public function downloadFile(PublicationFile $file)
+    // {
+    //     try {
+    //         $filePath = storage_path('app/public/' . $file->file_path);
 
-            if (!file_exists($filePath)) {
-                abort(404, 'File tidak ditemukan');
-            }
+    //         if (!file_exists($filePath)) {
+    //             abort(404, 'File tidak ditemukan');
+    //         }
 
-            return response()->download($filePath, $file->file_name);
+    //         return response()->download($filePath, $file->file_name);
 
-        } catch (\Exception $e) {
-            \Log::error('Error downloading file: ' . $e->getMessage());
-            return redirect()->back()
-                ->with('error', 'Gagal mengunduh file');
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         \Log::error('Error downloading file: ' . $e->getMessage());
+    //         return redirect()->back()
+    //             ->with('error', 'Gagal mengunduh file');
+    //     }
+    // }
 
     // Download semua file publikasi dalam 1 ZIP
-    public function downloadAllFiles(Publication $publication)
-    {
-        try {
-            $files = $publication->files;
+    // public function downloadAllFiles(Publication $publication)
+    // {
+    //     try {
+    //         $files = $publication->files;
 
-            if ($files->isEmpty()) {
-                return redirect()->back()
-                    ->with('error', 'Tidak ada file untuk diunduh');
-            }
+    //         if ($files->isEmpty()) {
+    //             return redirect()->back()
+    //                 ->with('error', 'Tidak ada file untuk diunduh');
+    //         }
 
-            $zipFileName = 'Publikasi_' . Str::slug($publication->publication_name) . '_' . time() . '.zip';
-            $zipPath = storage_path('app/temp/' . $zipFileName);
+    //         $zipFileName = 'Publikasi_' . Str::slug($publication->publication_name) . '_' . time() . '.zip';
+    //         $zipPath = storage_path('app/temp/' . $zipFileName);
 
-            if (!file_exists(storage_path('app/temp'))) {
-                mkdir(storage_path('app/temp'), 0755, true);
-            }
+    //         if (!file_exists(storage_path('app/temp'))) {
+    //             mkdir(storage_path('app/temp'), 0755, true);
+    //         }
 
-            $zip = new \ZipArchive();
-            if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
-                throw new \Exception('Gagal membuat file ZIP');
-            }
+    //         $zip = new \ZipArchive();
+    //         if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+    //             throw new \Exception('Gagal membuat file ZIP');
+    //         }
 
-            foreach ($files as $file) {
-                $filePath = storage_path('app/public/' . $file->file_path);
-                if (file_exists($filePath)) {
-                    $zip->addFile($filePath, $file->file_name);
-                }
-            }
+    //         foreach ($files as $file) {
+    //             $filePath = storage_path('app/public/' . $file->file_path);
+    //             if (file_exists($filePath)) {
+    //                 $zip->addFile($filePath, $file->file_name);
+    //             }
+    //         }
 
-            $zip->close();
+    //         $zip->close();
 
-            return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
+    //         return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
 
-        } catch (\Exception $e) {
-            \Log::error('Error creating ZIP: ' . $e->getMessage());
-            return redirect()->back()
-                ->with('error', 'Gagal membuat file ZIP: ' . $e->getMessage());
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         \Log::error('Error creating ZIP: ' . $e->getMessage());
+    //         return redirect()->back()
+    //             ->with('error', 'Gagal membuat file ZIP: ' . $e->getMessage());
+    //     }
+    // }
 
     /**
      * @param string $baseName - Nama kegiatan dasar (misal: "Inflasi")
