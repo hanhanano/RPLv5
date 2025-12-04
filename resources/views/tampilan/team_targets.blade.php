@@ -16,14 +16,12 @@
     </div>
 
     <main class="py-8" x-data="{ openAdd: false }">
-        <div class="max-w-7xl mx-auto px-4 space-y-6">
-            
+        <div class="max-w-7xl mx-auto px-4 space-y-6">            
             <div class="bg-white border shadow rounded-lg p-6">
-                
                 <div class="flex justify-between items-center mb-3">
                     <div>
-                        <h2 class="text-lg font-semibold text-blue-900">Daftar Target Kinerja</h2>
-                        <p class="text-sm text-gray-500">Tabel monitoring target dan realisasi per tim</p>
+                        <h2 class="text-lg font-semibold text-blue-900">Daftar Sasaran/Laporan</h2>
+                        <p class="text-sm text-gray-500">Tabel monitoring target dan realisasi</p>
                     </div>
 
                     <div class="flex gap-2">
@@ -45,7 +43,7 @@
                             type="text"
                             name="search"
                             value="{{ request('search') }}"
-                            placeholder="Cari Berdasarkan Nama Kegiatan..."
+                            placeholder="Cari Berdasarkan Nama Sasaran/Laporan..."
                             class="w-full px-3 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </form>
                 </div>
@@ -135,7 +133,7 @@
                                     <td class="px-4 py-4 text-center align-middle" rowspan="2">
                                         <div class="flex flex-col gap-1 w-full items-center">
                                             @if(auth()->check() && in_array(auth()->user()->role, ['ketua_tim', 'admin']))
-                                                <button onclick="openEditModal({{ json_encode($item) }})"
+                                                <button onclick="openEditModal({{ json_encode($item) }}, '{{ route('target.update', $item->id) }}')"
                                                     class="flex items-center justify-center gap-2 w-full px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm">
                                                     Edit
                                                 </button>
@@ -250,86 +248,124 @@
 
         <div id="editModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4" style="background-color: rgba(0,0,0,0.5);">
             <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden">
+                
                 <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
                     <h3 class="text-lg font-bold text-gray-800">Edit Target Kinerja</h3>
-                    <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">✖</button>
+                    <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">✖</button>
                 </div>
-                <form id="editForm" method="POST">
-                    @csrf @method('PUT')
-                    @include('tampilan.partials.form_target') 
+
+                <form id="editForm" method="POST" action="">
+                    @csrf
+                    @method('PUT') @include('tampilan.partials.form_target') 
+
                     <div class="bg-gray-50 px-6 py-4 flex justify-end gap-2 border-t">
-                        <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-white border rounded-lg text-sm">Batal</button>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Update</button>
+                        <button type="button" onclick="closeEditModal()" 
+                            class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50">
+                            Batal
+                        </button>
+                        
+                        <button type="submit" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 shadow-sm">
+                            Update
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
-
     </main>
 
     <script>
-    function openEditModal(data) {
-        const modal = document.getElementById('editModal');
-        const form = document.getElementById('editForm');
-        
-        // Update URL action
-        form.action = `/target/${data.id}`;
+        // Fungsi menerima 2 parameter: data object dan URL update
+        function openEditModal(data, updateUrl) {
+            const modal = document.getElementById('editModal');
+            const form = document.getElementById('editForm');
+            
+            // 1. CEK URL & SET ACTION FORM
+            if (!updateUrl) {
+                alert("Error: URL Update tidak ditemukan. Pastikan Route sudah benar.");
+                console.error("Update URL is missing");
+                return;
+            }
+            // Set Action Form ke URL yang dikirim dari Laravel
+            form.action = updateUrl;
 
-        // 1. Set Input Text Biasa
-        form.querySelector('[name="team_name"]').value = data.team_name;
-        form.querySelector('[name="activity_name"]').value = data.activity_name;
+            // 2. SEMBUNYIKAN BAGIAN GENERATE BULANAN (Opsional)
+            const monthlySection = form.querySelector('.monthly-options-wrapper');
+            if (monthlySection) monthlySection.style.display = 'none';
 
-        // Daftar opsi yang ada di dropdown (harus sama persis dengan di HTML blade)
-        const options = [
-            "Laporan Statistik Kependudukan dan Ketenagakerjaan",
-            "Laporan Statistik Statistik Kesejahteraan Rakyat",
-            "Laporan Statistik Ketahanan Sosial",
-            "Laporan Statistik Tanaman Pangan",
-            "Laporan Statistik Peternakan, Perikanan, dan Kehutanan",
-            "Laporan Statistik Industri",
-            "Laporan Statistik Distribusi",
-            "Laporan Statistik Harga",
-            "Laporan Statistik Keuangan, Teknologi Informasi, dan Pariwisata",
-            "Laporan Neraca Produksi",
-            "Laporan Neraca Pengeluaran",
-            "Laporan Analisis dan Pengembangan Statistik",
-            "Tingkat Penyelenggaraan Pembinaan Statistik Sektoral sesuai Standar",
-            "Indeks Pelayanan Publik - Penilaian Mandiri",
-            "Nilai SAKIP oleh Inspektorat",
-            "Indeks Implementasi BerAKHLAK"
-        ];
+            // 3. ISI DATA INPUT BIASA (Non-Alpine)
+            const teamInput = form.querySelector('[name="team_name"]');
+            if(teamInput) teamInput.value = data.team_name;
+            
+            const activityInput = form.querySelector('[name="activity_name"]');
+            if(activityInput) activityInput.value = data.activity_name;
 
-        // Ambil elemen Alpine
-        const modalAlpine = document.querySelector('#editModal [x-data]');
-        
-        // Logika penentuan dropdown vs lainnya
-        let isOther = !options.includes(data.report_name);
-        
-        // Update variabel Alpine secara manual
-        // Kita akses property __x.$data untuk memanipulasi state Alpine dari luar
-        if(modalAlpine && modalAlpine.__x) {
-            if (isOther) {
-                modalAlpine.__x.$data.selectedReport = 'other';
-                modalAlpine.__x.$data.otherReport = data.report_name;
-            } else {
-                modalAlpine.__x.$data.selectedReport = data.report_name;
-                modalAlpine.__x.$data.otherReport = '';
+            // 4. ISI DATA INPUT ALPINE JS
+            // Helper untuk memicu event input agar Alpine sadar ada perubahan
+            const setAlpineValue = (selector, value) => {
+                const el = form.querySelector(selector);
+                if (el) {
+                    el.value = value;
+                    el.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            };
+
+            // Isi Data Angka
+            setAlpineValue('input[x-model="plan_tahapan"]', data.q1_plan || 0);
+            setAlpineValue('input[x-model="real_tahapan"]', data.q1_real || 0);
+            setAlpineValue('input[x-model="plan_output"]', data.output_plan || 0);
+            setAlpineValue('input[x-model="real_output"]', data.output_real || 0);
+
+            // 5. LOGIKA DROPDOWN SASARAN
+            const options = [
+                "Laporan Statistik Kependudukan dan Ketenagakerjaan",
+                "Laporan Statistik Statistik Kesejahteraan Rakyat",
+                "Laporan Statistik Ketahanan Sosial",
+                "Laporan Statistik Tanaman Pangan",
+                "Laporan Statistik Peternakan, Perikanan, dan Kehutanan",
+                "Laporan Statistik Industri",
+                "Laporan Statistik Distribusi",
+                "Laporan Statistik Harga",
+                "Laporan Statistik Keuangan, Teknologi Informasi, dan Pariwisata",
+                "Laporan Neraca Produksi",
+                "Laporan Neraca Pengeluaran",
+                "Laporan Analisis dan Pengembangan Statistik",
+                "Tingkat Penyelenggaraan Pembinaan Statistik Sektoral sesuai Standar",
+                "Indeks Pelayanan Publik - Penilaian Mandiri",
+                "Nilai SAKIP oleh Inspektorat",
+                "Indeks Implementasi BerAKHLAK"
+            ];
+
+            const selectReport = form.querySelector('[name="report_name_select"]');
+            const manualInput = form.querySelector('[name="report_name_manual"]');
+
+            if (selectReport) {
+                if (options.includes(data.report_name)) {
+                    selectReport.value = data.report_name;
+                    selectReport.dispatchEvent(new Event('change', { bubbles: true }));
+                    if(manualInput) manualInput.value = '';
+                } else {
+                    selectReport.value = 'other';
+                    selectReport.dispatchEvent(new Event('change', { bubbles: true }));
+                    setTimeout(() => {
+                        if(manualInput) {
+                            manualInput.value = data.report_name;
+                            manualInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                    }, 50);
+                }
             }
 
-            // Set variabel tahapan & output
-            modalAlpine.__x.$data.plan_tahapan = data.q1_plan;
-            modalAlpine.__x.$data.real_tahapan = data.q1_real;
-            modalAlpine.__x.$data.plan_output = data.output_plan;
-            modalAlpine.__x.$data.real_output = data.output_real;
+            // Tampilkan Modal
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
         }
 
-        modal.classList.remove('hidden');
-    }
-
-    function closeEditModal() { 
-        document.getElementById('editModal').classList.add('hidden'); 
-    }
-
+        function closeEditModal() { 
+            const modal = document.getElementById('editModal');
+            modal.classList.add('hidden'); 
+            modal.classList.remove('flex');
+        }
     </script>
 </body>
 </html>

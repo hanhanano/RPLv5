@@ -44,8 +44,8 @@
                     </div>
                 </div>
 
-                <div class="max-w-6xl mx-auto mt-6 p-6 bg-white border shadow rounded-lg" x-data="{ uploading: false }">
-                    <!-- Header Section -->
+                <!-- {{-- <div class="max-w-6xl mx-auto mt-6 p-6 bg-white border shadow rounded-lg" x-data="{ uploading: false }">
+                    
                     <div class="flex justify-between items-center mb-4">
                         <div>
                             <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
@@ -69,7 +69,7 @@
                         @endif
                     </div>
 
-                    <!-- Upload Form -->
+                    
                     @if(auth()->check() && in_array(auth()->user()->role, ['ketua_tim', 'admin', 'operator']))
                     <form action="{{ route('publications.uploadFiles', $publication->slug_publication) }}" 
                         method="POST" 
@@ -101,7 +101,6 @@
                                 <p class="text-xs text-gray-400 mt-1">PDF, Excel, Word, ZIP (Max 10MB per file, max 10 files)</p>
                             </div>
 
-                            <!-- Preview file yang dipilih -->
                             <div id="file-preview" class="mt-4 hidden">
                                 <p class="text-sm font-medium text-gray-700 mb-2">File yang akan diupload:</p>
                                 <ul id="file-list" class="space-y-1 text-sm text-gray-600"></ul>
@@ -123,7 +122,6 @@
                     </form>
                     @endif
 
-                    <!-- Daftar File yang Sudah Diupload -->
                     @if($publication->files->count() > 0)
                     <div>
                         <h4 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
@@ -150,9 +148,8 @@
                                         </div>
                                     </div>
 
-                                    <!-- Actions -->
                                     <div class="flex gap-1">
-                                        <!-- Download -->
+                                        
                                         <a href="{{ route('publications.downloadFile', $file->file_id) }}" 
                                         class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
                                         title="Download">
@@ -162,7 +159,6 @@
                                             </svg>
                                         </a>
 
-                                        <!-- Delete (hanya ketua_tim & admin) -->
                                         @if(auth()->check() && in_array(auth()->user()->role, ['ketua_tim', 'admin']))
                                         <button onclick="deleteFile({{ $file->file_id }})"
                                                 class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
@@ -186,7 +182,8 @@
                         <p class="text-sm">Belum ada file publikasi yang diupload</p>
                     </div>
                     @endif
-                </div>
+                </div> 
+                --}} -->
 
                 <div class="grid grid-cols-1 sm:grid-cols-6 gap-2 mb-4 items-center pt-12">
                     <!-- Search -->
@@ -773,55 +770,55 @@
         }
     });
 
-    function updateFileList(input) {
-        const preview = document.getElementById('file-preview');
-        const list = document.getElementById('file-list');
+    // function updateFileList(input) {
+    //     const preview = document.getElementById('file-preview');
+    //     const list = document.getElementById('file-list');
         
-        if (input.files.length > 0) {
-            preview.classList.remove('hidden');
-            list.innerHTML = '';
+    //     if (input.files.length > 0) {
+    //         preview.classList.remove('hidden');
+    //         list.innerHTML = '';
             
-            Array.from(input.files).forEach((file, index) => {
-                const li = document.createElement('li');
-                li.className = 'flex items-center gap-2';
-                li.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4 text-green-600">
-                        <path fill-rule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clip-rule="evenodd" />
-                    </svg>
-                    <span>${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                `;
-                list.appendChild(li);
-            });
-        } else {
-            preview.classList.add('hidden');
-        }
-    }
+    //         Array.from(input.files).forEach((file, index) => {
+    //             const li = document.createElement('li');
+    //             li.className = 'flex items-center gap-2';
+    //             li.innerHTML = `
+    //                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4 text-green-600">
+    //                     <path fill-rule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clip-rule="evenodd" />
+    //                 </svg>
+    //                 <span>${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+    //             `;
+    //             list.appendChild(li);
+    //         });
+    //     } else {
+    //         preview.classList.add('hidden');
+    //     }
+    // }
 
     // Delete file
-    function deleteFile(fileId) {
-        if (!confirm('Yakin ingin menghapus file ini?')) return;
+    // function deleteFile(fileId) {
+    //     if (!confirm('Yakin ingin menghapus file ini?')) return;
 
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    //     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-        fetch(`/publication-files/${fileId}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json',
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                alert('File berhasil dihapus!');
-                location.reload();
-            } else {
-                alert('Gagal menghapus file: ' + data.message);
-            }
-        })
-        .catch(err => {
-            console.error('Error:', err);
-            alert('Terjadi kesalahan saat menghapus file');
-        });
-    }
+    //     fetch(`/publication-files/${fileId}`, {
+    //         method: 'DELETE',
+    //         headers: {
+    //             'X-CSRF-TOKEN': csrfToken,
+    //             'Accept': 'application/json',
+    //         }
+    //     })
+    //     .then(res => res.json())
+    //     .then(data => {
+    //         if (data.success) {
+    //             alert('File berhasil dihapus!');
+    //             location.reload();
+    //         } else {
+    //             alert('Gagal menghapus file: ' + data.message);
+    //         }
+    //     })
+    //     .catch(err => {
+    //         console.error('Error:', err);
+    //         alert('Terjadi kesalahan saat menghapus file');
+    //     });
+    // }
 </script>
