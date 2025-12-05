@@ -46,142 +46,184 @@ class TeamTargetController extends Controller
 
     public function store(Request $request)
     {
-        // 1. Validasi Input
         $request->validate([
-            'team_name'     => 'required|string',
-            'activity_name' => 'required|string', // Nama dasar kegiatan
-            // Validasi nama laporan (bisa dari select atau manual)
-            'report_name_select' => 'nullable|string',
-            'report_name_manual' => 'nullable|string',
-            
-            // Validasi Bulanan
-            'is_monthly'    => 'nullable|boolean',
-            'months'        => 'nullable|array',
-            'months.*'      => 'integer|between:1,12',
-
-            // Angka Target
-            'q1_plan' => 'nullable|numeric', 'output_plan' => 'nullable|numeric',
-            // ... (validasi angka lainnya opsional, default 0)
+            'publication_name'   => 'required|string|max:255|min:3',
+            'publication_report' => 'required|string|max:255|min:3',
+            'publication_pic'    => 'required|string|max:255|min:3',
+            'publication_report_other' => 'nullable|string|max:255|min:3',
+            'is_monthly' => 'nullable|boolean',
+            'months' => 'nullable|array',
+            'months.*' => 'integer|between:1,12',
         ]);
 
-        // 2. Tentukan Nama Laporan (Report Name)
-        $reportName = ($request->report_name_select === 'other') 
-            ? $request->report_name_manual 
-            : $request->report_name_select;
-
-        if (empty($reportName)) {
-            return redirect()->back()->with('error', 'Nama Sasaran/Laporan wajib diisi!');
+        $user = auth()->user();
+    
+        // Cek permission user
+        if (in_array($user->role, ['ketua_tim', 'operator'])) {
+            if ($request->publication_pic !== $user->team) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Anda tidak memiliki akses untuk membuat publikasi pada tim ini.');
+            }
         }
 
-        DB::beginTransaction(); // Mulai Transaksi Database
+        $publicationReport = $request->publication_report === 'other'
+            ? $request->publication_report_other
+            : $request->publication_report;
+
+        \DB::beginTransaction();
 
         try {
-            $user = Auth::user();
-            
+            // LOGIKA GENERATE BULANAN
             if ($request->has('is_monthly') && $request->has('months') && is_array($request->months)) {
                 
-                $year = now()->year;
-                $countCreated = 0;
-
-                foreach ($request->months as $monthNum) {
-                    $monthName = $this->getMonthName($monthNum);
-                    
-                    // A. Buat Nama Kegiatan Unik: "Sakernas - Januari 2025"
-                    $fullActivityName = $request->activity_name . ' - ' . $monthName . ' ' . $year;
-
-                    // B. Otomatis Buat Publikasi di Dashboard
-                    $pub = Publication::create([
-                        'publication_name'   => $fullActivityName,
-                        'publication_report' => $reportName,
-                        'publication_pic'    => $request->team_name, // PIC sesuai Tim yg dipilih
-                        'fk_user_id'         => $user->id,
-                        'is_monthly'         => 1,
-                        'slug_publication'   => Str::uuid(),
-                    ]);
-
-                    // C. Buat Default Step di Publikasi (Opsional, agar user senang sudah ada isinya)
-                    $this->createDefaultStep($pub->publication_id, $request->activity_name, $monthName, $year);
-
-                    // D. Buat Target Kinerja yang Terhubung ke Publikasi Tadi
-                    TeamTarget::create([
-                        'team_name'     => $request->team_name,
-                        'report_name'   => $reportName, // Backup nama
-                        'activity_name' => $fullActivityName,
-                        'publication_id'=> $pub->publication_id, // <--- KUNCI PENGHUBUNG
-                        
-                        // Copy data angka target (sama untuk semua bulan)
-                        'q1_plan' => $request->q1_plan ?? 0, 'q2_plan' => $request->q2_plan ?? 0,
-                        'q3_plan' => $request->q3_plan ?? 0, 'q4_plan' => $request->q4_plan ?? 0,
-                        'q1_real' => $request->q1_real ?? 0, 'q2_real' => $request->q2_real ?? 0,
-                        'q3_real' => $request->q3_real ?? 0, 'q4_real' => $request->q4_real ?? 0,
-                        'output_plan' => $request->output_plan ?? 0,
-                        'output_real' => $request->output_real ?? 0,
-                    ]);
-                    
-                    $countCreated++;
-                }
-
-                $msg = "Berhasil membuat $countCreated Target & Publikasi Bulanan!";
-            
-            } else {
+                // Panggil fungsi helper yang SUDAH DIPERBAIKI (ada di bawah)
+                $this->generateMonthlyPublications(
+                    $request->publication_name,
+                    $publicationReport,
+                    $request->publication_pic,
+                    $request->months
+                );
                 
-                // A. Buat Publikasi
-                $pub = Publication::create([
-                    'publication_name'   => $request->activity_name,
-                    'publication_report' => $reportName,
-                    'publication_pic'    => $request->team_name,
-                    'fk_user_id'         => $user->id,
+                $successMessage = count($request->months) . ' publikasi bulanan berhasil ditambahkan!';
+
+            } else {
+                // LOGIKA PUBLIKASI TUNGGAL (Manual)
+                
+                // 1. Simpan ke tabel PUBLICATIONS dan ambil ID-nya
+                $publicationId = \DB::table('publications')->insertGetId([
+                    'publication_name'   => $request->publication_name,
+                    'publication_report' => $publicationReport,
+                    'publication_pic'    => $request->publication_pic,
+                    'fk_user_id'         => Auth::id(),
                     'is_monthly'         => 0,
-                    'slug_publication'   => Str::uuid(),
+                    'slug_publication'   => \Str::uuid(),
+                    'created_at'         => now(),
+                    'updated_at'         => now(),
                 ]);
 
-                // B. Buat Target
+                // 2. [PENTING] Simpan juga ke tabel TEAM_TARGETS agar muncul di tabel
                 TeamTarget::create([
-                    'team_name'     => $request->team_name,
-                    'report_name'   => $reportName,
-                    'activity_name' => $request->activity_name,
-                    'publication_id'=> $pub->publication_id, // Terhubung!
-                    
-                    // Angka Target
-                    'q1_plan' => $request->input('q1_plan', 0), 'q2_plan' => $request->input('q2_plan', 0),
-                    'q3_plan' => $request->input('q3_plan', 0), 'q4_plan' => $request->input('q4_plan', 0),
-                    'q1_real' => $request->input('q1_real', 0), 'q2_real' => $request->input('q2_real', 0),
-                    'q3_real' => $request->input('q3_real', 0), 'q4_real' => $request->input('q4_real', 0),
-                    'output_plan' => $request->input('output_plan', 0),
-                    'output_real' => $request->input('output_real', 0),
+                    'team_name'      => $request->publication_pic,
+                    'activity_name'  => $request->publication_name,
+                    'report_name'    => $publicationReport,
+                    'publication_id' => $publicationId, // Relasi ke publikasi
+                    // Inisialisasi nilai 0
+                    'q1_plan' => 0, 'q2_plan' => 0, 'q3_plan' => 0, 'q4_plan' => 0,
+                    'q1_real' => 0, 'q2_real' => 0, 'q3_real' => 0, 'q4_real' => 0,
+                    'output_plan' => 0, 'output_real' => 0
                 ]);
 
-                $msg = "Data Target & Publikasi berhasil ditambahkan!";
+                $successMessage = 'Publikasi berhasil ditambahkan!';
             }
 
-            DB::commit();
-            return redirect()->back()->with('success', $msg);
-
+            \DB::commit();
+            
+            // Redirect kembali ke halaman index (target)
+            return redirect()->route('target.index') 
+                ->with('success', $successMessage);
+            
         } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            \DB::rollBack();
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Gagal menambahkan publikasi: ' . $e->getMessage());
         }
     }
 
-    // --- HELPER FUNCTION (Copy dari PublicationController agar mandiri) ---
+    // --- HELPER FUNCTION ---
     private function getMonthName($monthNumber)
     {
-        $months = [1=>'Januari', 2=>'Februari', 3=>'Maret', 4=>'April', 5=>'Mei', 6=>'Juni', 
-                   7=>'Juli', 8=>'Agustus', 9=>'September', 10=>'Oktober', 11=>'November', 12=>'Desember'];
+        $months = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 
+            4 => 'April', 5 => 'Mei', 6 => 'Juni', 
+            7 => 'Juli', 8 => 'Agustus', 9 => 'September', 
+            10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
         return $months[$monthNumber] ?? '';
     }
 
-    private function createDefaultStep($pubId, $baseName, $monthName, $year)
+    private function generateMonthlyPublications($baseName, $report, $pic, array $months)
     {
-        DB::table('steps_plans')->insert([
-            'publication_id'    => $pubId,
-            'plan_type'         => 'monthly',
-            'plan_name'         => "Kegiatan $baseName - $monthName $year",
-            'plan_start_date'   => now()->format('Y-m-d'), // Tanggal dummy
+        $currentYear = now()->year;
+
+        foreach ($months as $monthNumber) {
+            $monthNumber = (int)$monthNumber;
+
+            // Hitung Tanggal Otomatis
+            $targetDate = \Carbon\Carbon::create($currentYear, $monthNumber, 1);
+            $startDate = $targetDate->copy()->startOfMonth()->format('Y-m-d');
+            $endDate = $targetDate->copy()->endOfMonth()->format('Y-m-d');
+
+            $year = $targetDate->year;
+            $month = $targetDate->month;
+            $monthName = $this->getMonthName($month);
+            
+            // Nama Kegiatan per Bulan
+            $publicationName = $baseName . ' - ' . $monthName . ' ' . $year;
+
+            // 1. Insert ke Tabel PUBLICATIONS
+            $publicationId = \DB::table('publications')->insertGetId([
+                'publication_name'   => $publicationName,
+                'publication_report' => $report,
+                'publication_pic'    => $pic,
+                'fk_user_id'         => Auth::id(),
+                'is_monthly'         => 1,
+                'slug_publication'   => \Str::uuid(),
+                'created_at'         => now(),
+                'updated_at'         => now(),
+            ]);
+
+            // 2. [PENTING] Insert ke Tabel TEAM_TARGETS agar muncul di list
+            TeamTarget::create([
+                'team_name'      => $pic,
+                'activity_name'  => $publicationName,
+                'report_name'    => $report,
+                'publication_id' => $publicationId, // Relasi
+                // Inisialisasi nilai 0
+                'q1_plan' => 0, 'q2_plan' => 0, 'q3_plan' => 0, 'q4_plan' => 0,
+                'q1_real' => 0, 'q2_real' => 0, 'q3_real' => 0, 'q4_real' => 0,
+                'output_plan' => 0, 'output_real' => 0
+            ]);
+            
+            // 3. Buat Tahapan Otomatis
+            $this->createDefaultStep($publicationId, $baseName, $monthName, $year, $startDate, $endDate);
+        }
+    }
+    
+    /**
+     * Helper: Buat Tahapan Default dengan Tanggal yang sudah dihitung
+     */
+    private function createDefaultStep($publicationId, $baseName, $monthName, $year, $startDate, $endDate)
+    {
+        $planName = "Kegiatan " . $baseName . ' - ' . $monthName . ' ' . $year;
+        
+        \DB::table('steps_plans')->insert([
+            'publication_id'    => $publicationId, // Perbaikan: Sebelumnya $pubId (Error undefined)
+            'plan_type'         => 'pengumpulan data', 
+            'plan_name'         => $planName,
+            
+            // Masukkan tanggal otomatis di sini
+            'plan_start_date'   => $startDate, 
+            'plan_end_date'     => $endDate,
+            
+            'plan_desc'         => "Tahapan kegiatan $baseName bulan $monthName $year",
             'created_at'        => now(),
             'updated_at'        => now(),
         ]);
     }
+
+    // private function createDefaultStep($pubId, $baseName, $monthName, $year)
+    // {
+    //     DB::table('steps_plans')->insert([
+    //         'publication_id'    => $pubId,
+    //         'plan_type'         => 'monthly',
+    //         'plan_name'         => "Kegiatan $baseName - $monthName $year",
+    //         'plan_start_date'   => now()->format('Y-m-d'), // Tanggal dummy
+    //         'created_at'        => now(),
+    //         'updated_at'        => now(),
+    //     ]);
+    // }
     
     // ... Function Update & Destroy tetap ada ...
     public function update(Request $request, $id) 
@@ -235,14 +277,37 @@ class TeamTargetController extends Controller
         return redirect()->back()->with('success', 'Data berhasil diupdate');
     }
 
-    public function destroy($id) {
-        $target = TeamTarget::findOrFail($id);
-        
-        if ($target->publication) {
-            $target->publication->delete(); // Hapus publikasi terkait
+    public function destroy($id) 
+    {
+        \DB::beginTransaction(); // Gunakan transaksi agar aman
+        try {
+            // Load target beserta relasi publikasinya
+            $target = TeamTarget::with('publication')->findOrFail($id);
+            
+            if ($target->publication) {
+                // 1. Hapus Tahapan (StepsPlans) terkait Publikasi ini terlebih dahulu
+                // Ini penting agar tidak terkena Foreign Key Constraint Error
+                $target->publication->stepsPlans()->delete();
+
+                // 2. Hapus File (jika ada relasinya di model Publication)
+                if (method_exists($target->publication, 'files')) {
+                    $target->publication->files()->delete();
+                }
+                
+                // 3. Setelah 'anak-anaknya' bersih, baru hapus Publikasi induknya
+                $target->publication->delete(); 
+            }
+            
+            // 4. Terakhir, hapus data TeamTarget itu sendiri
+            $target->delete();
+
+            \DB::commit(); // Commit perubahan ke database
+            return redirect()->back()->with('success', 'Data Target & Publikasi berhasil dihapus');
+
+        } catch (\Exception $e) {
+            \DB::rollBack(); // Batalkan semua jika ada error
+            \Log::error('Gagal menghapus target: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
         }
-        
-        $target->delete();
-        return redirect()->back()->with('success', 'Data Target & Publikasi berhasil dihapus');
     }
 }

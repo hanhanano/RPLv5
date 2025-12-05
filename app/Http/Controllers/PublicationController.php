@@ -409,97 +409,76 @@ class PublicationController extends Controller
         return view('publications.create', compact('users'));
     }
 
-    // public function store(Request $request)
-    // {
-    //     $request->validate([
-    //         'publication_name'   => 'required|string|max:255|min:3|regex:/^[^<>`]+$/',
-    //         'publication_report' => 'required|string|max:255|min:3|regex:/^[^<>`]+$/',
-    //         'publication_pic'    => 'required|string|max:255|min:3|regex:/^[^<>`]+$/',
-    //         'publication_report_other' => 'nullable|string|max:255|min:3|regex:/^[^<>`]+$/',
-    //         'is_monthly' => 'nullable|boolean',
-    //         'months' => 'nullable|array',
-    //         'months.*' => 'integer|between:1,12',
-    //     ],
-    //     [
-    //         'publication_name.regex' => 'Nama publikasi tidak boleh mengandung karakter aneh seperti <, >, atau `.',
-    //         'publication_report.regex' => 'Laporan publikasi tidak boleh mengandung karakter aneh seperti <, >, atau `.',
-    //         'publication_pic.regex' => 'PIC tidak boleh mengandung karakter aneh seperti <, >, atau `.',
-    //     ]);
+    public function store(Request $request)
+    {
+        $request->validate([
+            'publication_name'   => 'required|string|max:255|min:3',
+            'publication_report' => 'required|string|max:255|min:3',
+            'publication_pic'    => 'required|string|max:255|min:3',
+            'publication_report_other' => 'nullable|string|max:255|min:3',
+            'is_monthly' => 'nullable|boolean',
+            'months' => 'nullable|array',
+            'months.*' => 'integer|between:1,12',
+        ]);
 
-    //     $user = auth()->user();
+        $user = auth()->user();
     
-    //     if (in_array($user->role, ['ketua_tim', 'operator'])) {
-    //         if ($request->publication_pic !== $user->team) {
-    //             return redirect()->back()
-    //                 ->withInput()
-    //                 ->with('error', 'Anda tidak memiliki akses untuk membuat publikasi pada tim ini.');
-    //         }
-    //     }
+        // Cek permission user (sesuai logika Anda)
+        if (in_array($user->role, ['ketua_tim', 'operator'])) {
+            if ($request->publication_pic !== $user->team) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Anda tidak memiliki akses untuk membuat publikasi pada tim ini.');
+            }
+        }
 
-    //     $publicationReport = $request->publication_report === 'other'
-    //         ? $request->publication_report_other
-    //         : $request->publication_report;
+        $publicationReport = $request->publication_report === 'other'
+            ? $request->publication_report_other
+            : $request->publication_report;
 
-    //     \DB::beginTransaction();
+        \DB::beginTransaction();
 
-    //     try {
-    //         if ($request->has('is_monthly') && $request->has('months') && is_array($request->months)) {
-    //             \Log::info('Creating ' . count($request->months) . ' monthly publications', [
-    //                 'user' => $user->name,
-    //                 'team' => $user->team,
-    //                 'pic' => $request->publication_pic,
-    //                 'months' => $request->months
-    //             ]);
+        try {
+            // LOGIKA GENERATE BULANAN
+            if ($request->has('is_monthly') && $request->has('months') && is_array($request->months)) {
                 
-    //             $this->generateMonthlyPublications(
-    //                 $request->publication_name,
-    //                 $publicationReport,
-    //                 $request->publication_pic,
-    //                 $request->months
-    //             );
+                // Panggil fungsi helper generateMonthlyPublications
+                $this->generateMonthlyPublications(
+                    $request->publication_name,
+                    $publicationReport,
+                    $request->publication_pic,
+                    $request->months
+                );
                 
-    //             $successMessage = count($request->months) . ' publikasi bulanan berhasil ditambahkan!';
-    //         } else {
-    //             \Log::info('Creating single publication', [
-    //                 'user' => $user->name,
-    //                 'team' => $user->team,
-    //                 'pic' => $request->publication_pic,
-    //                 'name' => $request->publication_name
-    //             ]);
+                $successMessage = count($request->months) . ' publikasi bulanan berhasil ditambahkan!';
+            } else {
+                // LOGIKA PUBLIKASI TUNGGAL (Manual)
+                \DB::table('publications')->insert([
+                    'publication_name'   => $request->publication_name,
+                    'publication_report' => $publicationReport,
+                    'publication_pic'    => $request->publication_pic,
+                    'fk_user_id'         => Auth::id(),
+                    'is_monthly'         => 0,
+                    'slug_publication'   => \Str::uuid(),
+                    'created_at'         => now(),
+                    'updated_at'         => now(),
+                ]);
 
-    //             \DB::table('publications')->insert([
-    //                 'publication_name'   => $request->publication_name,
-    //                 'publication_report' => $publicationReport,
-    //                 'publication_pic'    => $request->publication_pic,
-    //                 'fk_user_id'         => Auth::id(),
-    //                 'is_monthly'         => 0,
-    //                 'slug_publication'   => \Str::uuid(),
-    //                 'created_at'         => now(),
-    //                 'updated_at'         => now(),
-    //             ]);
+                $successMessage = 'Publikasi berhasil ditambahkan!';
+            }
 
-    //             \Log::info('Single publication created successfully');
-    //             $successMessage = 'Publikasi berhasil ditambahkan!';
-    //         }
-
-    //         \DB::commit();
+            \DB::commit();
             
-    //         return redirect()->route('daftarpublikasi')
-    //             ->with('success', $successMessage);
+            return redirect()->route('daftarpublikasi') // Pastikan route ini ada
+                ->with('success', $successMessage);
             
-    //     } catch (\Exception $e) {
-    //         \DB::rollBack();
-    //         \Log::error('Error creating publication: ' . $e->getMessage(), [
-    //             'user' => $user->name,
-    //             'team' => $user->team,
-    //             'trace' => $e->getTraceAsString()
-    //         ]);
-            
-    //         return redirect()->back()
-    //             ->withInput()
-    //             ->with('error', 'Gagal menambahkan publikasi: ' . $e->getMessage());
-    //     }
-    // }
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Gagal menambahkan publikasi: ' . $e->getMessage());
+        }
+    }
 
     public function update(Request $request, Publication $publication)
     {        
@@ -824,17 +803,24 @@ class PublicationController extends Controller
         
         foreach ($months as $monthNumber) {
             $monthNumber = (int)$monthNumber;
+            
+            // Membuat objek Carbon berdasarkan tahun ini, bulan yang dipilih, tanggal 1
             $targetDate = \Carbon\Carbon::create($currentYear, $monthNumber, 1);
             
             $year = $targetDate->year;
             $month = $targetDate->month;
             $monthName = $this->getMonthName($month);
             
+            // Nama Publikasi
             $publicationName = $baseName . ' - ' . $monthName . ' ' . $year;
+
+            // === BAGIAN UTAMA PERMINTAAN ANDA ===
+            // Otomatis set tanggal 1
             $startDate = $targetDate->copy()->startOfMonth()->format('Y-m-d');
+            // Otomatis set tanggal terakhir (28/29/30/31)
             $endDate = $targetDate->copy()->endOfMonth()->format('Y-m-d');
             
-            // Insert publikasi baru
+            // Insert data Publikasi Utama
             $publicationId = \DB::table('publications')->insertGetId([
                 'publication_name'   => $publicationName,
                 'publication_report' => $report,
@@ -846,8 +832,7 @@ class PublicationController extends Controller
                 'updated_at'         => now(),
             ]);
             
-            \Log::info("Monthly publication created: $publicationName (ID: $publicationId)");
-            
+            // Panggil fungsi untuk membuat Tahapan Rencana Otomatis
             $this->createDefaultStep($publicationId, $baseName, $monthName, $year, $startDate, $endDate);
         }
     }
@@ -869,16 +854,14 @@ class PublicationController extends Controller
         
         \DB::table('steps_plans')->insert([
             'publication_id'    => $publicationId,
-            'plan_type'         => 'monthly',
+            'plan_type'         => 'pengumpulan data', 
             'plan_name'         => $planName,
-            'plan_start_date'   => $startDate,
-            'plan_end_date'     => $endDate,
+            'plan_start_date'   => $startDate, // Ini akan terisi tanggal 1
+            'plan_end_date'     => $endDate,   // Ini akan terisi tanggal terakhir bulan
             'plan_desc'         => 'Tahapan kegiatan ' . $baseName . ' bulan ' . $monthName . ' ' . $year,
             'created_at'        => now(),
             'updated_at'        => now(),
         ]);
-        
-        \Log::info("Default step created for publication ID $publicationId: $planName");
     }
 
     /**
