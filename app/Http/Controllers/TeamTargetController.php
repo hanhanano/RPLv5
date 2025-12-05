@@ -77,7 +77,6 @@ class TeamTargetController extends Controller
             // LOGIKA GENERATE BULANAN
             if ($request->has('is_monthly') && $request->has('months') && is_array($request->months)) {
                 
-                // Panggil fungsi helper yang SUDAH DIPERBAIKI (ada di bawah)
                 $this->generateMonthlyPublications(
                     $request->publication_name,
                     $publicationReport,
@@ -90,44 +89,58 @@ class TeamTargetController extends Controller
             } else {
                 // LOGIKA PUBLIKASI TUNGGAL (Manual)
                 
-                // 1. Simpan ke tabel PUBLICATIONS dan ambil ID-nya
+                // 1. Simpan ke tabel PUBLICATIONS
                 $publicationId = \DB::table('publications')->insertGetId([
                     'publication_name'   => $request->publication_name,
                     'publication_report' => $publicationReport,
                     'publication_pic'    => $request->publication_pic,
-                    'fk_user_id'         => Auth::id(),
+                    'fk_user_id'         => \Illuminate\Support\Facades\Auth::id(),
                     'is_monthly'         => 0,
                     'slug_publication'   => \Str::uuid(),
                     'created_at'         => now(),
                     'updated_at'         => now(),
                 ]);
 
-                // 2. [PENTING] Simpan juga ke tabel TEAM_TARGETS agar muncul di tabel
+                // 2. [PERBAIKAN DISINI] Simpan ke tabel TEAM_TARGETS
+                // Tambahkan output_real_q1 s.d q4 yang sebelumnya tertinggal
                 TeamTarget::create([
                     'team_name'      => $request->publication_pic,
                     'activity_name'  => $request->publication_name,
                     'report_name'    => $publicationReport,
-                    'publication_id' => $publicationId, // Relasi ke publikasi
-                    // Inisialisasi nilai 0
-                    'q1_plan' => 0, 'q2_plan' => 0, 'q3_plan' => 0, 'q4_plan' => 0,
-                    'q1_real' => 0, 'q2_real' => 0, 'q3_real' => 0, 'q4_real' => 0,
-                    'output_plan' => 0, 'output_real' => 0
+                    'publication_id' => $publicationId,
+                    
+                    // -- Data Tahapan (Plan) --
+                    'q1_plan' => $request->input('q1_plan', 0), 
+                    'q2_plan' => $request->input('q2_plan', 0),
+                    'q3_plan' => $request->input('q3_plan', 0), 
+                    'q4_plan' => $request->input('q4_plan', 0),
+                    
+                    // -- Data Tahapan (Realisasi) --
+                    'q1_real' => $request->input('q1_real', 0), 
+                    'q2_real' => $request->input('q2_real', 0),
+                    'q3_real' => $request->input('q3_real', 0), 
+                    'q4_real' => $request->input('q4_real', 0),
+                    
+                    // -- Data Output --
+                    'output_plan' => $request->input('output_plan', 0),
+                    'output_real' => $request->input('output_real', 0), // Total
+
+                    // [INI YANG KURANG] Simpan Rincian Output Per Triwulan
+                    'output_real_q1' => $request->input('output_real_q1', 0),
+                    'output_real_q2' => $request->input('output_real_q2', 0),
+                    'output_real_q3' => $request->input('output_real_q3', 0),
+                    'output_real_q4' => $request->input('output_real_q4', 0),
                 ]);
 
                 $successMessage = 'Publikasi berhasil ditambahkan!';
             }
 
             \DB::commit();
-            
-            // Redirect kembali ke halaman index (target)
-            return redirect()->route('target.index') 
-                ->with('success', $successMessage);
+            return redirect()->route('target.index')->with('success', $successMessage);
             
         } catch (\Exception $e) {
             \DB::rollBack();
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Gagal menambahkan publikasi: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Gagal menambahkan: ' . $e->getMessage());
         }
     }
 
@@ -174,23 +187,40 @@ class TeamTargetController extends Controller
                 'updated_at'         => now(),
             ]);
 
-            // 2. [PENTING] Insert ke Tabel TEAM_TARGETS agar muncul di list
             TeamTarget::create([
-                'team_name'      => $pic,
-                'activity_name'  => $publicationName,
-                'report_name'    => $report,
-                'publication_id' => $publicationId, // Relasi
-                // Inisialisasi nilai 0
-                'q1_plan' => 0, 'q2_plan' => 0, 'q3_plan' => 0, 'q4_plan' => 0,
-                'q1_real' => 0, 'q2_real' => 0, 'q3_real' => 0, 'q4_real' => 0,
-                'output_plan' => 0, 'output_real' => 0
+                'team_name'      => $request->publication_pic,
+                'activity_name'  => $request->publication_name,
+                'report_name'    => $publicationReport,
+                'publication_id' => $publicationId,
+                
+                // -- Data Tahapan (Plan/Target) --
+                'q1_plan' => $request->input('q1_plan', 0), 
+                'q2_plan' => $request->input('q2_plan', 0),
+                'q3_plan' => $request->input('q3_plan', 0), 
+                'q4_plan' => $request->input('q4_plan', 0),
+                
+                // -- Data Tahapan (Realisasi) - WAJIB DIAMBIL DARI REQUEST --
+                'q1_real' => $request->input('q1_real', 0), 
+                'q2_real' => $request->input('q2_real', 0),
+                'q3_real' => $request->input('q3_real', 0), 
+                'q4_real' => $request->input('q4_real', 0),
+                
+                // -- Data Output --
+                'output_plan' => $request->input('output_plan', 0),
+                'output_real' => $request->input('output_real', 0), // Ini Total
+
+                // [BARU] Simpan Rincian Per Triwulan
+                'output_real_q1' => $request->input('output_real_q1', 0),
+                'output_real_q2' => $request->input('output_real_q2', 0),
+                'output_real_q3' => $request->input('output_real_q3', 0),
+                'output_real_q4' => $request->input('output_real_q4', 0),
             ]);
             
             // 3. Buat Tahapan Otomatis
             $this->createDefaultStep($publicationId, $baseName, $monthName, $year, $startDate, $endDate);
         }
     }
-    
+
     /**
      * Helper: Buat Tahapan Default dengan Tanggal yang sudah dihitung
      */
@@ -228,49 +258,55 @@ class TeamTargetController extends Controller
     // ... Function Update & Destroy tetap ada ...
     public function update(Request $request, $id) 
     {
-        // 1. Tentukan Nama Laporan (Sama seperti logika di STORE)
-        // Ambil dari select, jika 'other' ambil dari input manual
-        $reportName = ($request->report_name_select === 'other') 
-            ? $request->report_name_manual 
-            : $request->report_name_select;
+        // 1. Tentukan Nama Laporan (Ambil dari Select atau Input Manual)
+        $reportName = ($request->publication_report === 'other') 
+            ? $request->publication_report_other 
+            : $request->publication_report;
 
-        // Validasi sederhana agar tidak Error SQL Column cannot be null
+        // Validasi agar tidak null jika user tidak memilih apa-apa
         if (empty($reportName)) {
-            // Jika kosong, kita coba ambil data lama agar aman, atau set default
             $targetLama = TeamTarget::find($id);
             $reportName = $targetLama->report_name ?? '-'; 
         }
 
         $target = TeamTarget::findOrFail($id);
 
-        // 2. Update Data Target
-        // Kita tidak bisa pakai $request->except() mentah-mentah karena nama field beda
+        // 2. Update Tabel Target Kinerja
         $target->update([
-            'team_name'     => $request->team_name,
-            'activity_name' => $request->activity_name,
-            'report_name'   => $reportName, // <--- Ini yang bikin error 500 sebelumnya jika tidak diset
+            'team_name'     => $request->publication_pic,   // SESUAIKAN DENGAN FORM (publication_pic)
+            'activity_name' => $request->publication_name,  // SESUAIKAN DENGAN FORM (publication_name)
+            'report_name'   => $reportName,
             
-            // Update Angka (Gunakan input(), jika null dianggap data lama atau 0)
+            // Tahapan Plan
             'q1_plan' => $request->input('q1_plan', 0), 
             'q2_plan' => $request->input('q2_plan', 0),
             'q3_plan' => $request->input('q3_plan', 0), 
             'q4_plan' => $request->input('q4_plan', 0),
             
+            // Tahapan Realisasi
             'q1_real' => $request->input('q1_real', 0), 
             'q2_real' => $request->input('q2_real', 0),
             'q3_real' => $request->input('q3_real', 0), 
             'q4_real' => $request->input('q4_real', 0),
             
+            // Output
             'output_plan' => $request->input('output_plan', 0),
             'output_real' => $request->input('output_real', 0),
-        ]); 
+
+            // Rincian Output Per Triwulan
+            'output_real_q1' => $request->input('output_real_q1', 0),
+            'output_real_q2' => $request->input('output_real_q2', 0),
+            'output_real_q3' => $request->input('output_real_q3', 0),
+            'output_real_q4' => $request->input('output_real_q4', 0),
+        ]);
         
-        // 3. Update Publikasi Terkait (Jika Ada)
+        // 3. Update Publikasi Terkait (INI PENYEBAB ERRORNYA)
+        // Sebelumnya Anda pakai $request->activity_name yang kosong/null
         if($target->publication) {
             $target->publication->update([
-                'publication_name'   => $request->activity_name,
-                'publication_report' => $reportName, // Update nama laporan di publikasi juga
-                'publication_pic'    => $request->team_name,
+                'publication_name'   => $request->publication_name, // GANTI INI
+                'publication_report' => $reportName,
+                'publication_pic'    => $request->publication_pic,  // GANTI INI
             ]);
         }
         

@@ -35,10 +35,10 @@ class PublicationController extends Controller
         }
 
         $publications = $query->get();
-
         $rekapPublikasiTahunan = $this->getStatistikPublikasiTahunan($user);
         
         foreach ($publications as $publication) {
+            // Inisialisasi Array 0
             $rekapPlans = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
             $rekapFinals = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
             $lintasTriwulan = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
@@ -49,59 +49,49 @@ class PublicationController extends Controller
             $listFinals = [1 => [], 2 => [], 3 => [], 4 => []];
             $listLintas = [1 => [], 2 => [], 3 => [], 4 => []];
 
-            // Hitung total tahapan per quarter (untuk kumulatif)
             foreach ($publication->stepsPlans as $plan) {
+                // [PERBAIKAN 1] LOGIKA PLAN: Hapus Loop Kumulatif
                 $q = getQuarter($plan->plan_start_date);
-                
                 if ($q) {
-                    for ($i = $q; $i <= 4; $i++) {
-                        $rekapPlans[$i]++;
-                        $listPlans[$i][] = $plan->plan_name;
-                    }
+                    $rekapPlans[$q]++; // Hanya tambah di Q tersebut
+                    $listPlans[$q][] = $plan->plan_name;
                 }
                 
+                // [PERBAIKAN 2] LOGIKA REALISASI: Hapus Loop Kumulatif
                 if ($plan->stepsFinals) {
                     $fq = getQuarter($plan->stepsFinals->actual_started);
                     
                     if ($fq) {
-                        for ($i = $fq; $i <= 4; $i++) {
-                            $rekapFinals[$i]++;
-                            $listFinals[$i][] = $plan->plan_name;
-                        }
+                        $rekapFinals[$fq]++; // Hanya tambah di Q tersebut
+                        $listFinals[$fq][] = $plan->plan_name;
 
-                        // Cek tepat waktu atau terlambat
+                        // Cek Tepat Waktu / Terlambat
                         if ($q && $fq <= $q) {
-                            // Tepat waktu: tambahkan ke quarter realisasi dan setelahnya
-                            for ($i = $fq; $i <= 4; $i++) {
-                                $tepatWaktu[$i]++;
-                            }
+                            $tepatWaktu[$fq]++;
                         } else {
-                            // Terlambat: tambahkan ke quarter realisasi dan setelahnya
-                            for ($i = $fq; $i <= 4; $i++) {
-                                $terlambat[$i]++;
-                                $lintasTriwulan[$i]++;
-                                
-                                // Detail lintas triwulan hanya ditambahkan sekali di quarter realisasi
-                                if ($i == $fq) {
-                                    $listLintas[$i][] = [
-                                        'plan_name' => $plan->plan_name,
-                                        'from_quarter' => $q,
-                                        'to_quarter' => $fq,
-                                        'delay' => getDelayQuarters($q, $fq)
-                                    ];
-                                }
-                            }
+                            $terlambat[$fq]++;
+                            $lintasTriwulan[$fq]++;
+                            
+                            $listLintas[$fq][] = [
+                                'plan_name' => $plan->plan_name,
+                                'from_quarter' => $q,
+                                'to_quarter' => $fq,
+                                'delay' => getDelayQuarters($q, $fq)
+                            ];
                         }
                     }
                 }        
             }
 
-            // Hitung progress kumulatif (tetap sama)
+            // [PERBAIKAN 3] Hitung Total menggunakan array_sum (karena data sekarang pecahan)
             $totalPlans = array_sum($rekapPlans);
             $totalFinals = array_sum($rekapFinals);
-            $progressKumulatif = ($totalPlans > 0) ? ($totalFinals / $totalPlans) * 100 : 0;
+            
+            $publication->progressKumulatif = ($totalPlans > 0) 
+                ? ($totalFinals / $totalPlans) * 100 
+                : 0;
 
-            // Progress per triwulan (kumulatif)
+            // Progress per triwulan
             $progressTriwulan = [];
             foreach ([1, 2, 3, 4] as $q) {
                 if ($rekapPlans[$q] > 0) {
@@ -116,14 +106,13 @@ class PublicationController extends Controller
             $publication->lintasTriwulan = $lintasTriwulan;
             $publication->tepatWaktu = $tepatWaktu;
             $publication->terlambat = $terlambat;
-            $publication->progressKumulatif = $progressKumulatif;
             $publication->progressTriwulan = $progressTriwulan;
             $publication->listPlans = $listPlans;
             $publication->listFinals = $listFinals;
             $publication->listLintas = $listLintas;
         }
 
-        // Hitung chart data (kumulatif)
+        // Hitung Data Grafik
         $chartPlans = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
         $chartFinals = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
         $chartTepatWaktu = [1 => 0, 2 => 0, 3 => 0, 4 => 0]; 
@@ -141,18 +130,15 @@ class PublicationController extends Controller
             $pic = $publication->publication_pic;
             if (!isset($chartPerTim[$pic])) {
                 $chartPerTim[$pic] = [
-                    'plans' => 0,
-                    'finals' => 0,
-                    'tepat_waktu' => 0,
-                    'terlambat' => 0
+                    'plans' => 0, 'finals' => 0, 'tepat_waktu' => 0, 'terlambat' => 0
                 ];
             }
             
-            // Gunakan data Triwulan 4 (kumulatif maksimal)
-            $chartPerTim[$pic]['plans'] += $publication->rekapPlans[4];
-            $chartPerTim[$pic]['finals'] += $publication->rekapFinals[4];
-            $chartPerTim[$pic]['tepat_waktu'] += $publication->tepatWaktu[4];
-            $chartPerTim[$pic]['terlambat'] += $publication->terlambat[4];
+            // [PERBAIKAN 4] Hitung total tim pakai array_sum
+            $chartPerTim[$pic]['plans'] += array_sum($publication->rekapPlans);
+            $chartPerTim[$pic]['finals'] += array_sum($publication->rekapFinals);
+            $chartPerTim[$pic]['tepat_waktu'] += array_sum($publication->tepatWaktu);
+            $chartPerTim[$pic]['terlambat'] += array_sum($publication->terlambat);
         }
         
         $dataGrafikBatang = [
@@ -175,8 +161,8 @@ class PublicationController extends Controller
         $dataRingSummary = [
             'publikasiSelesai' => $rekapPublikasiTahunan['sudahSelesai'] ?? 0,
             'totalPublikasi' => $rekapPublikasiTahunan['total'] ?? 0,
-            'tahapanSelesai' => $chartFinals[4], // Gunakan kumulatif Q4
-            'totalTahapan' => $chartPlans[4], // Gunakan kumulatif Q4
+            'tahapanSelesai' => array_sum($chartFinals), // Total semua Q
+            'totalTahapan' => array_sum($chartPlans),    // Total semua Q
         ];
 
         $dataGrafikRing = [
@@ -204,16 +190,11 @@ class PublicationController extends Controller
             $r = $rencanaArray[$i];
             $f = $realisasiArray[$i];
             $percent = ($r > 0) ? round(($f / $r) * 100) : 0;
-
-            if ($percent == 100) {
-                $color = 'text-green-600';
-            } elseif ($percent >= 67) {
-                $color = 'text-yellow-600';
-            } elseif ($percent >= 50) {
-                $color = 'text-orange-600';
-            } else {
-                $color = 'text-red-600';
-            }
+            // ... (Color logic remains same) ...
+            if ($percent == 100) { $color = 'text-green-600'; } 
+            elseif ($percent >= 67) { $color = 'text-yellow-600'; } 
+            elseif ($percent >= 50) { $color = 'text-orange-600'; } 
+            else { $color = 'text-red-600'; }
 
             $dataTahapanSummary[] = [
                 'q' => 'Q' . $q,
@@ -224,13 +205,13 @@ class PublicationController extends Controller
         }
 
         return view('tampilan.homeketua', compact(
-            'publications',
+            'publications', 
             'rekapPublikasiTahunan', 
             'dataGrafikPublikasi',
             'dataGrafikBatang', 
-            'dataGrafikRing',
+            'dataGrafikRing', 
             'dataTahapanSummary', 
-            'dataRingSummary',
+            'dataRingSummary', 
             'dataGrafikPerTim'
         ));
     }
@@ -550,12 +531,7 @@ class PublicationController extends Controller
             ->orWhere('publication_name', 'like', "%{$query}%")
             ->orWhere('publication_pic', 'like', "%{$query}%");
         })
-        ->with([
-            'user',
-            'stepsPlans.stepsFinals.struggles',
-            'files',
-            'teamTarget'
-        ])
+        ->with(['user', 'stepsPlans.stepsFinals.struggles', 'files', 'teamTarget'])
         ->get();
 
         foreach ($publications as $publication) {
@@ -568,12 +544,14 @@ class PublicationController extends Controller
             $listLintas = [1 => [], 2 => [], 3 => [], 4 => []];
 
             foreach ($publication->stepsPlans as $plan) {
+                // [PERBAIKAN SEARCH 1] Non-Kumulatif
                 $q = getQuarter($plan->plan_start_date);
                 if ($q) {
                     $rekapPlans[$q]++;
                     $listPlans[$q][] = $plan->plan_name; 
                 }
 
+                // [PERBAIKAN SEARCH 2] Non-Kumulatif
                 if ($plan->stepsFinals) {
                     $fq = getQuarter($plan->stepsFinals->actual_started);
                     if ($fq) {
@@ -592,6 +570,7 @@ class PublicationController extends Controller
                 }
             }
 
+            // [PERBAIKAN SEARCH 3] Total pakai array_sum
             $totalPlans = array_sum($rekapPlans);
             $totalFinals = array_sum($rekapFinals);
             $progressKumulatif = $totalPlans > 0 ? ($totalFinals / $totalPlans) * 100 : 0;
@@ -603,9 +582,12 @@ class PublicationController extends Controller
                     : 0;
             }
 
+            // Assign kembali
             $publication->rekapPlans = $rekapPlans;
             $publication->rekapFinals = $rekapFinals;
-            $publication->lintasTriwulan = $lintasTriwulan;
+            // ... (sisa data sama)
+            
+            // Re-assign properti object untuk JSON
             $publication->progressKumulatif = $progressKumulatif;
             $publication->progressTriwulan = $progressTriwulan;
             $publication->listPlans = $listPlans;
@@ -613,6 +595,7 @@ class PublicationController extends Controller
             $publication->listLintas = $listLintas;
         }
 
+        // Return JSON sama seperti sebelumnya
         return response()->json($publications->map(function($pub) {
             return [
                 'slug_publication' => $pub->slug_publication,
@@ -635,6 +618,12 @@ class PublicationController extends Controller
                 'target_output_plan' => $pub->teamTarget->output_plan ?? 0,
                 'target_output_real' => $pub->teamTarget->output_real ?? 0,
 
+                // [TAMBAHKAN 4 BARIS INI] Agar data per triwulan terkirim ke Javascript
+                'target_output_real_q1' => $pub->teamTarget->output_real_q1 ?? 0,
+                'target_output_real_q2' => $pub->teamTarget->output_real_q2 ?? 0,
+                'target_output_real_q3' => $pub->teamTarget->output_real_q3 ?? 0,
+                'target_output_real_q4' => $pub->teamTarget->output_real_q4 ?? 0,
+
                 'lintasTriwulan' => $pub->lintasTriwulan,
                 'progressKumulatif' => $pub->progressKumulatif,
                 'progressTriwulan' => $pub->progressTriwulan,
@@ -645,7 +634,6 @@ class PublicationController extends Controller
             ];
         }));
     }
-
     // public function uploadFiles(Request $request, Publication $publication)
     // {
     //     $request->validate([

@@ -76,6 +76,7 @@
                             
                             <tbody class="divide-y divide-gray-200">
                                 @forelse($targets as $index => $item)
+                                {{-- BARIS 1: IDENTITAS + TAHAPAN --}}
                                 <tr class="bg-white hover:bg-gray-50 transition border-t border-gray-200">
                                     
                                     {{-- 1. No (Rowspan 2) --}}
@@ -137,11 +138,6 @@
                                                     class="flex items-center justify-center gap-2 w-full px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm">
                                                     Edit
                                                 </button>
-                                                <!-- {{-- <form action="{{ route('publications.destroy', $publication->slug_publication) }}" method="POST" onsubmit="return confirm('Yakin hapus publikasi ini?')" class="w-full">
-                                                    @csrf @method('DELETE')
-                                                    <button type="submit" class="flex items-center justify-center gap-2 w-full px-3 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-sm">Hapus</button>
-                                                </form> --}} -->
-
                                                 <form action="{{ route('target.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Yakin hapus?')" class="w-full">
                                                     @csrf @method('DELETE')
                                                     <button type="submit" 
@@ -154,44 +150,46 @@
                                     </td>
                                 </tr>
 
+                                {{-- BARIS 2: OUTPUT --}}
                                 <tr>
-                                    {{-- Kolom Identitas dilewati karena sudah rowspan di atas --}}
+                                    {{-- Kolom Identitas (No, Sasaran, Kegiatan, PIC) DILEWATI karena rowspan --}}
 
                                     {{-- Jenis: Output (Baris 2 - Ungu) --}}
                                     <td class="px-4 py-4 align-top bg-purple-50">
                                         <div class="text-sm font-bold text-purple-900">Output</div>
-                                        {{-- Tidak ada teks tambahan dibawahnya sesuai request --}}
                                     </td>
 
-                                    {{-- Rencana OUTPUT Q1-Q4 (Tampilkan output_plan) --}}
+                                    {{-- Rencana OUTPUT Q1-Q4 --}}
+                                    {{-- Menampilkan angka Target yang sama di setiap triwulan agar rapi (sesuai request 'seperti sebelumnya') --}}
                                     <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="font-bold text-purple-900 text-xs">{{ $item->output_plan ?: '-' }}</div>
+                                        <div class="text-purple-900 font-bold text-xs">{{ $item->output_plan ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="font-bold text-purple-900 text-xs">{{ $item->output_plan ?: '-' }}</div>
+                                        <div class="text-purple-900 font-bold text-xs">{{ $item->output_plan ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="font-bold text-purple-900 text-xs">{{ $item->output_plan ?: '-' }}</div>
+                                        <div class="text-purple-900 font-bold text-xs">{{ $item->output_plan ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="font-bold text-purple-900 text-xs">{{ $item->output_plan ?: '-' }}</div>
+                                        <div class="text-purple-900 font-bold text-xs">{{ $item->output_plan ?: '-' }}</div>
                                     </td>
 
-                                    {{-- Realisasi OUTPUT Q1-Q4 (Tampilkan output_real) --}}
+                                    {{-- Realisasi OUTPUT Q1-Q4 (SESUAI INPUT FORM) --}}
+                                    {{-- Menggunakan kolom baru yang Anda tambahkan (output_real_q1, dst) --}}
                                     <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="font-bold text-purple-900 text-xs">{{ $item->output_real ?: '-' }}</div>
+                                        <div class="font-bold text-purple-900 text-xs">{{ $item->output_real_q1 ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="font-bold text-purple-900 text-xs">{{ $item->output_real ?: '-' }}</div>
+                                        <div class="font-bold text-purple-900 text-xs">{{ $item->output_real_q2 ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="font-bold text-purple-900 text-xs">{{ $item->output_real ?: '-' }}</div>
+                                        <div class="font-bold text-purple-900 text-xs">{{ $item->output_real_q3 ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="font-bold text-purple-900 text-xs">{{ $item->output_real ?: '-' }}</div>
+                                        <div class="font-bold text-purple-900 text-xs">{{ $item->output_real_q4 ?: '-' }}</div>
                                     </td>
                                     
-                                    {{-- Kolom Aksi dilewati karena sudah rowspan --}}
+                                    {{-- Kolom Aksi DILEWATI karena rowspan --}}
                                 </tr>
                                 @empty
                                 <tr>
@@ -304,7 +302,7 @@
             const activityInput = form.querySelector('[name="publication_name"]');
             if(activityInput) activityInput.value = data.activity_name;
 
-            // 4. ISI DATA INPUT ALPINE JS (Tetap sama karena name-nya tidak berubah)
+            // 4. ISI DATA INPUT ALPINE JS
             const setAlpineValue = (selector, value) => {
                 const el = form.querySelector(selector);
                 if (el) {
@@ -313,11 +311,24 @@
                 }
             };
 
+            // Isi Target Tahapan (Satu input untuk 4 Q)
             setAlpineValue('input[x-model="plan_tahapan"]', data.q1_plan || 0);
-            setAlpineValue('input[x-model="real_tahapan"]', data.q1_real || 0);
-            setAlpineValue('input[x-model="plan_output"]', data.output_plan || 0);
-            setAlpineValue('input[x-model="real_output"]', data.output_real || 0);
 
+            // Isi Realisasi Tahapan (Dipecah jadi 4)
+            setAlpineValue('input[x-model="t_q1"]', data.q1_real || 0);
+            setAlpineValue('input[x-model="t_q2"]', data.q2_real || 0);
+            setAlpineValue('input[x-model="t_q3"]', data.q3_real || 0);
+            setAlpineValue('input[x-model="t_q4"]', data.q4_real || 0);
+
+            // Isi Target Output
+            setAlpineValue('input[x-model="plan_output"]', data.output_plan || 0);
+
+            // [BARU] Isi Realisasi Output PER TRIWULAN (Ambil dari kolom baru)
+            setAlpineValue('input[x-model="o_q1"]', data.output_real_q1 || 0);
+            setAlpineValue('input[x-model="o_q2"]', data.output_real_q2 || 0);
+            setAlpineValue('input[x-model="o_q3"]', data.output_real_q3 || 0);
+            setAlpineValue('input[x-model="o_q4"]', data.output_real_q4 || 0);
+            
             // 5. LOGIKA DROPDOWN SASARAN
             const options = [
                 "Laporan Statistik Kependudukan dan Ketenagakerjaan",
