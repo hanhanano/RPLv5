@@ -157,7 +157,8 @@
                             <td class="px-4 py-4 text-center flex justify-center gap-2">
 
                                 {{--Tombol Reset Password--}}
-                                @if(auth()->check() && auth()->user()->role === 'admin')
+                                {{-- Tambahan: && auth()->id() != $user->id agar tombol tidak muncul untuk diri sendiri --}}
+                                @if(auth()->check() && auth()->user()->role === 'admin' && auth()->id() != $user->id)
                                     <button 
                                         @click="resetOpen = true; 
                                                 resetAction = '{{ route('admin.resetPassword', $user->id) }}'; 
@@ -173,7 +174,8 @@
                                 @endif
 
                                 {{-- Aksi hanya untuk admin --}}
-                                @if(auth()->check() && auth()->user()->role === 'admin')
+                                {{-- Tambahan: && auth()->id() != $user->id agar tombol hapus hilang untuk diri sendiri --}}
+                                @if(auth()->check() && auth()->user()->role === 'admin' && auth()->id() != $user->id)
                                     <form method="POST" action="{{ route('admin.destroy', $user->id) }}" onsubmit="return confirm('Yakin hapus data pengguna ini?')">
                                         @csrf
                                         @method('DELETE')
