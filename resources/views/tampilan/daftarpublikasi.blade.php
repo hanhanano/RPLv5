@@ -211,18 +211,36 @@
                             </td>
 
                             {{-- Rencana & Realisasi Tahapan (Dari StepsPlan) --}}
+                            {{-- LOGIKA TOTAL TAHUNAN (FLAT) --}}
+                            @php 
+                                // Hitung total rencana dalam setahun
+                                $totalAnnualPlan = array_sum($publication->rekapPlans ?? []);
+                            @endphp
+
                             @for($q = 1; $q <= 4; $q++)
                                 <td class="px-4 py-4 text-center bg-blue-50 align-top">
-                                    @if(($publication->rekapPlans[$q] ?? 0) > 0)
+                                    @if($totalAnnualPlan > 0)
                                         <div class="relative group inline-block">
+                                            {{-- TAMPILAN UTAMA: Selalu Tampilkan Total Setahun --}}
                                             <div class="px-3 py-1 rounded-full bg-blue-900 text-white inline-block cursor-pointer hover:bg-blue-800 transition text-xs">
-                                                {{ $publication->rekapPlans[$q] }} Rencana
+                                                {{ $totalAnnualPlan }} Rencana
                                             </div>
+
+                                            {{-- TOOLTIP: Detail Rencana --}}
                                             <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64 text-sm text-gray-700 z-50">
-                                                <p class="font-semibold text-gray-800 mb-1">Daftar Rencana:</p>
-                                                <ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto text-left">
-                                                    @foreach($publication->listPlans[$q] ?? [] as $item) <li>{{ $item }}</li> @endforeach
-                                                </ul>
+                                                @php $quarterInput = $publication->rekapPlans[$q] ?? 0; @endphp
+                                                
+                                                {{-- Tampilkan detail item jika ada input di triwulan ini --}}
+                                                @if($quarterInput > 0)
+                                                    <p class="font-semibold text-gray-800 mb-1">Jadwal Triwulan {{ $q }}:</p>
+                                                    <ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto text-left text-xs">
+                                                        @foreach($publication->listPlans[$q] ?? [] as $item) 
+                                                            <li>{{ $item }}</li> 
+                                                        @endforeach
+                                                    </ul>
+                                                @else
+                                                    <p class="text-xs text-gray-500 italic">Tidak ada jadwal spesifik di Triwulan {{ $q }}, namun merupakan bagian dari total {{ $totalAnnualPlan }} target tahunan.</p>
+                                                @endif
                                             </div>
                                         </div>
                                     @else
@@ -231,18 +249,40 @@
                                 </td>
                             @endfor
 
+                            {{-- ... kode rencana di atasnya ... --}}
+
+                            {{-- REALISASI TAHAPAN (LOGIKA RUNNING SUM / PENJUMLAHAN BERTINGKAT) --}}
+                            @php $cumulativeRealization = 0; @endphp
+
                             @for($q = 1; $q <= 4; $q++)
+                                @php
+                                    // Ambil input realisasi di triwulan ini
+                                    $currentReal = $publication->rekapFinals[$q] ?? 0;
+                                    
+                                    // TAMBAHKAN ke total kumulatif
+                                    $cumulativeRealization += $currentReal;
+                                @endphp
+
                                 <td class="px-4 py-4 text-center bg-blue-50 align-top">
-                                    @if(($publication->rekapFinals[$q] ?? 0) > 0)
+                                    @if($cumulativeRealization > 0)
                                         <div class="relative inline-block group">
+                                            {{-- TAMPILAN UTAMA: Tampilkan Total Kumulatif --}}
                                             <div class="px-3 py-1 rounded-full bg-emerald-600 text-white inline-block cursor-pointer text-xs">
-                                                {{ $publication->rekapFinals[$q] }} Selesai
+                                                {{ $cumulativeRealization }} Selesai
                                             </div>
+
+                                            {{-- TOOLTIP: Detail Realisasi --}}
                                             <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64 text-sm text-gray-700 z-50">
-                                                <p class="font-semibold text-gray-800 mb-1">Daftar Realisasi:</p>
-                                                <ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto text-left">
-                                                    @foreach($publication->listFinals[$q] ?? [] as $item) <li>{{ $item }}</li> @endforeach
-                                                </ul>
+                                                @if($currentReal > 0)
+                                                    <p class="font-semibold text-gray-800 mb-1">Selesai di Q{{ $q }}:</p>
+                                                    <ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto text-left">
+                                                        @foreach($publication->listFinals[$q] ?? [] as $item) <li>{{ $item }}</li> @endforeach
+                                                    </ul>
+                                                @else
+                                                    <p class="text-xs text-gray-500 italic">Total akumulasi {{ $cumulativeRealization }} tahapan selesai sampai triwulan ini.</p>
+                                                @endif
+
+                                                {{-- Info Lintas Triwulan --}}
                                                 @if(($publication->lintasTriwulan[$q] ?? 0) > 0)
                                                     <div class="mt-2 pt-2 border-t border-gray-200">
                                                         <p class="text-xs text-orange-500 font-medium">+{{ $publication->lintasTriwulan[$q] }} lintas triwulan:</p>
@@ -255,6 +295,7 @@
                                                 @endif
                                             </div>
                                         </div>
+                                        {{-- Tanda kecil jika ada lintas triwulan --}}
                                         @if(($publication->lintasTriwulan[$q] ?? 0) > 0)
                                             <p class="text-xs text-orange-500 mt-1">+{{ $publication->lintasTriwulan[$q] }} Lintas</p>
                                         @endif
@@ -649,25 +690,49 @@ document.addEventListener("DOMContentLoaded", function() {
     initLoad();
 });
 
+
 // Helper: Quarter Columns untuk AJAX (Row 1)
 function generateQuarterColumns(item) {
     let html = '';
-    // Rencana Tahapan
+    
+    let totalAnnualPlan = 0;
+    for(let i = 1; i <= 4; i++) {
+        totalAnnualPlan += (item.rekapPlans?.[i] || 0);
+    }
+    // Render kolom Rencana
     for (let q = 1; q <= 4; q++) {
-        let count = item.rekapPlans?.[q] || 0;
-        let content = count > 0 
-            ? `<div class="px-3 py-1 rounded-full bg-blue-900 text-white inline-block text-xs">${count} Rencana</div>`
-            : `<div class="text-xs text-gray-400">-</div>`;
+        let quarterInput = item.rekapPlans?.[q] || 0;
+        let content = '';
+        if (totalAnnualPlan > 0) {
+            let tooltipText = quarterInput > 0 ? `Jadwal Q${q}` : `Bagian dari target tahunan`;
+            content = `<div class="px-3 py-1 rounded-full bg-blue-900 text-white inline-block text-xs" title="${tooltipText}">${totalAnnualPlan} Rencana</div>`;
+        } else {
+            content = `<div class="text-xs text-gray-400">-</div>`;
+        }
         html += `<td class="px-4 py-4 text-center bg-blue-50 align-top">${content}</td>`;
     }
-    // Realisasi Tahapan
+
+    let cumulativeRealization = 0; // Reset penampung
+
     for (let q = 1; q <= 4; q++) {
-        let count = item.rekapFinals?.[q] || 0;
-        let content = count > 0 
-            ? `<div class="px-3 py-1 rounded-full bg-emerald-600 text-white inline-block text-xs">${count} Selesai</div>`
-            : `<div class="text-xs text-gray-400">-</div>`;
+        let currentReal = item.rekapFinals?.[q] || 0;
+        
+        cumulativeRealization += currentReal;
+
+        let content = '';
+        if (cumulativeRealization > 0) {
+            // Tampilkan TOTAL kumulatif
+            content = `<div class="px-3 py-1 rounded-full bg-emerald-600 text-white inline-block text-xs" title="Total Selesai s.d Q${q}: ${cumulativeRealization}">${cumulativeRealization} Selesai</div>`;
+            
+            if (item.lintasTriwulan?.[q] > 0) {
+                content += `<p class="text-xs text-orange-500 mt-1">+${item.lintasTriwulan[q]} Lintas</p>`;
+            }
+        } else {
+            content = `<div class="text-xs text-gray-400">-</div>`;
+        }
         html += `<td class="px-4 py-4 text-center bg-blue-50 align-top">${content}</td>`;
     }
+    
     return html;
 }
 
