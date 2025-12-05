@@ -1,25 +1,20 @@
 <div class="fixed top-0 left-0 right-0 w-full z-50">
-    <!-- Main Navbar -->
     <nav class="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 shadow-lg" x-data="{isOpen: false}">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                <!-- Logo & Brand -->
                 <div class="flex items-center space-x-3">
-                    <!-- Logo -->
                     <div class="flex-shrink-0">
                         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Lambang_Badan_Pusat_Statistik_%28BPS%29_Indonesia.svg/960px-Lambang_Badan_Pusat_Statistik_%28BPS%29_Indonesia.svg.png" 
                              alt="Logo BPS" 
                              class="h-10 w-10 drop-shadow-lg">
                     </div>
                     
-                    <!-- Brand Text -->
                     <div class="hidden lg:block">
                         <h1 class="text-xl font-bold text-white tracking-tight">SIMONICA</h1>
                         <p class="text-xs text-blue-200">BPS Kota Bekasi</p>
                     </div>
                 </div>
 
-                <!-- Desktop Navigation -->
                 <div class="hidden md:flex items-center space-x-2">
                     <a href="/dashboard" 
                        class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
@@ -48,9 +43,7 @@
                     @endif
                 </div>
 
-                <!-- User Menu Desktop -->
                 <div class="hidden md:flex items-center space-x-3">
-                    <!-- User Dropdown -->
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" 
                                 class="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium text-white hover:bg-white/10 transition-all duration-200">
@@ -69,7 +62,6 @@
                             </svg>
                         </button>
 
-                        <!-- Dropdown Menu -->
                         <div x-show="open" x-cloak
                              @click.away="open = false"
                              x-transition:enter="transition ease-out duration-200"
@@ -89,15 +81,13 @@
                                         @endif
                                     </div>
                                     
-                                    @if(auth()->user()->role !== 'admin')
-                                        <a href="{{ route('password.change') }}" 
-                                           class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mr-2">
-                                                <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd" />
-                                            </svg>
-                                            Ubah Password
-                                        </a>
-                                    @endif
+                                    <a href="{{ route('password.change') }}" 
+                                       class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mr-2">
+                                            <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd" />
+                                        </svg>
+                                        Ubah Password
+                                    </a>
                                     
                                     @if(auth()->user()->role === 'admin')
                                         <a href="/admin" 
@@ -135,7 +125,6 @@
                     </div>
                 </div>
 
-                <!-- Mobile Menu Button -->
                 <div class="md:hidden">
                     <button @click="isOpen = !isOpen" 
                             class="inline-flex items-center justify-center p-2 rounded-lg text-white hover:bg-white/10 transition-colors">
@@ -150,8 +139,7 @@
             </div>
         </div>
 
-        <!-- Mobile Menu -->
-        <div x-show="isOpen" 
+        <div x-show="isOpen" x-cloak
              x-transition:enter="transition ease-out duration-200"
              x-transition:enter-start="opacity-0 -translate-y-1"
              x-transition:enter-end="opacity-100 translate-y-0"
@@ -180,14 +168,13 @@
 
                 @if(auth()->check() && in_array(auth()->user()->role, ['ketua_tim', 'admin']))
                     <a href="{{ route('target.index') }}" 
-                        class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                            {{ request()->is('target.index') ? 'bg-white/20 text-white shadow-lg' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium
+                          {{ request()->is('target.index') ? 'bg-white/20 text-white' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
                         Target Kinerja
                     </a>
                 @endif
             </div>
             
-            <!-- Mobile User Menu -->
             <div class="border-t border-blue-700 pt-4 pb-3">
                 @auth
                     <div class="px-4 pb-3">
@@ -199,15 +186,13 @@
                     </div>
                     
                     <div class="space-y-1 px-2">
-                        @if(auth()->user()->role !== 'admin')
-                            <a href="{{ route('password.change') }}" 
-                               class="flex items-center px-3 py-2 rounded-lg text-base font-medium text-blue-100 hover:bg-white/10 hover:text-white">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-2">
-                                    <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd" />
-                                </svg>
-                                Ubah Password
-                            </a>
-                        @endif
+                        <a href="{{ route('password.change') }}" 
+                           class="flex items-center px-3 py-2 rounded-lg text-base font-medium text-blue-100 hover:bg-white/10 hover:text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-2">
+                                <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd" />
+                            </svg>
+                            Ubah Password
+                        </a>
                         
                         @if(auth()->user()->role === 'admin')
                             <a href="/admin" 
@@ -245,11 +230,9 @@
         </div>
     </nav>
 
-    <!-- Header/Subtitle Bar -->
     <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 border-b border-gray-200 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 py-4">
             <div class="flex flex-col md:flex-row items-center justify-between space-y-2 md:space-y-0">
-                <!-- Title & Subtitle -->
                 <div class="text-center md:text-left">
                     <h2 class="text-lg md:text-xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent">
                         Sistem Monitoring Capaian Kinerja
@@ -266,5 +249,4 @@
     </div>
 </div>
 
-<!-- Spacer for fixed navbar -->
 <div class="h-32"></div>

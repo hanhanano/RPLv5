@@ -65,4 +65,24 @@ class AdminController extends Controller
 
     return response()->json($users);
 }
+
+// Fitur Reset Password User Lain (Khusus Admin)
+    public function resetPassword(Request $request, $id)
+    {
+        // 1. Validasi input
+        $request->validate([
+            'new_password' => 'required|string|min:6',
+        ]);
+
+        // 2. Cari user
+        $user = User::findOrFail($id);
+
+        // 3. Update password
+        $user->update([
+            'password' => Hash::make($request->new_password),
+        ]);
+
+        // 4. Kembali dengan pesan sukses
+        return redirect()->back()->with('success', 'Password untuk pengguna ' . $user->name . ' berhasil diubah.');
+    }
 }
