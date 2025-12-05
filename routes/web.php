@@ -136,3 +136,8 @@ Route::post('/publications/{slug}/outputs', [PublicationOutputController::class,
 // Hapus Output
 Route::delete('/publication-plans/{id}', [PublicationOutputController::class, 'destroy'])
     ->name('outputs.destroy');
+
+// Ganti Password Role Lain
+Route::put('/admin/users/{id}/reset-password', [AdminController::class, 'resetPassword'])
+    ->name('admin.resetPassword')
+    ->middleware('auth');
