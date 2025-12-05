@@ -6,27 +6,34 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up()
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
     {
         Schema::table('team_targets', function (Blueprint $table) {
-            // Menambahkan kolom foreign key setelah kolom id
-            // Kita buat nullable dulu untuk mencegah error pada data lama
-            $table->unsignedBigInteger('publication_id')->nullable()->after('id');
-
-            // Definisikan Foreign Key ke tabel publications
-            // Mengacu pada 'publication_id' di tabel 'publications'
-            $table->foreign('publication_id')
-                  ->references('publication_id')
-                  ->on('publications')
-                  ->onDelete('cascade'); // Jika publikasi dihapus, target juga terhapus
+            // Menambahkan 4 kolom baru setelah kolom output_real (total)
+            // Kita beri default 0 agar data lama tidak error/null
+            $table->integer('output_real_q1')->default(0)->after('output_real');
+            $table->integer('output_real_q2')->default(0)->after('output_real_q1');
+            $table->integer('output_real_q3')->default(0)->after('output_real_q2');
+            $table->integer('output_real_q4')->default(0)->after('output_real_q3');
         });
     }
 
-    public function down()
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
     {
         Schema::table('team_targets', function (Blueprint $table) {
-            $table->dropForeign(['publication_id']);
-            $table->dropColumn('publication_id');
+            // Menghapus kolom jika migration di-rollback
+            $table->dropColumn([
+                'output_real_q1',
+                'output_real_q2',
+                'output_real_q3',
+                'output_real_q4'
+            ]);
         });
     }
 };

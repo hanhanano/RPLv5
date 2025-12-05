@@ -371,22 +371,22 @@
                             @endfor
                         </tr>
 
-                        {{-- BARIS 4: Target Kinerja Output (NEW) --}}
+                        {{-- BARIS 4: Target Kinerja Output --}}
                         <tr class="bg-purple-50/50">
                              <td class="px-4 py-2 align-top bg-purple-100">
                                 <div class="text-xs font-bold text-purple-900">Target Output</div>
                             </td>
-                            {{-- Target Output: Plan (Nilai biasanya sama tiap triwulan atau spesifik, diambil dari teamTarget) --}}
+                            {{-- Target Output: Plan (Tetap sama) --}}
                             <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">{{ $publication->teamTarget->output_plan ?? '-' }}</td>
                             <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">{{ $publication->teamTarget->output_plan ?? '-' }}</td>
                             <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">{{ $publication->teamTarget->output_plan ?? '-' }}</td>
                             <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">{{ $publication->teamTarget->output_plan ?? '-' }}</td>
                             
-                            {{-- Target Output: Realisasi (Dari TeamTarget) --}}
-                            <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">{{ $publication->teamTarget->output_real ?? '-' }}</td>
-                            <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">{{ $publication->teamTarget->output_real ?? '-' }}</td>
-                            <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">{{ $publication->teamTarget->output_real ?? '-' }}</td>
-                            <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">{{ $publication->teamTarget->output_real ?? '-' }}</td>
+                            {{-- [PERBAIKAN DISINI] Target Output: Realisasi (Gunakan Data Per Triwulan) --}}
+                            <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">{{ $publication->teamTarget->output_real_q1 ?? '-' }}</td>
+                            <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">{{ $publication->teamTarget->output_real_q2 ?? '-' }}</td>
+                            <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">{{ $publication->teamTarget->output_real_q3 ?? '-' }}</td>
+                            <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">{{ $publication->teamTarget->output_real_q4 ?? '-' }}</td>
                         </tr>
 
                         @endforeach
@@ -572,10 +572,11 @@ document.getElementById('search').addEventListener('keyup', function() {
                     <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_plan ?? '-'}</td>
                     <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_plan ?? '-'}</td>
                     <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_plan ?? '-'}</td>
-                    <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_real ?? '-'}</td>
-                    <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_real ?? '-'}</td>
-                    <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_real ?? '-'}</td>
-                    <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_real ?? '-'}</td>
+                    
+                    <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_real_q1 ?? '-'}</td>
+                    <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_real_q2 ?? '-'}</td>
+                    <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_real_q3 ?? '-'}</td>
+                    <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_real_q4 ?? '-'}</td>
                 </tr>`;
 
                 return row1 + row2 + row3 + row4;
