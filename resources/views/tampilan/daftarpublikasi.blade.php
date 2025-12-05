@@ -270,7 +270,7 @@
                                     <a href="{{ route('steps.index', $publication->slug_publication) }}" class="flex items-center justify-center gap-2 w-full px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-sm">Detail</a>
                                     <a href="{{ route('outputs.index', $publication->slug_publication) }}" class="flex items-center justify-center gap-2 w-full px-3 py-1.5 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors shadow-sm">Output</a>
                                     @if(auth()->check() && in_array(auth()->user()->role, ['ketua_tim', 'admin']))
-                                        <button onclick="openEditModal('{{ $publication->slug_publication }}', '{{ $publication->publication_report }}', '{{ $publication->publication_name }}', '{{ $publication->publication_pic }}')" class="flex items-center justify-center gap-2 w-full px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm">Edit</button>
+                                        <!-- <button onclick="openEditModal('{{ $publication->slug_publication }}', '{{ $publication->publication_report }}', '{{ $publication->publication_name }}', '{{ $publication->publication_pic }}')" class="flex items-center justify-center gap-2 w-full px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm">Edit</button> -->
                                         <form action="{{ route('publications.destroy', $publication->slug_publication) }}" method="POST" onsubmit="return confirm('Yakin hapus publikasi ini?')" class="w-full">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="flex items-center justify-center gap-2 w-full px-3 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-sm">Hapus</button>
@@ -423,7 +423,7 @@
             </div>
         </div>
         
-        {{-- Edit Modal --}}
+        <!-- {{-- {{-- Edit Modal --}}
         <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
              <div class="bg-white rounded-xl shadow-lg w-full max-w-lg p-6 relative" x-data="{ editReport: '', editOther: false, editReportOther: '' }">
                 <button type="button" onclick="closeEditModal()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✖</button>
@@ -472,32 +472,32 @@
                     <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg mt-3">Update</button>
                 </form>
             </div>
-        </div>
+        </div> --}} -->
 
     </div>
 </div>
 
 <script>
-// (Bagian Open/Close Modal Edit Tetap Sama)
-function openEditModal(slug, report, name, pic) {
-    let modal = document.getElementById('editModal');
-    modal.classList.remove('hidden'); modal.classList.add('flex');
-    let form = document.getElementById('editForm');
-    form.action = `/publications/${slug}`;
-    document.getElementById('edit_name').value = name;
-    document.getElementById('edit_pic').value = pic;
-    // Alpine Logic untuk Edit Report (Tetap sama)
-    const alpineElement = modal.querySelector('[x-data]');
-    if (alpineElement && alpineElement._x_dataStack) {
-        const alpineData = alpineElement._x_dataStack[0];
-        alpineData.editReport = report;
-        alpineData.editOther = (report === 'other');
-    }
-}
-function closeEditModal() {
-    let modal = document.getElementById('editModal');
-    modal.classList.add('hidden'); modal.classList.remove('flex');
-}
+// // (Bagian Open/Close Modal Edit Tetap Sama)
+// function openEditModal(slug, report, name, pic) {
+//     let modal = document.getElementById('editModal');
+//     modal.classList.remove('hidden'); modal.classList.add('flex');
+//     let form = document.getElementById('editForm');
+//     form.action = `/publications/${slug}`;
+//     document.getElementById('edit_name').value = name;
+//     document.getElementById('edit_pic').value = pic;
+//     // Alpine Logic untuk Edit Report (Tetap sama)
+//     const alpineElement = modal.querySelector('[x-data]');
+//     if (alpineElement && alpineElement._x_dataStack) {
+//         const alpineData = alpineElement._x_dataStack[0];
+//         alpineData.editReport = report;
+//         alpineData.editOther = (report === 'other');
+//     }
+// }
+// function closeEditModal() {
+//     let modal = document.getElementById('editModal');
+//     modal.classList.add('hidden'); modal.classList.remove('flex');
+// }
 
 // Search Logic Updated for 4 Rows
 document.getElementById('search').addEventListener('keyup', function() {

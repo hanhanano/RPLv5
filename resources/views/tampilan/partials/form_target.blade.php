@@ -11,20 +11,18 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
             <label class="block text-xs font-bold text-gray-700 mb-1">Nama Tim</label>
-            <select name="team_name" required
+            {{-- UBAH name="team_name" JADI name="publication_pic" --}}
+            <select name="publication_pic" required
                 class="w-full rounded text-xs border-gray-300 px-2 py-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-sm">
                 
-                {{-- LOGIKA PEMBATASAN TIM --}}
                 @php
                     $user = auth()->user();
                     $teams = ['Umum', 'Produksi', 'Distribusi', 'Neraca', 'Sosial', 'IPDS'];
                 @endphp
 
                 @if($user->role === 'ketua_tim')
-                    {{-- Jika Ketua Tim: Hanya tampilkan timnya sendiri & otomatis selected --}}
                     <option value="{{ $user->team }}" selected>Tim {{ $user->team }}</option>
                 @else
-                    {{-- Jika Admin: Tampilkan semua pilihan --}}
                     <option value="">-- Pilih Tim --</option>
                     @foreach($teams as $team)
                         <option value="{{ $team }}">Tim {{ $team }}</option>
@@ -37,7 +35,8 @@
         <div>
             <label class="block text-xs font-bold text-gray-700 mb-1">Nama Sasaran/Laporan (Induk)</label>
             <div x-data="{ reportType: 'select', customReport: '' }">
-                <select x-model="reportType" name="report_name_select"
+                {{-- UBAH name="report_name_select" JADI name="publication_report" --}}
+                <select x-model="reportType" name="publication_report"
                     class="w-full rounded text-xs border-gray-300 px-2 py-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-sm mb-1">
                     <option value="">-- Pilih Kategori --</option>
                     <option value="Laporan Statistik Kependudukan dan Ketenagakerjaan">Laporan Statistik Kependudukan dan Ketenagakerjaan</option>
@@ -59,7 +58,8 @@
                     <option value="other">-- Tambahkan Lainnya (Manual) --</option>
                 </select>
 
-                <input type="text" name="report_name_manual" x-show="reportType === 'other'" 
+                {{-- UBAH name="report_name_manual" JADI name="publication_report_other" --}}
+                <input type="text" name="publication_report_other" x-show="reportType === 'other'" 
                     placeholder="Tulis nama laporan baru..."
                     class="w-full rounded text-xs border-gray-300 px-2 py-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-sm transition-all">
             </div>
@@ -69,7 +69,8 @@
     {{-- BARIS 2: NAMA KEGIATAN --}}
     <div>
         <label class="block text-xs font-bold text-gray-700 mb-1">Nama Kegiatan/Target Dasar</label>
-        <input type="text" name="activity_name" required placeholder="Contoh: Survei Angkatan Kerja"
+        {{-- UBAH name="activity_name" JADI name="publication_name" --}}
+        <input type="text" name="publication_name" required placeholder="Contoh: Survei Angkatan Kerja"
             class="w-full rounded text-xs border-gray-300 px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-sm">
     </div>
 
@@ -105,9 +106,9 @@
 
     <hr class="border-gray-100">
 
-    {{-- BARIS 4: TARGET & OUTPUT (SIDE BY SIDE) --}}
+    {{-- BARIS 4: TARGET & OUTPUT --}}
+    {{-- (Bagian bawah ini tidak perlu diubah, name-nya sudah benar sesuai logika update) --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        
         <div class="bg-blue-50 px-3 py-3 rounded border border-blue-100">
             <h4 class="text-xs font-bold text-blue-900 mb-2 flex items-center gap-1.5">
                 <span class="w-1.5 h-4 bg-blue-600 rounded-full"></span> Data Tahapan

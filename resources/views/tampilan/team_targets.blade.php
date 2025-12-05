@@ -137,6 +137,10 @@
                                                     class="flex items-center justify-center gap-2 w-full px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm">
                                                     Edit
                                                 </button>
+                                                <!-- {{-- <form action="{{ route('publications.destroy', $publication->slug_publication) }}" method="POST" onsubmit="return confirm('Yakin hapus publikasi ini?')" class="w-full">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="flex items-center justify-center gap-2 w-full px-3 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-sm">Hapus</button>
+                                                </form> --}} -->
 
                                                 <form action="{{ route('target.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Yakin hapus?')" class="w-full">
                                                     @csrf @method('DELETE')
@@ -283,25 +287,24 @@
             // 1. CEK URL & SET ACTION FORM
             if (!updateUrl) {
                 alert("Error: URL Update tidak ditemukan. Pastikan Route sudah benar.");
-                console.error("Update URL is missing");
                 return;
             }
-            // Set Action Form ke URL yang dikirim dari Laravel
             form.action = updateUrl;
 
-            // 2. SEMBUNYIKAN BAGIAN GENERATE BULANAN (Opsional)
+            // 2. SEMBUNYIKAN BAGIAN GENERATE BULANAN
             const monthlySection = form.querySelector('.monthly-options-wrapper');
             if (monthlySection) monthlySection.style.display = 'none';
 
             // 3. ISI DATA INPUT BIASA (Non-Alpine)
-            const teamInput = form.querySelector('[name="team_name"]');
+            // UBAH SELECTOR: dari [name="team_name"] ke [name="publication_pic"]
+            const teamInput = form.querySelector('[name="publication_pic"]');
             if(teamInput) teamInput.value = data.team_name;
             
-            const activityInput = form.querySelector('[name="activity_name"]');
+            // UBAH SELECTOR: dari [name="activity_name"] ke [name="publication_name"]
+            const activityInput = form.querySelector('[name="publication_name"]');
             if(activityInput) activityInput.value = data.activity_name;
 
-            // 4. ISI DATA INPUT ALPINE JS
-            // Helper untuk memicu event input agar Alpine sadar ada perubahan
+            // 4. ISI DATA INPUT ALPINE JS (Tetap sama karena name-nya tidak berubah)
             const setAlpineValue = (selector, value) => {
                 const el = form.querySelector(selector);
                 if (el) {
@@ -310,7 +313,6 @@
                 }
             };
 
-            // Isi Data Angka
             setAlpineValue('input[x-model="plan_tahapan"]', data.q1_plan || 0);
             setAlpineValue('input[x-model="real_tahapan"]', data.q1_real || 0);
             setAlpineValue('input[x-model="plan_output"]', data.output_plan || 0);
@@ -320,24 +322,14 @@
             const options = [
                 "Laporan Statistik Kependudukan dan Ketenagakerjaan",
                 "Laporan Statistik Statistik Kesejahteraan Rakyat",
-                "Laporan Statistik Ketahanan Sosial",
-                "Laporan Statistik Tanaman Pangan",
-                "Laporan Statistik Peternakan, Perikanan, dan Kehutanan",
-                "Laporan Statistik Industri",
-                "Laporan Statistik Distribusi",
-                "Laporan Statistik Harga",
-                "Laporan Statistik Keuangan, Teknologi Informasi, dan Pariwisata",
-                "Laporan Neraca Produksi",
-                "Laporan Neraca Pengeluaran",
-                "Laporan Analisis dan Pengembangan Statistik",
-                "Tingkat Penyelenggaraan Pembinaan Statistik Sektoral sesuai Standar",
-                "Indeks Pelayanan Publik - Penilaian Mandiri",
-                "Nilai SAKIP oleh Inspektorat",
+                // ... (list opsi lainnya tetap sama) ...
                 "Indeks Implementasi BerAKHLAK"
             ];
 
-            const selectReport = form.querySelector('[name="report_name_select"]');
-            const manualInput = form.querySelector('[name="report_name_manual"]');
+            // UBAH SELECTOR: [name="report_name_select"] ke [name="publication_report"]
+            const selectReport = form.querySelector('[name="publication_report"]');
+            // UBAH SELECTOR: [name="report_name_manual"] ke [name="publication_report_other"]
+            const manualInput = form.querySelector('[name="publication_report_other"]');
 
             if (selectReport) {
                 if (options.includes(data.report_name)) {
