@@ -68,40 +68,41 @@ class TeamTargetController extends Controller
             ? $request->publication_report_other
             : $request->publication_report;
 
-        \DB::beginTransaction();
+        DB::beginTransaction();
 
         try {
             // LOGIKA GENERATE BULANAN
             if ($request->has('is_monthly') && $request->has('months') && is_array($request->months)) {
                 
-                // [UBAH] Passing $request agar data target/output terbawa
                 $this->generateMonthlyPublications(
                     $request->publication_name,
                     $publicationReport,
                     $request->publication_pic,
                     $request->months,
-                    $request // Kirim request lengkap
+                    $request 
                 );
                 
                 $successMessage = count($request->months) . ' publikasi bulanan berhasil ditambahkan!';
 
             } else {
-                // LOGIKA PUBLIKASI TUNGGAL (Manual) - Tetap sama
+                // LOGIKA PUBLIKASI TUNGGAL (Manual)
                 
                 // 1. Simpan ke tabel PUBLICATIONS
-                $publicationId = \DB::table('publications')->insertGetId([
+                $publicationId = DB::table('publications')->insertGetId([
                     'publication_name'   => $request->publication_name,
                     'publication_report' => $publicationReport,
                     'publication_pic'    => $request->publication_pic,
                     'fk_user_id'         => Auth::id(),
                     'is_monthly'         => 0,
-                    'slug_publication'   => \Str::uuid(),
+                    'slug_publication'   => Str::uuid(),
                     'created_at'         => now(),
                     'updated_at'         => now(),
                 ]);
 
                 // 2. Simpan ke tabel TEAM_TARGETS
-                $targetValue = $request->input('q1_plan', 0);
+                $targetTahapan = $request->input('q1_plan', 0);
+                $targetOutput  = $request->input('output_plan', 0);
+                $realOutput    = $request->input('output_real', 0);
 
                 TeamTarget::create([
                     'team_name'      => $request->publication_pic,
@@ -128,17 +129,20 @@ class TeamTargetController extends Controller
                     'output_real_q4' => $request->input('output_real_q4', 0),
                 ]);
 
-                // [GENERATE TAHAPAN SIMPLE]
-                $this->syncSimpleSteps($publicationId, $targetValue);
+                // [GENERATE DETAIL OTOMATIS]
+                // 1. Tahapan
+                $this->syncSimpleSteps($publicationId, $targetTahapan);
+                // 2. Output (LOGIKA BARU)
+                $this->syncSimpleOutputs($publicationId, $targetOutput, $realOutput);
 
-                $successMessage = 'Publikasi berhasil ditambahkan beserta ' . $targetValue . ' tahapannya!';
+                $successMessage = 'Publikasi berhasil ditambahkan beserta detail Tahapan & Output!';
             }
 
-            \DB::commit();
+            DB::commit();
             return redirect()->route('target.index')->with('success', $successMessage);
             
         } catch (\Exception $e) {
-            \DB::rollBack();
+            DB::rollBack();
             return redirect()->back()->withInput()->with('error', 'Gagal menambahkan: ' . $e->getMessage());
         }
     }
@@ -188,8 +192,13 @@ class TeamTargetController extends Controller
             ]);
 
             // [SINKRONISASI TAHAPAN SAAT UPDATE]
-            $targetValue = $request->input('q1_plan', 0);
-            $this->syncSimpleSteps($target->publication_id, $targetValue);
+            $targetTahapan = $request->input('q1_plan', 0);
+            $this->syncSimpleSteps($target->publication_id, $targetTahapan);
+
+            // [SINKRONISASI OUTPUT SAAT UPDATE]
+            $targetOutput = $request->input('output_plan', 0);
+            $realOutput   = $request->input('output_real', 0);
+            $this->syncSimpleOutputs($target->publication_id, $targetOutput, $realOutput);
         }
         
         return redirect()->back()->with('success', 'Data berhasil diupdate');
@@ -199,7 +208,6 @@ class TeamTargetController extends Controller
 
     /**
      * Membuat Tahapan otomatis untuk PUBLIKASI TUNGGAL / MANUAL
-     * Default tanggal: Januari tahun ini
      */
     private function syncSimpleSteps($publicationId, $targetCount)
     {
@@ -207,7 +215,6 @@ class TeamTargetController extends Controller
         if ($targetCount <= 0) return;
 
         $year = now()->year;
-        // Default Januari jika manual
         $startDate = "$year-01-01";
         $endDate = "$year-01-31";
 
@@ -215,10 +222,8 @@ class TeamTargetController extends Controller
 
         if ($targetCount > $existingCount) {
             $needed = $targetCount - $existingCount;
-
             for ($i = 1; $i <= $needed; $i++) {
                 $counter = $existingCount + $i;
-                
                 StepsPlan::create([
                     'publication_id'    => $publicationId,
                     'plan_type'         => 'pengumpulan data', 
@@ -233,6 +238,68 @@ class TeamTargetController extends Controller
         }
     }
 
+    /**
+     * [BARU] Membuat Detail Output otomatis (di tabel publication_plans)
+     */
+    private function syncSimpleOutputs($publicationId, $targetCount, $realCount)
+    {
+        $targetCount = (int)$targetCount;
+        $realCount   = (int)$realCount;
+        if ($targetCount <= 0) return;
+
+        // Gunakan tabel 'publication_plans' untuk detail output
+        
+        $year = now()->year;
+        // Kita set default di Q1 (Januari akhir) atau sesuaikan logika tanggalnya
+        $planDate = "$year-01-31"; 
+
+        // 1. Cek jumlah output yang sudah ada
+        $existing = DB::table('publication_plans')->where('publication_id', $publicationId)->get();
+        $existingCount = $existing->count();
+
+        // 2. Tambah Detail Output jika kurang (berdasarkan Target)
+        if ($targetCount > $existingCount) {
+            $needed = $targetCount - $existingCount;
+            for ($i = 1; $i <= $needed; $i++) {
+                $counter = $existingCount + $i;
+                DB::table('publication_plans')->insert([
+                    'publication_id' => $publicationId,
+                    'plan_name'      => "Output $counter",
+                    'plan_date'      => $planDate,
+                    'actual_date'    => null, // Awalnya belum terealisasi
+                    'created_at'     => now(),
+                    'updated_at'     => now(),
+                ]);
+            }
+        }
+
+        // 3. Update Realisasi (Isi actual_date) sejumlah 'output_real'
+        // Ambil lagi data terbaru
+        $allOutputs = DB::table('publication_plans')
+                        ->where('publication_id', $publicationId)
+                        ->orderBy('id')
+                        ->get();
+        
+        $currentRealized = $allOutputs->whereNotNull('actual_date')->count();
+
+        // Jika realisasi di form bertambah, update item yang belum selesai
+        // if ($realCount > $currentRealized) {
+        //     $toUpdate = $realCount - $currentRealized;
+        //     foreach ($allOutputs as $out) {
+        //         if ($toUpdate <= 0) break;
+        //         if (is_null($out->actual_date)) {
+        //             DB::table('publication_plans')
+        //                 ->where('id', $out->id)
+        //                 ->update([
+        //                     'actual_date' => $planDate, // Anggap selesai di tanggal plan
+        //                     'updated_at' => now()
+        //                 ]);
+        //             $toUpdate--;
+        //         }
+        //     }
+        // }
+    }
+
     private function getMonthName($monthNumber)
     {
         $months = [
@@ -244,21 +311,19 @@ class TeamTargetController extends Controller
         return $months[$monthNumber] ?? '';
     }
 
-    /**
-     * [LOGIKA BARU] Generate Bulanan dengan Data Target yang Benar
-     */
     private function generateMonthlyPublications($baseName, $report, $pic, array $months, $request)
     {
         $currentYear = now()->year;
 
-        // Ambil jumlah tahapan target (biasanya input q1=q2=q3=q4 sama, ambil salah satu)
-        $targetCount = (int)$request->input('q1_plan', 0);
+        // Ambil nilai target
+        $targetTahapan = (int)$request->input('q1_plan', 0);
+        $targetOutput  = (int)$request->input('output_plan', 0);
+        $realOutput    = (int)$request->input('output_real', 0);
 
         foreach ($months as $monthNumber) {
             $monthNumber = (int)$monthNumber;
 
-            // Tentukan tanggal awal & akhir bulan tersebut
-            $targetDate = \Carbon\Carbon::create($currentYear, $monthNumber, 1);
+            $targetDate = Carbon::create($currentYear, $monthNumber, 1);
             $startDate = $targetDate->copy()->startOfMonth()->format('Y-m-d');
             $endDate = $targetDate->copy()->endOfMonth()->format('Y-m-d');
 
@@ -269,30 +334,28 @@ class TeamTargetController extends Controller
             $publicationName = $baseName . ' - ' . $monthName . ' ' . $year;
 
             // 1. Buat Publikasi
-            $publicationId = \DB::table('publications')->insertGetId([
+            $publicationId = DB::table('publications')->insertGetId([
                 'publication_name'   => $publicationName,
                 'publication_report' => $report,
                 'publication_pic'    => $pic,
                 'fk_user_id'         => Auth::id(),
                 'is_monthly'         => 1,
-                'slug_publication'   => \Str::uuid(),
+                'slug_publication'   => Str::uuid(),
                 'created_at'         => now(),
                 'updated_at'         => now(),
             ]);
 
-            // 2. Buat TeamTarget dengan NILAI DARI REQUEST (Bukan 0)
+            // 2. Buat TeamTarget
             TeamTarget::create([
                 'team_name'      => $pic,
                 'activity_name'  => $publicationName,
                 'report_name'    => $report,
                 'publication_id' => $publicationId,
                 
-                // Isi dengan data inputan form
                 'q1_plan' => $request->input('q1_plan', 0), 
                 'q2_plan' => $request->input('q2_plan', 0), 
                 'q3_plan' => $request->input('q3_plan', 0), 
                 'q4_plan' => $request->input('q4_plan', 0),
-                
                 'q1_real' => $request->input('q1_real', 0), 
                 'q2_real' => $request->input('q2_real', 0), 
                 'q3_real' => $request->input('q3_real', 0), 
@@ -307,15 +370,14 @@ class TeamTargetController extends Controller
                 'output_real_q4' => $request->input('output_real_q4', 0),
             ]);
             
-            // 3. Buat Tahapan (StepsPlan) Sejumlah Target
-            // Ganti createDefaultStep dengan loop pembuatan tahapan
-            $this->createMonthlySteps($publicationId, $targetCount, $startDate, $endDate, $baseName, $monthName, $year);
+            // 3. Buat Detail Tahapan
+            $this->createMonthlySteps($publicationId, $targetTahapan, $startDate, $endDate, $baseName, $monthName, $year);
+
+            // 4. [BARU] Buat Detail Output
+            $this->createMonthlyOutputs($publicationId, $targetOutput, $realOutput, $endDate, $baseName, $monthName, $year);
         }
     }
 
-    /**
-     * Helper baru untuk membuat N tahapan pada bulan tertentu
-     */
     private function createMonthlySteps($publicationId, $count, $startDate, $endDate, $baseName, $monthName, $year)
     {
         if ($count <= 0) return;
@@ -323,7 +385,7 @@ class TeamTargetController extends Controller
         for ($i = 1; $i <= $count; $i++) {
             $planName = "Tahapan $i - " . $baseName . " (" . $monthName . ")";
             
-            \DB::table('steps_plans')->insert([
+            DB::table('steps_plans')->insert([
                 'publication_id'    => $publicationId, 
                 'plan_type'         => 'pengumpulan data', 
                 'plan_name'         => $planName,
@@ -336,14 +398,43 @@ class TeamTargetController extends Controller
         }
     }
 
+    /**
+     * [BARU] Helper khusus untuk membuat detail output bulanan
+     */
+    private function createMonthlyOutputs($publicationId, $targetCount, $realCount, $endDate, $baseName, $monthName, $year)
+    {
+        if ($targetCount <= 0) return;
+
+        // Buat Plan Output sejumlah target
+        for ($i = 1; $i <= $targetCount; $i++) {
+            // Cek apakah item ini sudah terealisasi (berdasarkan jumlah realCount)
+            $isRealized = ($i <= $realCount);
+            
+            DB::table('publication_plans')->insert([
+                'publication_id' => $publicationId,
+                'plan_name'      => "Output $i - " . $baseName . " (" . $monthName . ")",
+                'plan_date'      => $endDate, // Target selesai di akhir bulan
+                // 'actual_date'    => $isRealized ? $endDate : null, // Jika terealisasi, set tanggal sama
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ]);
+        }
+    }
+
     public function destroy($id) 
     {
-        \DB::beginTransaction();
+        DB::beginTransaction();
         try {
             $target = TeamTarget::with('publication')->findOrFail($id);
             
             if ($target->publication) {
+                // Hapus Tahapan
                 $target->publication->stepsPlans()->delete();
+                
+                // [BARU] Hapus Output (publication_plans)
+                if (\Schema::hasTable('publication_plans')) {
+                    DB::table('publication_plans')->where('publication_id', $target->publication_id)->delete();
+                }
 
                 if (method_exists($target->publication, 'files')) {
                     $target->publication->files()->delete();
@@ -354,11 +445,11 @@ class TeamTargetController extends Controller
             
             $target->delete();
 
-            \DB::commit(); 
+            DB::commit(); 
             return redirect()->back()->with('success', 'Data Target & Publikasi berhasil dihapus');
 
         } catch (\Exception $e) {
-            \DB::rollBack(); 
+            DB::rollBack(); 
             \Log::error('Gagal menghapus target: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
         }
