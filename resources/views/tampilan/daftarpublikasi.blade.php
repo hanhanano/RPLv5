@@ -249,8 +249,6 @@
                                 </td>
                             @endfor
 
-                            {{-- ... kode rencana di atasnya ... --}}
-
                             {{-- REALISASI TAHAPAN (LOGIKA RUNNING SUM / PENJUMLAHAN BERTINGKAT) --}}
                             @php $cumulativeRealization = 0; @endphp
 
@@ -371,18 +369,28 @@
                                 </div>
                             </td>
 
+                            {{-- LOOP RENCANA OUTPUT: TAMPILKAN TOTAL (BUKAN PER Q) --}}
                             @for($q = 1; $q <= 4; $q++)
                                 <td class="px-4 py-4 text-center bg-purple-50 align-top">
-                                    @if($pubPlansQ[$q] > 0)
+                                    {{-- Logika Baru: Cek jika ada TOTAL rencana setahun, bukan cuma rencana di Q ini --}}
+                                    @if($totalPubPlans > 0)
                                         <div class="relative group inline-block">
+                                            {{-- TAMPILKAN TOTAL RENCANA --}}
                                             <div class="px-3 py-1 rounded-full bg-blue-700 text-white inline-block cursor-pointer hover:bg-blue-600 transition text-xs">
-                                                {{ $pubPlansQ[$q] }} Rencana
+                                                {{ $totalPubPlans }} Rencana
                                             </div>
+
+                                            {{-- Tooltip: Tetap tampilkan detail apa saja yang ada di Q ini --}}
                                             <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64 text-sm text-gray-700 z-50">
-                                                <p class="font-semibold text-gray-800 mb-1">Daftar Rencana:</p>
-                                                <ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto text-left">
-                                                    @foreach($pubListPlansQ[$q] as $itemName) <li>{{ $itemName }}</li> @endforeach
-                                                </ul>
+                                                @if(count($pubListPlansQ[$q]) > 0)
+                                                    <p class="font-semibold text-gray-800 mb-1">Jadwal Q{{ $q }}:</p>
+                                                    <ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto text-left">
+                                                        @foreach($pubListPlansQ[$q] as $itemName) <li>{{ $itemName }}</li> @endforeach
+                                                    </ul>
+                                                @else
+                                                    {{-- Pesan jika di Q ini kosong tapi ada target tahunan --}}
+                                                    <p class="text-xs text-gray-500 italic">Bagian dari total {{ $totalPubPlans }} target output tahunan.</p>
+                                                @endif
                                             </div>
                                         </div>
                                     @else
@@ -391,18 +399,33 @@
                                 </td>
                             @endfor
 
+                            {{-- LOOP REALISASI OUTPUT (KUMULATIF) --}}
+                            @php $cumulativeOutput = 0; @endphp {{-- Variabel penampung --}}
+
                             @for($q = 1; $q <= 4; $q++)
+                                @php 
+                                    $currentQCount = $pubFinalsQ[$q] ?? 0; // Jumlah selesai spesifik di Q ini
+                                    $cumulativeOutput += $currentQCount;   // Tambahkan ke total kumulatif
+                                @endphp
+
                                 <td class="px-4 py-4 text-center bg-purple-50 align-top">
-                                    @if($pubFinalsQ[$q] > 0)
+                                    @if($cumulativeOutput > 0)
                                         <div class="relative inline-block group">
+                                            {{-- Tampilkan Angka KUMULATIF --}}
                                             <div class="px-3 py-1 rounded-full bg-green-600 text-white inline-block cursor-pointer text-xs">
-                                                {{ $pubFinalsQ[$q] }} Selesai
+                                                {{ $cumulativeOutput }} Selesai
                                             </div>
+
+                                            {{-- Tooltip Detail --}}
                                             <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64 text-sm text-gray-700 z-50">
-                                                <p class="font-semibold text-gray-800 mb-1">Daftar Selesai:</p>
-                                                <ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto text-left">
-                                                    @foreach($pubListFinalsQ[$q] as $itemName) <li>{{ $itemName }}</li> @endforeach
-                                                </ul>
+                                                @if($currentQCount > 0)
+                                                    <p class="font-semibold text-gray-800 mb-1">Selesai di Q{{ $q }}:</p>
+                                                    <ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto text-left">
+                                                        @foreach($pubListFinalsQ[$q] as $itemName) <li>{{ $itemName }}</li> @endforeach
+                                                    </ul>
+                                                @else
+                                                    <p class="text-xs text-gray-500 italic">Total akumulasi {{ $cumulativeOutput }} output selesai.</p>
+                                                @endif
                                             </div>
                                         </div>
                                     @else
@@ -597,11 +620,12 @@ document.getElementById('search').addEventListener('keyup', function() {
                 <tr>
                     <td class="px-4 py-4 align-top bg-purple-50">
                         <div class="text-sm font-medium text-gray-700">Realisasi Output</div>
-                        <div class="text-xs text-gray-500 mt-1">${outputCount} Output</div>
-                        <div class="mt-1"><span class="px-2 py-0.5 text-xs bg-purple-100 border rounded-full">0% selesai</span></div>
+                        <div class="text-xs text-gray-500 mt-1">${totOutFinal}/${totOutPlan} Item</div>
+                        <div class="mt-1"><span class="px-2 py-0.5 text-xs bg-purple-100 border rounded-full">${Math.round(percentOut)}% selesai</span></div>
                     </td>
-                    ${generateEmptyPurpleColumns()}
+                    ${generateOutputColumns(item)} 
                 </tr>`;
+                // Perhatikan: kita memanggil generateOutputColumns(item) bukan generateEmptyPurpleColumns()
 
                 // BARIS 4: Target Output (Purple Light)
                 let row4 = `
@@ -736,10 +760,90 @@ function generateQuarterColumns(item) {
     return html;
 }
 
-// Helper: Empty Purple Columns untuk AJAX (Row 3 - Realisasi Output)
-function generateEmptyPurpleColumns() {
+// Helper: Output Columns (Kumulatif pada Realisasi)
+function generateOutputColumns(item) {
     let html = '';
-    for(let i=0; i<8; i++) html += `<td class="px-4 py-4 text-center bg-purple-50 align-top"><div class="text-xs text-gray-400">-</div></td>`;
+    
+    // 1. Parsing Data
+    let plansQ = {1:0, 2:0, 3:0, 4:0};
+    let finalsQ = {1:0, 2:0, 3:0, 4:0};
+    let listPlansQ = {1:[], 2:[], 3:[], 4:[]};
+    let listFinalsQ = {1:[], 2:[], 3:[], 4:[]};
+
+    if (item.publicationPlans && Array.isArray(item.publicationPlans)) {
+        item.publicationPlans.forEach(plan => {
+            if (plan.plan_date) {
+                let date = new Date(plan.plan_date);
+                let month = date.getMonth() + 1;
+                let q = Math.ceil(month / 3);
+                
+                plansQ[q]++;
+                listPlansQ[q].push(plan.plan_name);
+                
+                if (plan.actual_date) {
+                    finalsQ[q]++;
+                    listFinalsQ[q].push(plan.plan_name);
+                }
+            }
+        });
+    }
+
+    let totalPubPlans = Object.values(plansQ).reduce((a, b) => a + b, 0);
+
+    // 2. Render RENCANA (Tetap Total Tahunan)
+    for (let q = 1; q <= 4; q++) {
+        let content = '';
+        if (totalPubPlans > 0) {
+            let tooltipContent = listPlansQ[q].length > 0 
+                ? `<p class="font-semibold text-gray-800 mb-1">Rencana Q${q}:</p><ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto text-left text-xs">${listPlansQ[q].map(name => `<li>${name}</li>`).join('')}</ul>`
+                : `<p class="text-xs text-gray-500 italic">Bagian dari total ${totalPubPlans} output tahunan.</p>`;
+
+            content = `
+                <div class="relative group inline-block">
+                    <div class="px-3 py-1 rounded-full bg-blue-700 text-white inline-block cursor-pointer hover:bg-blue-600 transition text-xs">
+                        ${totalPubPlans} Rencana
+                    </div>
+                    <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64 text-sm text-gray-700 z-50">
+                        ${tooltipContent}
+                    </div>
+                </div>`;
+        } else {
+            content = `<div class="px-3 py-1 text-gray-400 inline-block text-xs"> - </div>`;
+        }
+        html += `<td class="px-4 py-4 text-center bg-purple-50 align-top">${content}</td>`;
+    }
+
+    // 3. Render REALISASI (LOGIKA KUMULATIF)
+    let cumulativeOutput = 0; // Reset counter
+
+    for (let q = 1; q <= 4; q++) {
+        let count = finalsQ[q]; // Jumlah spesifik di Q ini
+        cumulativeOutput += count; // Tambahkan ke kumulatif
+
+        let content = '';
+        if (cumulativeOutput > 0) {
+            let tooltipContent = '';
+            if (count > 0) {
+                tooltipContent = `<p class="font-semibold text-gray-800 mb-1">Selesai di Q${q}:</p><ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto text-left text-xs">${listFinalsQ[q].map(name => `<li>${name}</li>`).join('')}</ul>`;
+            } else {
+                tooltipContent = `<p class="text-xs text-gray-500 italic">Total akumulasi: ${cumulativeOutput} Selesai</p>`;
+            }
+            
+            content = `
+                <div class="relative inline-block group">
+                    <div class="px-3 py-1 rounded-full bg-green-600 text-white inline-block cursor-pointer text-xs">
+                        ${cumulativeOutput} Selesai
+                    </div>
+                    <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64 text-sm text-gray-700 z-50">
+                        ${tooltipContent}
+                    </div>
+                </div>`;
+        } else {
+            content = `<div class="px-3 py-1 text-gray-400 inline-block text-xs"> - </div>`;
+        }
+        html += `<td class="px-4 py-4 text-center bg-purple-50 align-top">${content}</td>`;
+    }
+
     return html;
 }
 

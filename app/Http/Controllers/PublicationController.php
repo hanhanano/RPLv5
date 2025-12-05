@@ -25,7 +25,8 @@ class PublicationController extends Controller
             'user',
             'stepsPlans.stepsFinals.struggles',
             'files',
-            'teamTarget'
+            'teamTarget',
+            'publicationPlans'
         ]);
 
         $user = auth()->user();
@@ -377,7 +378,8 @@ class PublicationController extends Controller
         $publication = Publication::with([
             'user',
             'stepsPlans.stepsFinals.struggles',
-            'files'
+            'files',
+            'publicationPlans'
         ])->findOrFail($id);
 
         return view('publications.show', compact('publication'));
@@ -531,7 +533,7 @@ class PublicationController extends Controller
             ->orWhere('publication_name', 'like', "%{$query}%")
             ->orWhere('publication_pic', 'like', "%{$query}%");
         })
-        ->with(['user', 'stepsPlans.stepsFinals.struggles', 'files', 'teamTarget'])
+        ->with(['user', 'stepsPlans.stepsFinals.struggles', 'files', 'teamTarget', 'publicationPlans'])
         ->get();
 
         foreach ($publications as $publication) {
