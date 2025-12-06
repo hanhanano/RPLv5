@@ -244,7 +244,7 @@
                         <p class="text-sm text-gray-600">Badan Pusat Statistik Kota Bekasi</p>
                     </div>
                 </div>
-                {{-- BAGIAN BARU: FILTER TAHUN --}}
+                {{-- Filter Tahun --}}
                 <div class="mb-1">
                     <form action="{{ route('change.year') }}" method="POST" id="yearForm">
                         @csrf
@@ -253,16 +253,20 @@
                             <select name="year" id="year" 
                                     onchange="document.getElementById('yearForm').submit()" 
                                     class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm py-1 pl-2 pr-8">
+                                
                                 @php 
-                                    $currentYear = now()->year; 
+                                    $currentYear = now()->year;
                                     $selectedYear = session('selected_year', $currentYear);
+                                    $startYear = 2024; 
                                 @endphp
                                 
-                                @for ($i = $currentYear; $i >= $currentYear - 4; $i--)
+                                {{-- Loop dari Tahun Depan lalu mundur sampai Tahun 2024 --}}
+                                @for ($i = $currentYear + 1; $i >= $startYear; $i--)
                                     <option value="{{ $i }}" {{ $selectedYear == $i ? 'selected' : '' }}>
                                         {{ $i }}
                                     </option>
                                 @endfor
+
                             </select>
                         </div>
                     </form>
