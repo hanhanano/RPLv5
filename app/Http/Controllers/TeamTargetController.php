@@ -37,6 +37,9 @@ class TeamTargetController extends Controller
             $query->where('team_name', $user->team);
         }
 
+        $year = session('selected_year', now()->year);
+        $query->whereYear('created_at', $year); 
+
         $targets = $query->get();
         
         return view('tampilan.team_targets', compact('targets'));
