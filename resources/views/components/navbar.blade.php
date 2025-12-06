@@ -255,13 +255,8 @@
                                     class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm py-1 pl-2 pr-8">
                                 
                                 @php 
-                                    // 1. Tentukan Tahun Sekarang (Otomatis mengikuti server/waktu saat ini)
                                     $currentYear = now()->year;
-                                    
-                                    // 2. Ambil tahun yang dipilih dari session, atau default ke tahun sekarang
                                     $selectedYear = session('selected_year', $currentYear);
-
-                                    // 3. Tentukan Tahun Mulai (Start) sesuai keinginan Anda
                                     $startYear = 2024; 
                                 @endphp
                                 
