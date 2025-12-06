@@ -23,7 +23,7 @@
                 <!-- Header -->
                 <div class="flex items-center justify-between mb-6 pt-4">
                     <a href="/dashboard" 
-                        class="flex gap-1 rounded-md text-sm px-2 py-2 sm:text-xs hover:bg-emerald-600 hover:text-white bg-white border shadow rounded-lg"> 
+                        class="flex gap-1 items-center bg-white-600 text-black px-4 py-2 rounded-lg hover:bg-green-700 hover:text-white shadow transition text-sm font-medium">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">
                             <path fill-rule="evenodd" d="M14 8a.75.75 0 0 1-.75.75H4.56l3.22 3.22a.75.75 0 1 1-1.06 1.06l-4.5-4.5a.75.75 0 0 1 0-1.06l4.5-4.5a.75.75 0 0 1 1.06 1.06L4.56 7.25h8.69A.75.75 0 0 1 14 8Z" clip-rule="evenodd" />
                         </svg>
@@ -32,7 +32,7 @@
                 </div>
 
                 <!-- Judul -->
-                <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center justify-between mb-2">
                     <div>
                         <h1 class="text-2xl font-bold mb-2">{{ $publication->publication_report }}</h1>
                         <p class="text-xs sm:text-sm text-gray-600 mb-2">{{ $publication->publication_name }}</p>
@@ -185,7 +185,7 @@
                 </div> 
                 --}} -->
 
-                <div class="grid grid-cols-1 sm:grid-cols-6 gap-2 mb-4 items-center pt-12">
+                <div class="grid grid-cols-1 sm:grid-cols-6 gap-2 mb-4 items-center pt-4">
                     <!-- Search -->
                     <div class="{{ (auth()->check() && in_array(auth()->user()->role, ['ketua_tim', 'admin'])) ? 'sm:col-span-4' : 'sm:col-span-6' }}">
                             <input 

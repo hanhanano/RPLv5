@@ -118,7 +118,8 @@
     </div>
 
     <div class="mb-4 mt-1 border rounded-lg">
-        <input type="text" id="search" placeholder="Cari Berdasarkan Nama Sasaran/Laporan" class="w-full px-3 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        {{-- Input Search Client-Side --}}
+        <input type="text" id="searchInput" placeholder="Cari Berdasarkan Nama Sasaran/Laporan..." class="w-full px-3 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
     </div>
 
     <div class="bg-white shadow rounded-lg overflow-hidden">
@@ -563,309 +564,396 @@
 //     modal.classList.add('hidden'); modal.classList.remove('flex');
 // }
 
-// Search Logic Updated for 4 Rows
-document.getElementById('search').addEventListener('keyup', function() {
-    let query = this.value;
-    let tbody = document.getElementById('publication-table-body');
+// // Search Logic Updated for 4 Rows
+// document.getElementById('search').addEventListener('keyup', function() {
+//     let query = this.value;
+//     let tbody = document.getElementById('publication-table-body');
 
-    fetch(`/publications/search?query=${query}`)
-        .then(res => res.json())
-        .then(data => {
-            if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="15" class="text-center text-gray-500 py-4">Tidak ada data ditemukan</td></tr>`;
-                return;
-            }
+//     fetch(`/publications/search?query=${query}`)
+//         .then(res => res.json())
+//         .then(data => {
+//             if (data.length === 0) {
+//                 tbody.innerHTML = `<tr><td colspan="15" class="text-center text-gray-500 py-4">Tidak ada data ditemukan</td></tr>`;
+//                 return;
+//             }
 
-            // Generate HTML HTML sesuai struktur 4 Baris
-            state.dataHtml = data.map((item, index) => {
-                let outputCount = item.filesCount || 0;
+//             // Generate HTML HTML sesuai struktur 4 Baris
+//             state.dataHtml = data.map((item, index) => {
+//                 let outputCount = item.filesCount || 0;
                 
-                // BARIS 1: Realisasi Tahapan (Blue)
-                let row1 = `
-                <tr class="border-t border-gray-200">
-                    <td class="px-4 py-4 align-top" rowspan="4">${index + 1}</td>
-                    <td class="px-4 py-4 align-top font-semibold text-gray-700" rowspan="4">${item.publication_report}</td>
-                    <td class="px-4 py-4 align-top font-semibold text-gray-700" rowspan="4">${item.publication_name}</td>
-                    <td class="px-4 py-4 align-top font-semibold text-gray-700" rowspan="4">${item.publication_pic}</td>
+//                 // BARIS 1: Realisasi Tahapan (Blue)
+//                 let row1 = `
+//                 <tr class="border-t border-gray-200">
+//                     <td class="px-4 py-4 align-top" rowspan="4">${index + 1}</td>
+//                     <td class="px-4 py-4 align-top font-semibold text-gray-700" rowspan="4">${item.publication_report}</td>
+//                     <td class="px-4 py-4 align-top font-semibold text-gray-700" rowspan="4">${item.publication_name}</td>
+//                     <td class="px-4 py-4 align-top font-semibold text-gray-700" rowspan="4">${item.publication_pic}</td>
                     
-                    <td class="px-4 py-4 align-top bg-blue-50">
-                        <div class="text-sm font-medium text-gray-700">Realisasi Tahapan</div>
-                        <div class="text-xs text-gray-500 mt-1">
-                            ${(Object.values(item.rekapFinals ?? {}).reduce((a,b)=>a+b,0))}/${(Object.values(item.rekapPlans ?? {}).reduce((a,b)=>a+b,0))} Item
-                        </div>
-                        <div class="mt-1"><span class="px-2 py-0.5 text-xs bg-blue-100 border rounded-full">${Math.round(item.progressKumulatif ?? 0)}% selesai</span></div>
-                    </td>
-                    ${generateQuarterColumns(item)}
-                    <td class="px-4 py-4 text-center" rowspan="4">${generateActionButtons(item)}</td>
-                </tr>`;
+//                     <td class="px-4 py-4 align-top bg-blue-50">
+//                         <div class="text-sm font-medium text-gray-700">Realisasi Tahapan</div>
+//                         <div class="text-xs text-gray-500 mt-1">
+//                             ${(Object.values(item.rekapFinals ?? {}).reduce((a,b)=>a+b,0))}/${(Object.values(item.rekapPlans ?? {}).reduce((a,b)=>a+b,0))} Item
+//                         </div>
+//                         <div class="mt-1"><span class="px-2 py-0.5 text-xs bg-blue-100 border rounded-full">${Math.round(item.progressKumulatif ?? 0)}% selesai</span></div>
+//                     </td>
+//                     ${generateQuarterColumns(item)}
+//                     <td class="px-4 py-4 text-center" rowspan="4">${generateActionButtons(item)}</td>
+//                 </tr>`;
 
-                // BARIS 2: Target Tahapan (Blue Light)
-                let row2 = `
-                <tr class="bg-blue-50/50 border-b border-white">
-                    <td class="px-4 py-2 align-top bg-blue-100">
-                        <div class="text-xs font-bold text-blue-900">Target Tahapan</div>
-                    </td>
-                    <td class="px-4 py-2 text-center text-blue-900 font-bold text-xs">${item.target_q1_plan ?? '-'}</td>
-                    <td class="px-4 py-2 text-center text-blue-900 font-bold text-xs">${item.target_q2_plan ?? '-'}</td>
-                    <td class="px-4 py-2 text-center text-blue-900 font-bold text-xs">${item.target_q3_plan ?? '-'}</td>
-                    <td class="px-4 py-2 text-center text-blue-900 font-bold text-xs">${item.target_q4_plan ?? '-'}</td>
-                    <td class="px-4 py-2 text-center text-emerald-700 font-bold text-xs">${item.target_q1_real ?? '-'}</td>
-                    <td class="px-4 py-2 text-center text-emerald-700 font-bold text-xs">${item.target_q2_real ?? '-'}</td>
-                    <td class="px-4 py-2 text-center text-emerald-700 font-bold text-xs">${item.target_q3_real ?? '-'}</td>
-                    <td class="px-4 py-2 text-center text-emerald-700 font-bold text-xs">${item.target_q4_real ?? '-'}</td>
-                </tr>`;
+//                 // BARIS 2: Target Tahapan (Blue Light)
+//                 let row2 = `
+//                 <tr class="bg-blue-50/50 border-b border-white">
+//                     <td class="px-4 py-2 align-top bg-blue-100">
+//                         <div class="text-xs font-bold text-blue-900">Target Tahapan</div>
+//                     </td>
+//                     <td class="px-4 py-2 text-center text-blue-900 font-bold text-xs">${item.target_q1_plan ?? '-'}</td>
+//                     <td class="px-4 py-2 text-center text-blue-900 font-bold text-xs">${item.target_q2_plan ?? '-'}</td>
+//                     <td class="px-4 py-2 text-center text-blue-900 font-bold text-xs">${item.target_q3_plan ?? '-'}</td>
+//                     <td class="px-4 py-2 text-center text-blue-900 font-bold text-xs">${item.target_q4_plan ?? '-'}</td>
+//                     <td class="px-4 py-2 text-center text-emerald-700 font-bold text-xs">${item.target_q1_real ?? '-'}</td>
+//                     <td class="px-4 py-2 text-center text-emerald-700 font-bold text-xs">${item.target_q2_real ?? '-'}</td>
+//                     <td class="px-4 py-2 text-center text-emerald-700 font-bold text-xs">${item.target_q3_real ?? '-'}</td>
+//                     <td class="px-4 py-2 text-center text-emerald-700 font-bold text-xs">${item.target_q4_real ?? '-'}</td>
+//                 </tr>`;
 
-                // BARIS 3: Realisasi Output (Purple)
-                let row3 = `
-                <tr>
-                    <td class="px-4 py-4 align-top bg-purple-50">
-                        <div class="text-sm font-medium text-gray-700">Realisasi Output</div>
-                        <div class="text-xs text-gray-500 mt-1">${totOutFinal}/${totOutPlan} Item</div>
-                        <div class="mt-1"><span class="px-2 py-0.5 text-xs bg-purple-100 border rounded-full">${Math.round(percentOut)}% selesai</span></div>
-                    </td>
-                    ${generateOutputColumns(item)} 
-                </tr>`;
-                // Perhatikan: kita memanggil generateOutputColumns(item) bukan generateEmptyPurpleColumns()
+//                 // BARIS 3: Realisasi Output (Purple)
+//                 let row3 = `
+//                 <tr>
+//                     <td class="px-4 py-4 align-top bg-purple-50">
+//                         <div class="text-sm font-medium text-gray-700">Realisasi Output</div>
+//                         <div class="text-xs text-gray-500 mt-1">${totOutFinal}/${totOutPlan} Item</div>
+//                         <div class="mt-1"><span class="px-2 py-0.5 text-xs bg-purple-100 border rounded-full">${Math.round(percentOut)}% selesai</span></div>
+//                     </td>
+//                     ${generateOutputColumns(item)} 
+//                 </tr>`;
+//                 // Perhatikan: kita memanggil generateOutputColumns(item) bukan generateEmptyPurpleColumns()
 
-                // BARIS 4: Target Output (Purple Light)
-                let row4 = `
-                <tr class="bg-purple-50/50">
-                    <td class="px-4 py-2 align-top bg-purple-100">
-                        <div class="text-xs font-bold text-purple-900">Target Output</div>
-                    </td>
-                    <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_plan ?? '-'}</td>
-                    <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_plan ?? '-'}</td>
-                    <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_plan ?? '-'}</td>
-                    <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_plan ?? '-'}</td>
+//                 // BARIS 4: Target Output (Purple Light)
+//                 let row4 = `
+//                 <tr class="bg-purple-50/50">
+//                     <td class="px-4 py-2 align-top bg-purple-100">
+//                         <div class="text-xs font-bold text-purple-900">Target Output</div>
+//                     </td>
+//                     <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_plan ?? '-'}</td>
+//                     <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_plan ?? '-'}</td>
+//                     <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_plan ?? '-'}</td>
+//                     <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_plan ?? '-'}</td>
                     
-                    <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_real_q1 ?? '-'}</td>
-                    <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_real_q2 ?? '-'}</td>
-                    <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_real_q3 ?? '-'}</td>
-                    <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_real_q4 ?? '-'}</td>
-                </tr>`;
+//                     <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_real_q1 ?? '-'}</td>
+//                     <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_real_q2 ?? '-'}</td>
+//                     <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_real_q3 ?? '-'}</td>
+//                     <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_real_q4 ?? '-'}</td>
+//                 </tr>`;
 
-                return row1 + row2 + row3 + row4;
-            });
+//                 return row1 + row2 + row3 + row4;
+//             });
 
-            state.currentPage = 1;
-            updatePagination();
-        });
-});
+//             state.currentPage = 1;
+//             updatePagination();
+//         });
+// });
 
+
+// Fungsi Helper untuk Modal (Jika diperlukan untuk tombol Edit/Hapus)
 window.userRole = "{{ auth()->check() ? auth()->user()->role : 'viewer' }}";
 const csrfToken = document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').content : '';
 
 document.addEventListener("DOMContentLoaded", function() {
-    const elements = {
-        tbody: document.getElementById('publication-table-body'),
-        rowsSelect: document.getElementById('rowsPerPage'),
-        btnPrev: document.getElementById('btnPrev'),
-        btnNext: document.getElementById('btnNext'),
-        pageInfo: document.getElementById('pageInfo'),
-        search: document.getElementById('search')
-    };
+    // 1. Definisi Elemen
+    const tbody = document.getElementById('publication-table-body');
+    const rowsSelect = document.getElementById('rowsPerPage');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const pageInfo = document.getElementById('pageInfo');
+    const searchInput = document.getElementById('searchInput');
 
-    window.state = { currentPage: 1, rowsPerPage: 10, dataHtml: [] };
+    // Cek keberadaan tabel
+    if (!tbody) return;
 
-    // Init Load: Mengambil data HTML yang dirender dari Blade (Per 4 Baris)
-    function initLoad() {
-        const rawRows = Array.from(elements.tbody.getElementsByTagName('tr'));
-        state.dataHtml = [];
-        
-        // Loop setiap 4 baris (Row 1,2,3,4 adalah 1 item)
+    // 2. Ambil Data Mentah (Semua baris TR)
+    const rawRows = Array.from(tbody.querySelectorAll('tr'));
+    let dataItems = [];
+
+    // Cek apakah data kosong
+    const isEmpty = rawRows.length === 0 || (rawRows.length === 1 && rawRows[0].innerText.includes("Tidak ada data"));
+
+    if (!isEmpty) {
+        // 3. GROUPING DATA: 1 Item Laporan = 4 Baris TR
+        // Berbeda dengan team_target (2 baris), disini kita lompat 4 (i += 4)
         for (let i = 0; i < rawRows.length; i += 4) {
+            // Pastikan ke-4 baris tersedia sebelum dikelompokkan
             if (rawRows[i] && rawRows[i+1] && rawRows[i+2] && rawRows[i+3]) {
-                state.dataHtml.push(
-                    rawRows[i].outerHTML + 
-                    rawRows[i+1].outerHTML + 
-                    rawRows[i+2].outerHTML + 
-                    rawRows[i+3].outerHTML
-                );
+                dataItems.push([
+                    rawRows[i],     // Baris 1: Info & Realisasi Tahapan
+                    rawRows[i+1],   // Baris 2: Target Tahapan
+                    rawRows[i+2],   // Baris 3: Realisasi Output
+                    rawRows[i+3]    // Baris 4: Target Output
+                ]);
             }
         }
-        window.updatePagination();
     }
 
-    window.updatePagination = function() {
-        const totalItems = state.dataHtml.length;
+    // State Awal
+    let currentPage = 1;
+    let rowsPerPage = 10;
+    let filteredData = [...dataItems]; // Data aktif (awal = semua data)
+
+    // --- FUNGSI UPDATE TAMPILAN (PAGINATION) ---
+    function updatePagination() {
+        const totalItems = filteredData.length;
+
+        // Langkah 1: Sembunyikan SEMUA baris di tabel terlebih dahulu
+        rawRows.forEach(row => row.style.display = 'none');
+
+        // Jika data kosong (setelah search atau memang kosong)
         if (totalItems === 0) {
-            elements.tbody.innerHTML = `<tr><td colspan="15" class="text-center text-gray-500 py-4">Tidak ada data ditemukan</td></tr>`;
-            elements.pageInfo.innerText = "0 data";
-            elements.btnPrev.disabled = true; elements.btnNext.disabled = true;
+            pageInfo.innerText = "0 data ditemukan";
+            btnPrev.disabled = true;
+            btnNext.disabled = true;
+            
+            // Jika tabel aslinya memang kosong/pesan tidak ada data, tampilkan kembali pesan itu
+            if (dataItems.length === 0 && rawRows.length > 0) {
+                rawRows[0].style.display = '';
+            }
             return;
         }
-        const totalPages = Math.ceil(totalItems / state.rowsPerPage);
-        if (state.currentPage < 1) state.currentPage = 1;
-        if (state.currentPage > totalPages) state.currentPage = totalPages;
 
-        const start = (state.currentPage - 1) * state.rowsPerPage;
-        const end = start + state.rowsPerPage;
-        elements.tbody.innerHTML = state.dataHtml.slice(start, end).join('');
-        elements.pageInfo.innerText = `${start + 1}-${Math.min(end, totalItems)} dari ${totalItems}`;
-        elements.btnPrev.disabled = (state.currentPage === 1);
-        elements.btnNext.disabled = (state.currentPage >= totalPages);
+        // Hitung Total Halaman
+        const totalPages = Math.ceil(totalItems / rowsPerPage);
+
+        // Validasi Halaman Aktif
+        if (currentPage < 1) currentPage = 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        // Hitung Batas Slice Array
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+
+        // Ambil data yang harus tampil
+        const pageItems = filteredData.slice(start, end);
+
+        // Langkah 2: Tampilkan baris yang terpilih
+        pageItems.forEach(group => {
+            // Loop setiap baris dalam grup (ada 4 baris) dan tampilkan
+            group.forEach(tr => {
+                tr.style.display = ''; // Reset display ke default (table-row)
+            });
+        });
+
+        // Update Info Pagination
+        pageInfo.innerText = `${start + 1}-${Math.min(end, totalItems)} dari ${totalItems} data`;
+
+        // Update Status Tombol
+        btnPrev.disabled = (currentPage === 1);
+        btnNext.disabled = (currentPage >= totalPages);
     }
 
-    // Pagination Listeners
-    elements.rowsSelect.addEventListener('change', function() { state.rowsPerPage = parseInt(this.value); state.currentPage = 1; updatePagination(); });
-    elements.btnPrev.addEventListener('click', function() { if(state.currentPage > 1) { state.currentPage--; updatePagination(); } });
-    elements.btnNext.addEventListener('click', function() { if(state.currentPage < Math.ceil(state.dataHtml.length / state.rowsPerPage)) { state.currentPage++; updatePagination(); } });
+    // --- EVENT LISTENERS ---
 
-    initLoad();
-});
+    // 1. Search (Real-time Filter)
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function() {
+            const query = this.value.toLowerCase();
 
+            // Filter dataItems
+            filteredData = dataItems.filter(group => {
+                // Kita cek teks pada Baris 1 (Nama Laporan, Kegiatan, PIC ada disitu)
+                // group[0] adalah Baris pertama dari 4 baris
+                const textContent = group[0].innerText.toLowerCase();
+                return textContent.includes(query);
+            });
 
-// Helper: Quarter Columns untuk AJAX (Row 1)
-function generateQuarterColumns(item) {
-    let html = '';
-    
-    let totalAnnualPlan = 0;
-    for(let i = 1; i <= 4; i++) {
-        totalAnnualPlan += (item.rekapPlans?.[i] || 0);
-    }
-    // Render kolom Rencana
-    for (let q = 1; q <= 4; q++) {
-        let quarterInput = item.rekapPlans?.[q] || 0;
-        let content = '';
-        if (totalAnnualPlan > 0) {
-            let tooltipText = quarterInput > 0 ? `Jadwal Q${q}` : `Bagian dari target tahunan`;
-            content = `<div class="px-3 py-1 rounded-full bg-blue-900 text-white inline-block text-xs" title="${tooltipText}">${totalAnnualPlan} Rencana</div>`;
-        } else {
-            content = `<div class="text-xs text-gray-400">-</div>`;
-        }
-        html += `<td class="px-4 py-4 text-center bg-blue-50 align-top">${content}</td>`;
+            // Reset ke halaman 1 saat mencari
+            currentPage = 1;
+            updatePagination();
+        });
     }
 
-    let cumulativeRealization = 0; // Reset penampung
-
-    for (let q = 1; q <= 4; q++) {
-        let currentReal = item.rekapFinals?.[q] || 0;
-        
-        cumulativeRealization += currentReal;
-
-        let content = '';
-        if (cumulativeRealization > 0) {
-            // Tampilkan TOTAL kumulatif
-            content = `<div class="px-3 py-1 rounded-full bg-emerald-600 text-white inline-block text-xs" title="Total Selesai s.d Q${q}: ${cumulativeRealization}">${cumulativeRealization} Selesai</div>`;
-            
-            if (item.lintasTriwulan?.[q] > 0) {
-                content += `<p class="text-xs text-orange-500 mt-1">+${item.lintasTriwulan[q]} Lintas</p>`;
-            }
-        } else {
-            content = `<div class="text-xs text-gray-400">-</div>`;
-        }
-        html += `<td class="px-4 py-4 text-center bg-blue-50 align-top">${content}</td>`;
+    // 2. Ganti Jumlah Rows per Page
+    if (rowsSelect) {
+        rowsSelect.addEventListener('change', function() {
+            rowsPerPage = parseInt(this.value);
+            currentPage = 1;
+            updatePagination();
+        });
     }
-    
-    return html;
-}
 
-// Helper: Output Columns (Kumulatif pada Realisasi)
-function generateOutputColumns(item) {
-    let html = '';
-    
-    // 1. Parsing Data
-    let plansQ = {1:0, 2:0, 3:0, 4:0};
-    let finalsQ = {1:0, 2:0, 3:0, 4:0};
-    let listPlansQ = {1:[], 2:[], 3:[], 4:[]};
-    let listFinalsQ = {1:[], 2:[], 3:[], 4:[]};
-
-    if (item.publicationPlans && Array.isArray(item.publicationPlans)) {
-        item.publicationPlans.forEach(plan => {
-            if (plan.plan_date) {
-                let date = new Date(plan.plan_date);
-                let month = date.getMonth() + 1;
-                let q = Math.ceil(month / 3);
-                
-                plansQ[q]++;
-                listPlansQ[q].push(plan.plan_name);
-                
-                if (plan.actual_date) {
-                    finalsQ[q]++;
-                    listFinalsQ[q].push(plan.plan_name);
-                }
+    // 3. Tombol Previous
+    if (btnPrev) {
+        btnPrev.addEventListener('click', function() {
+            if (currentPage > 1) {
+                currentPage--;
+                updatePagination();
             }
         });
     }
 
-    let totalPubPlans = Object.values(plansQ).reduce((a, b) => a + b, 0);
-
-    // 2. Render RENCANA (Tetap Total Tahunan)
-    for (let q = 1; q <= 4; q++) {
-        let content = '';
-        if (totalPubPlans > 0) {
-            let tooltipContent = listPlansQ[q].length > 0 
-                ? `<p class="font-semibold text-gray-800 mb-1">Rencana Q${q}:</p><ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto text-left text-xs">${listPlansQ[q].map(name => `<li>${name}</li>`).join('')}</ul>`
-                : `<p class="text-xs text-gray-500 italic">Bagian dari total ${totalPubPlans} output tahunan.</p>`;
-
-            content = `
-                <div class="relative group inline-block">
-                    <div class="px-3 py-1 rounded-full bg-blue-700 text-white inline-block cursor-pointer hover:bg-blue-600 transition text-xs">
-                        ${totalPubPlans} Rencana
-                    </div>
-                    <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64 text-sm text-gray-700 z-50">
-                        ${tooltipContent}
-                    </div>
-                </div>`;
-        } else {
-            content = `<div class="px-3 py-1 text-gray-400 inline-block text-xs"> - </div>`;
-        }
-        html += `<td class="px-4 py-4 text-center bg-purple-50 align-top">${content}</td>`;
-    }
-
-    // 3. Render REALISASI (LOGIKA KUMULATIF)
-    let cumulativeOutput = 0; // Reset counter
-
-    for (let q = 1; q <= 4; q++) {
-        let count = finalsQ[q]; // Jumlah spesifik di Q ini
-        cumulativeOutput += count; // Tambahkan ke kumulatif
-
-        let content = '';
-        if (cumulativeOutput > 0) {
-            let tooltipContent = '';
-            if (count > 0) {
-                tooltipContent = `<p class="font-semibold text-gray-800 mb-1">Selesai di Q${q}:</p><ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto text-left text-xs">${listFinalsQ[q].map(name => `<li>${name}</li>`).join('')}</ul>`;
-            } else {
-                tooltipContent = `<p class="text-xs text-gray-500 italic">Total akumulasi: ${cumulativeOutput} Selesai</p>`;
+    // 4. Tombol Next
+    if (btnNext) {
+        btnNext.addEventListener('click', function() {
+            const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                updatePagination();
             }
+        });
+    }
+
+    // Jalankan saat load pertama kali
+    updatePagination();
+});
+
+// // Helper: Quarter Columns untuk AJAX (Row 1)
+// function generateQuarterColumns(item) {
+//     let html = '';
+    
+//     let totalAnnualPlan = 0;
+//     for(let i = 1; i <= 4; i++) {
+//         totalAnnualPlan += (item.rekapPlans?.[i] || 0);
+//     }
+//     // Render kolom Rencana
+//     for (let q = 1; q <= 4; q++) {
+//         let quarterInput = item.rekapPlans?.[q] || 0;
+//         let content = '';
+//         if (totalAnnualPlan > 0) {
+//             let tooltipText = quarterInput > 0 ? `Jadwal Q${q}` : `Bagian dari target tahunan`;
+//             content = `<div class="px-3 py-1 rounded-full bg-blue-900 text-white inline-block text-xs" title="${tooltipText}">${totalAnnualPlan} Rencana</div>`;
+//         } else {
+//             content = `<div class="text-xs text-gray-400">-</div>`;
+//         }
+//         html += `<td class="px-4 py-4 text-center bg-blue-50 align-top">${content}</td>`;
+//     }
+
+//     let cumulativeRealization = 0; // Reset penampung
+
+//     for (let q = 1; q <= 4; q++) {
+//         let currentReal = item.rekapFinals?.[q] || 0;
+        
+//         cumulativeRealization += currentReal;
+
+//         let content = '';
+//         if (cumulativeRealization > 0) {
+//             // Tampilkan TOTAL kumulatif
+//             content = `<div class="px-3 py-1 rounded-full bg-emerald-600 text-white inline-block text-xs" title="Total Selesai s.d Q${q}: ${cumulativeRealization}">${cumulativeRealization} Selesai</div>`;
             
-            content = `
-                <div class="relative inline-block group">
-                    <div class="px-3 py-1 rounded-full bg-green-600 text-white inline-block cursor-pointer text-xs">
-                        ${cumulativeOutput} Selesai
-                    </div>
-                    <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64 text-sm text-gray-700 z-50">
-                        ${tooltipContent}
-                    </div>
-                </div>`;
-        } else {
-            content = `<div class="px-3 py-1 text-gray-400 inline-block text-xs"> - </div>`;
-        }
-        html += `<td class="px-4 py-4 text-center bg-purple-50 align-top">${content}</td>`;
-    }
+//             if (item.lintasTriwulan?.[q] > 0) {
+//                 content += `<p class="text-xs text-orange-500 mt-1">+${item.lintasTriwulan[q]} Lintas</p>`;
+//             }
+//         } else {
+//             content = `<div class="text-xs text-gray-400">-</div>`;
+//         }
+//         html += `<td class="px-4 py-4 text-center bg-blue-50 align-top">${content}</td>`;
+//     }
+    
+//     return html;
+// }
 
-    return html;
-}
+// // Helper: Output Columns (Kumulatif pada Realisasi)
+// function generateOutputColumns(item) {
+//     let html = '';
+    
+//     // 1. Parsing Data
+//     let plansQ = {1:0, 2:0, 3:0, 4:0};
+//     let finalsQ = {1:0, 2:0, 3:0, 4:0};
+//     let listPlansQ = {1:[], 2:[], 3:[], 4:[]};
+//     let listFinalsQ = {1:[], 2:[], 3:[], 4:[]};
 
-// Helper: Action Buttons untuk AJAX
-function generateActionButtons(item) {
-    const escapeQuotes = (str) => (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-    let html = `
-        <a href="/publications/${item.slug_publication}/steps" class="flex gap-1 sm:text-xs px-3 py-1 text-sm text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg mb-1 justify-center items-center w-full">Detail</a>
-        <a href="/publications/${item.slug_publication}/outputs" class="flex gap-1 sm:text-xs px-3 py-1 text-sm text-white bg-purple-600 hover:bg-purple-700 rounded-lg mb-1 justify-center items-center w-full">Output</a>
-    `;
-    if (window.userRole === 'ketua_tim' || window.userRole === 'admin') {
-        html += `
-            <button onclick="openEditModal('${item.slug_publication}', '${escapeQuotes(item.publication_report)}', '${escapeQuotes(item.publication_name)}', '${escapeQuotes(item.publication_pic)}')" class="flex gap-1 sm:text-xs px-3 py-1 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg mb-1 justify-center items-center w-full">Edit</button>
-            <form action="/publications/${item.slug_publication}" method="POST" onsubmit="return confirm('Yakin hapus publikasi ini?')" class="w-full">
-                <input type="hidden" name="_token" value="${csrfToken}">
-                <input type="hidden" name="_method" value="DELETE">
-                <button type="submit" class="flex gap-1 sm:text-xs px-3 py-1 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg mb-1 justify-center items-center w-full">Hapus</button>
-            </form>
-        `;
-    }
-    return html;
-}
+//     if (item.publicationPlans && Array.isArray(item.publicationPlans)) {
+//         item.publicationPlans.forEach(plan => {
+//             if (plan.plan_date) {
+//                 let date = new Date(plan.plan_date);
+//                 let month = date.getMonth() + 1;
+//                 let q = Math.ceil(month / 3);
+                
+//                 plansQ[q]++;
+//                 listPlansQ[q].push(plan.plan_name);
+                
+//                 if (plan.actual_date) {
+//                     finalsQ[q]++;
+//                     listFinalsQ[q].push(plan.plan_name);
+//                 }
+//             }
+//         });
+//     }
+
+//     let totalPubPlans = Object.values(plansQ).reduce((a, b) => a + b, 0);
+
+//     // 2. Render RENCANA (Tetap Total Tahunan)
+//     for (let q = 1; q <= 4; q++) {
+//         let content = '';
+//         if (totalPubPlans > 0) {
+//             let tooltipContent = listPlansQ[q].length > 0 
+//                 ? `<p class="font-semibold text-gray-800 mb-1">Rencana Q${q}:</p><ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto text-left text-xs">${listPlansQ[q].map(name => `<li>${name}</li>`).join('')}</ul>`
+//                 : `<p class="text-xs text-gray-500 italic">Bagian dari total ${totalPubPlans} output tahunan.</p>`;
+
+//             content = `
+//                 <div class="relative group inline-block">
+//                     <div class="px-3 py-1 rounded-full bg-blue-700 text-white inline-block cursor-pointer hover:bg-blue-600 transition text-xs">
+//                         ${totalPubPlans} Rencana
+//                     </div>
+//                     <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64 text-sm text-gray-700 z-50">
+//                         ${tooltipContent}
+//                     </div>
+//                 </div>`;
+//         } else {
+//             content = `<div class="px-3 py-1 text-gray-400 inline-block text-xs"> - </div>`;
+//         }
+//         html += `<td class="px-4 py-4 text-center bg-purple-50 align-top">${content}</td>`;
+//     }
+
+//     // 3. Render REALISASI (LOGIKA KUMULATIF)
+//     let cumulativeOutput = 0; // Reset counter
+
+//     for (let q = 1; q <= 4; q++) {
+//         let count = finalsQ[q]; // Jumlah spesifik di Q ini
+//         cumulativeOutput += count; // Tambahkan ke kumulatif
+
+//         let content = '';
+//         if (cumulativeOutput > 0) {
+//             let tooltipContent = '';
+//             if (count > 0) {
+//                 tooltipContent = `<p class="font-semibold text-gray-800 mb-1">Selesai di Q${q}:</p><ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto text-left text-xs">${listFinalsQ[q].map(name => `<li>${name}</li>`).join('')}</ul>`;
+//             } else {
+//                 tooltipContent = `<p class="text-xs text-gray-500 italic">Total akumulasi: ${cumulativeOutput} Selesai</p>`;
+//             }
+            
+//             content = `
+//                 <div class="relative inline-block group">
+//                     <div class="px-3 py-1 rounded-full bg-green-600 text-white inline-block cursor-pointer text-xs">
+//                         ${cumulativeOutput} Selesai
+//                     </div>
+//                     <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64 text-sm text-gray-700 z-50">
+//                         ${tooltipContent}
+//                     </div>
+//                 </div>`;
+//         } else {
+//             content = `<div class="px-3 py-1 text-gray-400 inline-block text-xs"> - </div>`;
+//         }
+//         html += `<td class="px-4 py-4 text-center bg-purple-50 align-top">${content}</td>`;
+//     }
+
+//     return html;
+// }
+
+// // Helper: Action Buttons untuk AJAX
+// function generateActionButtons(item) {
+//     const escapeQuotes = (str) => (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+//     let html = `
+//         <a href="/publications/${item.slug_publication}/steps" class="flex gap-1 sm:text-xs px-3 py-1 text-sm text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg mb-1 justify-center items-center w-full">Detail</a>
+//         <a href="/publications/${item.slug_publication}/outputs" class="flex gap-1 sm:text-xs px-3 py-1 text-sm text-white bg-purple-600 hover:bg-purple-700 rounded-lg mb-1 justify-center items-center w-full">Output</a>
+//     `;
+//     if (window.userRole === 'ketua_tim' || window.userRole === 'admin') {
+//         html += `
+//             <button onclick="openEditModal('${item.slug_publication}', '${escapeQuotes(item.publication_report)}', '${escapeQuotes(item.publication_name)}', '${escapeQuotes(item.publication_pic)}')" class="flex gap-1 sm:text-xs px-3 py-1 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg mb-1 justify-center items-center w-full">Edit</button>
+//             <form action="/publications/${item.slug_publication}" method="POST" onsubmit="return confirm('Yakin hapus publikasi ini?')" class="w-full">
+//                 <input type="hidden" name="_token" value="${csrfToken}">
+//                 <input type="hidden" name="_method" value="DELETE">
+//                 <button type="submit" class="flex gap-1 sm:text-xs px-3 py-1 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg mb-1 justify-center items-center w-full">Hapus</button>
+//             </form>
+//         `;
+//     }
+//     return html;
+// }
 </script>
 
 {{-- Auto-open modal jika error --}}

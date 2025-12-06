@@ -1,22 +1,23 @@
 <div class="max-w-6xl mx-auto mt-6 p-6 bg-white shadow-lg border rounded-xl" 
      x-data="{ chartsLoaded: false }"
      x-init="setTimeout(() => chartsLoaded = true, 500)">
-    
-    <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-blue-600">
-            <path d="M18.375 2.25c-1.035 0-1.875.84-1.875 1.875v15.75c0 1.035.84 1.875 1.875 1.875h.75c1.035 0 1.875-.84 1.875-1.875V4.125c0-1.036-.84-1.875-1.875-1.875h-.75ZM9.75 8.625c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-.75a1.875 1.875 0 0 1-1.875-1.875V8.625ZM3 13.125c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v6.75c0 1.035-.84 1.875-1.875 1.875h-.75A1.875 1.875 0 0 1 3 19.875v-6.75Z" />
-        </svg>
-        Analisis Visual Kinerja
-    </h2>
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-blue-600">
+                <path d="M18.375 2.25c-1.035 0-1.875.84-1.875 1.875v15.75c0 1.035.84 1.875 1.875 1.875h.75c1.035 0 1.875-.84 1.875-1.875V4.125c0-1.036-.84-1.875-1.875-1.875h-.75ZM9.75 8.625c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-.75a1.875 1.875 0 0 1-1.875-1.875V8.625ZM3 13.125c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v6.75c0 1.035-.84 1.875-1.875 1.875h-.75A1.875 1.875 0 0 1 3 19.875v-6.75Z" />
+            </svg>
+            Analisis Visual Kinerja
+        </h2>
 
-    <button onclick="window.print()" 
-            class="flex items-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium print:hidden mb-3 ml-auto"
-            >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-            <path fill-rule="evenodd" d="M5 2.75C5 1.784 5.784 1 6.75 1h6.5c.966 0 1.75.784 1.75 1.75v3.552c.377.046.752.097 1.126.153A2.212 2.212 0 0 1 18 8.653v4.097A2.25 2.25 0 0 1 15.75 15h-.241l.305 1.984A1.75 1.75 0 0 1 14.084 19H5.915a1.75 1.75 0 0 1-1.73-2.016L4.492 15H4.25A2.25 2.25 0 0 1 2 12.75V8.653c0-1.082.775-2.034 1.874-2.198.374-.056.75-.107 1.127-.153L5 2.75ZM6.75 2.5a.25.25 0 0 0-.25.25v3.05c.59-.033 1.181-.058 1.775-.075V2.5h-1.525Zm5.025 0v3.225c.594.017 1.185.042 1.775.075V2.75a.25.25 0 0 0-.25-.25h-1.525ZM5.618 15.25l-.356 2.316a.25.25 0 0 0 .247.284h8.382a.25.25 0 0 0 .247-.284l-.356-2.316H5.618Z" clip-rule="evenodd" />
-        </svg>
-        Print Dashboard
-    </button>
+        <button onclick="window.print()" 
+                class="flex items-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium print:hidden mb-3 ml-auto"
+                >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                <path fill-rule="evenodd" d="M5 2.75C5 1.784 5.784 1 6.75 1h6.5c.966 0 1.75.784 1.75 1.75v3.552c.377.046.752.097 1.126.153A2.212 2.212 0 0 1 18 8.653v4.097A2.25 2.25 0 0 1 15.75 15h-.241l.305 1.984A1.75 1.75 0 0 1 14.084 19H5.915a1.75 1.75 0 0 1-1.73-2.016L4.492 15H4.25A2.25 2.25 0 0 1 2 12.75V8.653c0-1.082.775-2.034 1.874-2.198.374-.056.75-.107 1.127-.153L5 2.75ZM6.75 2.5a.25.25 0 0 0-.25.25v3.05c.59-.033 1.181-.058 1.775-.075V2.5h-1.525Zm5.025 0v3.225c.594.017 1.185.042 1.775.075V2.75a.25.25 0 0 0-.25-.25h-1.525ZM5.618 15.25l-.356 2.316a.25.25 0 0 0 .247.284h8.382a.25.25 0 0 0 .247-.284l-.356-2.316H5.618Z" clip-rule="evenodd" />
+            </svg>
+            Print Dashboard
+        </button>
+    </div>
     
     {{-- Skeleton Loading --}}
     <div x-show="!chartsLoaded" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -103,11 +104,17 @@
             </div>
 
             <div class="grid grid-cols-2 gap-2 mt-4 text-xs">
-                @foreach($dataTahapanSummary as $data)
+                @foreach($dataTahapanSummary as $index => $data)
                     <div class="bg-gray-50 p-2 rounded-lg border hover:bg-gray-100 transition-colors">
                         <p class="font-bold text-gray-800">{{ $data['q'] }}</p>
-                        <p class="text-gray-600">{{ $data['ratio'] }}</p>
-                        <p class="{{ $data['color'] }} font-semibold">{{ $data['percent_text'] }}</p>
+                        
+                        <p id="tw-ratio-{{ $index + 1 }}" class="text-gray-600">
+                            {{ $data['ratio'] }}
+                        </p>
+                        
+                        <p id="tw-percent-{{ $index + 1 }}" class="font-semibold {{ $data['color'] }}">
+                            {{ $data['percent_text'] }}
+                        </p>
                     </div>
                 @endforeach
             </div>
@@ -137,14 +144,23 @@
             
             <div class="grid grid-cols-2 gap-2 mt-4 text-xs">
                 <div class="bg-emerald-50 p-3 rounded-lg border border-emerald-200 text-center hover:bg-emerald-100 transition-colors">
-                    <p class="text-emerald-700 text-2xl font-bold">{{ $dataRingSummary['publikasiSelesai'] }}</p>
+                    <p class="text-emerald-700 text-2xl font-bold">
+                        <span id="summary-pub-selesai">{{ $dataRingSummary['publikasiSelesai'] }}</span>
+                    </p>
                     <p class="text-gray-600 font-medium mt-1">Publikasi Selesai</p>
-                    <p class="text-gray-500 text-[10px]">dari {{ $dataRingSummary['totalPublikasi'] }} total</p>
+                    <p class="text-gray-500 text-[10px]">
+                        dari <span id="summary-pub-total">{{ $dataRingSummary['totalPublikasi'] }}</span> total
+                    </p>
                 </div>
+
                 <div class="bg-blue-50 p-3 rounded-lg border border-blue-200 text-center hover:bg-blue-100 transition-colors">
-                    <p class="text-blue-700 text-2xl font-bold">{{ $dataRingSummary['tahapanSelesai'] }}</p>
+                    <p class="text-blue-700 text-2xl font-bold">
+                        <span id="summary-tahap-selesai">{{ $dataRingSummary['tahapanSelesai'] }}</span>
+                    </p>
                     <p class="text-gray-600 font-medium mt-1">Tahapan Selesai</p>
-                    <p class="text-gray-500 text-[10px]">dari {{ $dataRingSummary['totalTahapan'] }} total</p>
+                    <p class="text-gray-500 text-[10px]">
+                        dari <span id="summary-tahap-total">{{ $dataRingSummary['totalTahapan'] }}</span> total
+                    </p>
                 </div>
             </div>
         </div>
@@ -185,24 +201,27 @@
         <div class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
             @foreach($dataGrafikPerTim['labels'] as $index => $tim)
                 @php
+                    // Logika warna awal PHP (tetap biarkan untuk render pertama kali)
                     $plans = $dataGrafikPerTim['plans'][$index];
                     $finals = $dataGrafikPerTim['tepat_waktu'][$index] + $dataGrafikPerTim['terlambat'][$index];
                     $percent = $plans > 0 ? round(($finals / $plans) * 100) : 0;
                     
-                    // Tentukan warna badge
-                    if ($percent >= 80) {
-                        $badgeColor = 'bg-green-100 text-green-700 border-green-300';
-                    } elseif ($percent >= 60) {
-                        $badgeColor = 'bg-yellow-100 text-yellow-700 border-yellow-300';
-                    } else {
-                        $badgeColor = 'bg-red-100 text-red-700 border-red-300';
-                    }
+                    if ($percent >= 80) { $badgeColor = 'bg-green-100 text-green-700 border-green-300'; } 
+                    elseif ($percent >= 60) { $badgeColor = 'bg-yellow-100 text-yellow-700 border-yellow-300'; } 
+                    else { $badgeColor = 'bg-red-100 text-red-700 border-red-300'; }
                 @endphp
                 
-                <div class="p-2 border rounded-lg {{ $badgeColor }} hover:shadow transition-shadow">
+                <div id="tim-card-{{ $index }}" class="p-2 border rounded-lg {{ $badgeColor }} hover:shadow transition-shadow">
+                    
                     <p class="font-bold">Tim {{ $tim }}</p>
-                    <p class="text-[10px] mt-1">{{ $finals }}/{{ $plans }} tahapan</p>
-                    <p class="font-semibold">{{ $percent }}%</p>
+                    
+                    <p id="tim-stats-{{ $index }}" class="text-[10px] mt-1">
+                        {{ $finals }}/{{ $plans }} tahapan
+                    </p>
+                    
+                    <p id="tim-percent-{{ $index }}" class="font-semibold">
+                        {{ $percent }}%
+                    </p>
                 </div>
             @endforeach
         </div>
@@ -220,9 +239,9 @@
         margin: 1cm;
     }
     
-    .page-break {
+    /* .page-break {
         page-break-after: always;
-    }
+    } */
     
     body {
         font-size: 10pt;
@@ -236,179 +255,3 @@
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
-    // Fungsi Print
-    function downloadChart(chartId, filename) {
-        const canvas = document.getElementById(chartId);
-        const url = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.download = filename;
-        link.href = url;
-        link.click();
-    }
-
-    document.addEventListener("DOMContentLoaded", function() {
-        
-        // Chart status publikasi
-        const ctxKinerja = document.getElementById('kinerjaChart');
-        if (ctxKinerja) {
-            new Chart(ctxKinerja, {
-                type: 'bar',
-                data: {
-                    labels: @json($dataGrafikPublikasi['labels']), 
-                    datasets: [{
-                        label: 'Jumlah',
-                        data: @json($dataGrafikPublikasi['data']), 
-                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], 
-                        borderRadius: 4,
-                        barPercentage: 0.6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false } 
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { display: true, drawBorder: false }
-                        },
-                        x: {
-                            grid: { display: false }
-                        }
-                    }
-                }
-            });
-        }
-
-        // Chart Rencana vs Realisasi
-        const ctxTahapan = document.getElementById('tahapanChart');
-        if (ctxTahapan) {
-            new Chart(ctxTahapan, {
-                type: 'bar',
-                data: {
-                    labels: @json($dataGrafikBatang['labels']), 
-                    datasets: [
-                        {
-                            label: 'Rencana',
-                            data: @json($dataGrafikBatang['rencana']), 
-                            backgroundColor: '#1e40af', 
-                            borderRadius: 4
-                        },
-                        {
-                            label: 'Realisasi',
-                            data: @json($dataGrafikBatang['realisasi']),
-                            backgroundColor: '#10b981',
-                            borderRadius: 4
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { display: false } },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
-        }
-
-        // Chart Proporsi
-        const ctxRing = document.getElementById('ringChart');
-        if (ctxRing) {
-            new Chart(ctxRing, {
-                type: 'doughnut',
-                data: {
-                    labels: @json($dataGrafikRing['labels']),
-                    datasets: [{
-                        data: @json($dataGrafikRing['data']),
-                        backgroundColor: ['#10b981', '#e5e7eb'], 
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    }
-                }
-            });
-        }
-
-        // Grafik Kinerja per tim
-        const ctxTim = document.getElementById('timChart');
-        if (ctxTim) {
-            const timData = @json($dataGrafikPerTim);
-
-            const sisaRencana = timData.plans.map((plan, i) => {
-                const totalSelesai = timData.tepat_waktu[i] + timData.terlambat[i];
-                return Math.max(0, plan - totalSelesai);
-            });
-
-            new Chart(ctxTim, {
-                type: 'bar',
-                data: {
-                    labels: timData.labels,
-                    datasets: [
-                        {
-                            label: 'Tepat Waktu',
-                            data: timData.tepat_waktu,
-                            backgroundColor: '#4472C4', 
-                            barPercentage: 0.6,
-                        },
-                        {
-                            label: 'Terlambat',
-                            data: timData.terlambat,
-                            backgroundColor: '#ED7D31', 
-                            barPercentage: 0.6,
-                        },
-                        {
-                            label: 'Sisa Target', 
-                            data: sisaRencana,
-                            backgroundColor: '#cdcbcbff', 
-                            barPercentage: 0.6,
-                        }
-                        
-                    ]
-                },
-                options: {
-                    indexAxis: 'y', 
-                    responsive: true,
-                    maintainAspectRatio: false,
-
-                    interaction: {
-                        mode: 'index', 
-                        axis: 'y', 
-                        intersect: false 
-                    },
-
-                    scales: {
-                        x: {
-                            stacked: true, 
-                            grid: { display: true } 
-                        },
-                        y: {
-                            stacked: true, 
-                            grid: { display: false }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { usePointStyle: true, boxWidth: 8 }
-                        },
-                        tooltip: {
-                            position: 'nearest'
-                        }
-                    }
-                }
-            });
-        }
-    });
-</script>

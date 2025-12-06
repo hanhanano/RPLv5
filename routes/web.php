@@ -13,6 +13,7 @@ use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\PublicationOutputController;
 use App\Http\Controllers\TeamTargetController;
 use App\Models\Publication;
+use Illuminate\Http\Request;
 
 /*
 |---------------------
@@ -141,3 +142,11 @@ Route::delete('/publication-plans/{id}', [PublicationOutputController::class, 'd
 Route::put('/admin/users/{id}/reset-password', [AdminController::class, 'resetPassword'])
     ->name('admin.resetPassword')
     ->middleware('auth');
+
+// Route untuk mengubah tahun session
+Route::post('/change-year', function (Request $request) {
+    // Simpan tahun ke session
+    session(['selected_year' => $request->input('year')]);
+    // Kembali ke halaman sebelumnya
+    return redirect()->back();
+})->name('change.year');

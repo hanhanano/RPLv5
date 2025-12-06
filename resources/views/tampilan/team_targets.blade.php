@@ -38,14 +38,12 @@
                 </div>
 
                 <div class="mb-4 mt-1 border rounded-lg">
-                    <form action="{{ route('target.index') }}" method="GET">
-                        <input 
-                            type="text"
-                            name="search"
-                            value="{{ request('search') }}"
-                            placeholder="Cari Berdasarkan Nama Sasaran/Laporan..."
-                            class="w-full px-3 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </form>
+                    {{-- Hapus Form, gunakan ID untuk JavaScript --}}
+                    <input 
+                        type="text"
+                        id="searchInput" 
+                        placeholder="Cari Berdasarkan Nama Sasaran/Laporan..."
+                        class="w-full px-3 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
 
                 <div class="border rounded-lg overflow-hidden">
@@ -74,7 +72,7 @@
                                 </tr>
                             </thead>
                             
-                            <tbody class="divide-y divide-gray-200">
+                            <tbody class="divide-y divide-gray-200" id="target-table-body">
                                 @forelse($targets as $index => $item)
                                 {{-- BARIS 1: IDENTITAS + TAHAPAN --}}
                                 <tr class="bg-white hover:bg-gray-50 transition border-t border-gray-200">
@@ -151,9 +149,7 @@
                                 </tr>
 
                                 {{-- BARIS 2: OUTPUT --}}
-                                <tr>
-                                    {{-- Kolom Identitas (No, Sasaran, Kegiatan, PIC) DILEWATI karena rowspan --}}
-
+                                <tr class="target-row-item">                       
                                     {{-- Jenis: Output (Baris 2 - Ungu) --}}
                                     <td class="px-4 py-4 align-top bg-purple-50">
                                         <div class="text-sm font-bold text-purple-900">Output</div>
@@ -200,30 +196,26 @@
                         </table>
                     </div>
 
-                    <div class="bg-white px-4 py-3 border-t border-gray-200 rounded-b-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+                    {{-- Footer Pagination --}}
+                    <div class="bg-white px-4 py-3 border-t border-gray-200 rounded-b-lg flex flex-col sm:flex-row items-center justify-between gap-4 mt-2" id="pagination-container">
                         <div class="flex items-center gap-4 text-sm text-gray-700 w-full sm:w-auto">
                             <div class="flex items-center gap-2">
                                 <span>Rows:</span>
-                                <select class="border-gray-300 rounded text-sm py-1 pl-2 pr-8 focus:ring-blue-500 focus:border-blue-500 cursor-pointer shadow-sm">
+                                <select id="rowsPerPage" class="border-gray-300 rounded text-sm py-1 pl-2 pr-8 focus:ring-blue-500 focus:border-blue-500 cursor-pointer shadow-sm">
                                     <option value="5">5</option>
                                     <option value="10" selected>10</option>
                                     <option value="25">25</option>
+                                    <option value="50">50</option>
                                 </select>
                             </div>
-                            <div class="font-medium whitespace-nowrap">
-                                {{ $targets->count() }} data
-                            </div>
+                            <div id="pageInfo" class="font-medium whitespace-nowrap">Menghitung data...</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button class="p-1.5 rounded-md border border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
-                                </svg>
+                            <button id="btnPrev" class="p-1.5 rounded-md border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-gray-600 transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" /></svg>
                             </button>
-                            <button class="p-1.5 rounded-md border border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
-                                </svg>
+                            <button id="btnNext" class="p-1.5 rounded-md border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-gray-600 transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" /></svg>
                             </button>
                         </div>
                     </div>
@@ -369,6 +361,115 @@
             modal.classList.add('hidden'); 
             modal.classList.remove('flex');
         }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const tbody = document.getElementById('target-table-body');
+            const rowsSelect = document.getElementById('rowsPerPage');
+            const btnPrev = document.getElementById('btnPrev');
+            const btnNext = document.getElementById('btnNext');
+            const pageInfo = document.getElementById('pageInfo');
+            const searchInput = document.getElementById('searchInput'); // Ambil elemen search
+
+            // 1. Ambil semua baris dari DOM
+            const allRows = Array.from(tbody.querySelectorAll('tr'));
+            let dataItems = [];
+
+            // 2. Grouping: 1 Item = 2 Baris (Tahapan + Output)
+            for (let i = 0; i < allRows.length; i += 2) {
+                if (allRows[i] && allRows[i+1]) {
+                    dataItems.push([allRows[i], allRows[i+1]]);
+                } else if (allRows[i]) {
+                    dataItems.push([allRows[i]]);
+                }
+            }
+
+            // Variabel State
+            let currentPage = 1;
+            let rowsPerPage = 10;
+            let filteredData = [...dataItems]; // Data yang akan ditampilkan (hasil search)
+
+            function updatePagination() {
+                const totalItems = filteredData.length;
+                
+                // Sembunyikan SEMUA baris terlebih dahulu
+                allRows.forEach(row => row.style.display = 'none');
+
+                // Cek jika data kosong
+                if (totalItems === 0) {
+                    pageInfo.innerText = "0 data";
+                    btnPrev.disabled = true;
+                    btnNext.disabled = true;
+                    
+                    return;
+                }
+
+                const totalPages = Math.ceil(totalItems / rowsPerPage);
+
+                // Validasi Halaman
+                if (currentPage < 1) currentPage = 1;
+                if (currentPage > totalPages) currentPage = totalPages;
+
+                // Hitung Slice Data
+                const start = (currentPage - 1) * rowsPerPage;
+                const end = start + rowsPerPage;
+
+                // Ambil data yang sesuai halaman & filter
+                const pageItems = filteredData.slice(start, end);
+
+                // Tampilkan baris yang terpilih
+                pageItems.forEach(itemPair => {
+                    itemPair.forEach(tr => tr.style.display = ''); // Reset display ke default (table-row)
+                });
+
+                // Update Info Text
+                pageInfo.innerText = `${start + 1}-${Math.min(end, totalItems)} dari ${totalItems} data`;
+
+                // Update Tombol Navigasi
+                btnPrev.disabled = (currentPage === 1);
+                btnNext.disabled = (currentPage >= totalPages);
+            }
+
+            // --- FITUR SEARCH (BARU) ---
+            searchInput.addEventListener('keyup', function() {
+                const query = this.value.toLowerCase();
+
+                // Filter dataItems berdasarkan teks yang ada di baris pertama (Nama Laporan/Kegiatan/PIC)
+                filteredData = dataItems.filter(itemPair => {
+                    const rowText = itemPair[0].innerText.toLowerCase();
+                    return rowText.includes(query);
+                });
+
+                currentPage = 1;
+                updatePagination();
+            });
+
+            // Event Listener: Ganti Jumlah Rows
+            rowsSelect.addEventListener('change', function() {
+                rowsPerPage = parseInt(this.value);
+                currentPage = 1;
+                updatePagination();
+            });
+
+            // Event Listener: Prev
+            btnPrev.addEventListener('click', function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    updatePagination();
+                }
+            });
+
+            // Event Listener: Next
+            btnNext.addEventListener('click', function() {
+                const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    updatePagination();
+                }
+            });
+
+            // Jalankan Pertama Kali
+            updatePagination();
+        });
     </script>
 </body>
 </html>

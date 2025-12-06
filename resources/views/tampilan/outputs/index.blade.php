@@ -22,7 +22,7 @@
             
             <div class="flex items-center justify-between pt-4">
                 <a href="{{ url('/dashboard') }}" 
-                    class="flex gap-1 items-center rounded-md text-sm px-3 py-2 sm:text-xs hover:bg-emerald-600 hover:text-white bg-white border shadow transition"> 
+                class="flex gap-1 items-center bg-white-600 text-black px-4 py-2 rounded-lg hover:bg-green-700 hover:text-white shadow transition text-sm font-medium">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">
                         <path fill-rule="evenodd" d="M14 8a.75.75 0 0 1-.75.75H4.56l3.22 3.22a.75.75 0 1 1-1.06 1.06l-4.5-4.5a.75.75 0 0 1 0-1.06l4.5-4.5a.75.75 0 0 1 1.06 1.06L4.56 7.25h8.69A.75.75 0 0 1 14 8Z" clip-rule="evenodd" />
                     </svg>
@@ -68,7 +68,7 @@
 
                 <div class="overflow-x-auto rounded-lg border border-gray-200">
                     <table class="w-full text-sm text-left text-gray-600">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+                        <thead class="text-xs text-gray-700 bg-gray-50 border-b">
                             <tr>
                                 <th scope="col" class="px-6 py-3 font-semibold">Nama Output</th>
                                 <th scope="col" class="px-6 py-3 text-center font-semibold">Jadwal Rencana</th>
