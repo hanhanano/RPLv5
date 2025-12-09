@@ -12,6 +12,7 @@ use App\Http\Controllers\PublicationExportController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\PublicationOutputController;
 use App\Http\Controllers\TeamTargetController;
+use App\Http\Controllers\CapaianKinerjaController;
 use App\Models\Publication;
 use Illuminate\Http\Request;
 
@@ -33,6 +34,9 @@ Route::get('/dashboard', [PublicationController::class, 'index'])
 
 // Laporan
 Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan');
+
+// Capaian Kinerja
+Route::get('/capaian-kinerja', [CapaianKinerjaController::class, 'index'])->name('capaian.index');
 
 // Halaman Target Kinerja
 Route::get('/target-kinerja', [TeamTargetController::class, 'index'])

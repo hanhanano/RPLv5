@@ -25,27 +25,35 @@ class PublicationOutputController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'actual_date' => 'required|date',
-            'file_output' => 'nullable|mimes:pdf,xls,xlsx,doc,docx|max:10240', // Max 10MB
+            'plan_name'   => 'required|string|max:255',
+            'plan_date'   => 'required|date',
+            // VALIDASI TAMBAHAN: Tanggal Rilis harus >= Tanggal Rencana
+            'actual_date' => 'nullable|date|after_or_equal:plan_date', 
+            'file_output' => 'nullable|mimes:pdf,xls,xlsx,doc,docx|max:10240',
+        ], [
+            // Custom Error Message (Opsional)
+            'actual_date.after_or_equal' => 'Tanggal realisasi tidak boleh lebih awal dari tanggal rencana.',
         ]);
 
         $plan = PublicationPlan::findOrFail($id);
 
-        // Update Tanggal Rilis
-        $plan->actual_date = $request->actual_date;
+        // Update Data Rencana
+        $plan->plan_name = $request->plan_name;
+        $plan->plan_date = $request->plan_date;
+        
+        // Update Realisasi
+        if ($request->filled('actual_date')) {
+            $plan->actual_date = $request->actual_date;
+        }
 
-        // Proses Upload File jika ada
+        // Proses Upload File
         if ($request->hasFile('file_output')) {
-            // Hapus file lama jika ada
             if ($plan->file_path && Storage::disk('public')->exists($plan->file_path)) {
                 Storage::disk('public')->delete($plan->file_path);
             }
-
-            // Simpan file baru
             $file = $request->file('file_output');
             $filename = time() . '_' . $file->getClientOriginalName();
             $path = $file->storeAs('outputs', $filename, 'public');
-            
             $plan->file_path = $path;
         }
 
