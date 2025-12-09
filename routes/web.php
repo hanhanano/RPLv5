@@ -33,10 +33,14 @@ Route::get('/dashboard', [PublicationController::class, 'index'])
     ->middleware('auth');
 
 // Laporan
-Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan');
+Route::get('/laporan', [LaporanController::class, 'index'])
+    ->name('laporan')
+    ->middleware('auth');
 
 // Capaian Kinerja
-Route::get('/capaian-kinerja', [CapaianKinerjaController::class, 'index'])->name('capaian.index');
+Route::get('/capaian-kinerja', [CapaianKinerjaController::class, 'index'])
+    ->name('capaian.index')
+    ->middleware('auth');
 
 // Halaman Target Kinerja
 Route::get('/target-kinerja', [TeamTargetController::class, 'index'])
