@@ -40,7 +40,7 @@ class TeamTargetController extends Controller
         $year = session('selected_year', now()->year);
         $query->whereYear('created_at', $year); 
 
-        $targets = $query->get();
+        $targets = $query->orderBy('id', 'desc')->get();
         
         return view('tampilan.team_targets', compact('targets'));
     }

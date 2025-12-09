@@ -38,7 +38,8 @@ class PublicationController extends Controller
             $query->where('publication_pic', $user->team);
         }
 
-        $publications = $query->get();
+        // Paksa urut ID terbesar (terbaru) di atas
+        $publications = $query->orderBy('publication_id', 'desc')->get();
         
         // Kirim tahun ke fungsi statistik
         $rekapPublikasiTahunan = $this->getStatistikPublikasiTahunan($user, $selectedYear);
@@ -377,6 +378,7 @@ class PublicationController extends Controller
             });
         })
         ->with(['user', 'stepsPlans.stepsFinals.struggles', 'files', 'teamTarget', 'publicationPlans'])
+        ->orderBy('publication_id', 'desc')
         ->get();
 
         foreach ($publications as $publication) {
