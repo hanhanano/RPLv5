@@ -358,9 +358,10 @@ class PublicationExportController extends Controller
         $fileName = 'laporan_capaian_kinerja_'. $year .'.xlsx';
         $writer = new Xlsx($spreadsheet);
 
-        return response()->streamDownload(function () use ($writer) {
-            $writer->save('php://output');
-        }, $fileName);
+        // return response()->streamDownload(function () use ($writer) {
+        //     $writer->save('php://output');
+        // }, $fileName);
+        return $this->generateExcel($year, $this->getDataIndikator($year), 'laporan_kinerja_indikator');
     }
 
     private function getQuarter($date)
@@ -372,4 +373,229 @@ class PublicationExportController extends Controller
             return null;
         }
     }
+
+    public function exportTableSasaran()
+    {
+        $year = session('selected_year', now()->year);
+        // Panggil helper untuk ambil data Sasaran
+        $data = $this->getDataSasaran($year);
+        return $this->generateExcel($year, $data, 'laporan_kinerja_sasaran');
+    }
+
+    private function getSasaranStrategis() {
+        return [
+            "Terwujudnya Penyediaan Data dan Insight Statistik Kependudukan dan Ketenagakerjaan yang Berkualitas" => ["Laporan Statistik Kependudukan dan Ketenagakerjaan"],
+            "Terwujudnya Penyediaan Data dan Insight Statistik Kesejahteraan Rakyat yang Berkualitas" => ["Laporan Statistik Statistik Kesejahteraan Rakyat"],
+            "Terwujudnya penyediaan Data dan Insight Statistik Ketahanan Sosial yang Berkualitas" => ["Laporan Statistik Ketahanan Sosial"],
+            "Terwujudnya Penyediaan Data dan Insight Statistik Tanaman Pangan, Hortikultura, dan Perkebunan yang Berkualitas" => ["Laporan Statistik Tanaman Pangan"],
+            "Terwujudnya Penyediaan Data dan Insight Statistik Peternakan, Perikanan, dan Kehutanan yang Berkualitas" => ["Laporan Statistik Peternakan, Perikanan, dan Kehutanan"],
+            "Terwujudnya penyediaan Data dan Insight Statistik Industri yang Berkualitas" => ["Laporan Statistik Industri"],
+            "Terwujudnya Penyediaan Data dan Insight Statistik Distribusi yang Berkualitas" => ["Laporan Statistik Distribusi"],
+            "Terwujudnya Penyediaan Data dan Insight Statistik Harga yang Berkualitas" => ["Laporan Statistik Harga"],
+            "Terwujudnya Penyediaan Data dan Insight Statistik Keuangan, Teknologi Informasi, dan Pariwisata yang Berkualitas" => ["Laporan Statistik Keuangan, Teknologi Informasi, dan Pariwisata"],
+            "Terwujudnya Penyediaan Data dan Insight Statistik Lintas Sektor yang Berkualitas" => ["Laporan Neraca Produksi", "Laporan Neraca Pengeluaran", "Laporan Analisis dan Pengembangan Statistik"],
+            "Terwujudnya Penguatan Penyelenggaraan Pembinaan Statistik Sektoral K/L/Pemda" => ["Tingkat Penyelenggaraan Pembinaan Statistik Sektoral sesuai Standar"],
+            "Terwujudnya Kemudahan Akses Data Bps" => ["Indeks Pelayanan Publik - Penilaian Mandiri"],
+            "Terwujudnya Dukungan Manajemen pada BPS Provinsi dan BPS Kabupaten/Kota" => ["Nilai SAKIP oleh Inspektorat", "Indeks Implementasi BerAKHLAK"]
+        ];
+    }
+
+    private function getDataSasaran($year) {
+        $dbData = Publication::with(['teamTarget', 'publicationPlans', 'stepsPlans.stepsFinals'])
+            ->whereYear('created_at', $year)->get()->groupBy('publication_report');
+        
+        $result = [];
+        foreach ($this->getSasaranStrategis() as $namaSasaran => $daftarLaporan) {
+            foreach ($daftarLaporan as $reportName) {
+                // LOGIKA PER LAPORAN (INDIVIDUAL)
+                $items = $dbData->get($reportName) ?? collect([]);
+                $result[] = $this->calculateSingleItem($reportName, $items);
+            }
+        }
+        return $result;
+    }
+
+    private function getDataIndikator($year) {
+        $dbData = Publication::with(['teamTarget', 'publicationPlans', 'stepsPlans.stepsFinals'])
+            ->whereYear('created_at', $year)->get()->groupBy('publication_report');
+        
+        $result = [];
+        foreach ($this->getSasaranStrategis() as $namaSasaran => $daftarLaporan) {
+            // LOGIKA AGREGAT (GABUNGAN)
+            // Kumpulkan semua items dari semua laporan dalam 1 indikator
+            $allItems = collect([]);
+            foreach ($daftarLaporan as $reportName) {
+                $allItems = $allItems->merge($dbData->get($reportName) ?? collect([]));
+            }
+            $result[] = $this->calculateSingleItem($namaSasaran, $allItems);
+        }
+        return $result;
+    }
+
+    // Inti Perhitungan (Sama untuk Indikator & Sasaran)
+    private function calculateSingleItem($name, $items) {
+        // Init Variabel
+        $tPlanQ = [1=>0, 2=>0, 3=>0, 4=>0]; $tRealQ = [1=>0, 2=>0, 3=>0, 4=>0]; $rRawQ = [1=>0, 2=>0, 3=>0, 4=>0];
+        $oPlanTotal = 0; $oTargetRealQ = [1=>0, 2=>0, 3=>0, 4=>0]; $oRawQ = [1=>0, 2=>0, 3=>0, 4=>0];
+
+        foreach ($items as $pub) {
+            if ($pub->stepsPlans) {
+                foreach ($pub->stepsPlans as $step) {
+                    $date = $step->stepsFinals->actual_started ?? null;
+                    if ($date && $q = $this->getQuarter($date)) $rRawQ[$q]++;
+                }
+            }
+            if ($pub->publicationPlans) {
+                foreach ($pub->publicationPlans as $plan) {
+                    $date = $plan->actual_date ?? null;
+                    if ($date && $q = $this->getQuarter($date)) $oRawQ[$q]++;
+                }
+            }
+            if ($pub->teamTarget) {
+                $t = $pub->teamTarget;
+                $tPlanQ[1] += $t->q1_plan??0; $tPlanQ[2] += $t->q2_plan??0; $tPlanQ[3] += $t->q3_plan??0; $tPlanQ[4] += $t->q4_plan??0;
+                $tRealQ[1] += $t->q1_real??0; $tRealQ[2] += $t->q2_real??0; $tRealQ[3] += $t->q3_real??0; $tRealQ[4] += $t->q4_real??0;
+                $oPlanTotal += $t->output_plan??0;
+                $oTargetRealQ[1] += $t->output_real_q1??0; $oTargetRealQ[2] += $t->output_real_q2??0; $oTargetRealQ[3] += $t->output_real_q3??0; $oTargetRealQ[4] += $t->output_real_q4??0;
+            }
+        }
+
+        // Kumulatif
+        $rKumulatif = []; $oKumulatif = []; $runT = 0; $runO = 0;
+        for ($i=1; $i<=4; $i++) {
+            $runT += $rRawQ[$i]; $rKumulatif[$i] = $runT;
+            $runO += $oRawQ[$i]; $oKumulatif[$i] = $runO;
+        }
+
+        // Data Baris
+        $row1_Blue = $tPlanQ; $row1_Green = $rKumulatif;
+        $row2_Blue = $tPlanQ; $row2_Green = $tRealQ;
+        $row3_Blue = []; for($i=1; $i<=4; $i++) $row3_Blue[$i] = $oPlanTotal;
+        $row3_Green = $oKumulatif;
+        $row4_Blue = $row3_Blue; $row4_Green = $oTargetRealQ;
+
+        // Persentase
+        $capaian = ['tahapan'=>['tw'=>[], 'thn'=>[]], 'output'=>['tw'=>[], 'thn'=>[]]];
+        $denom_Tahapan_THN = ($tPlanQ[4]>0) ? ($tRealQ[4]/$tPlanQ[4]) : 0;
+        $denom_Output_THN = ($oPlanTotal>0) ? ($oTargetRealQ[4]/$oPlanTotal) : 0;
+
+        for ($i=1; $i<=4; $i++) {
+            $den_TW_T = ($tPlanQ[$i]>0) ? ($tRealQ[$i]/$tPlanQ[$i]) : 0;
+            $raw_T_TW = ($den_TW_T>0) ? (($tPlanQ[$i]>0 ? ($rKumulatif[$i]/$tPlanQ[$i]) : 0) / $den_TW_T)*100 : 0;
+            $capaian['tahapan']['tw'][$i] = ($raw_T_TW>120) ? 120 : $raw_T_TW;
+
+            $raw_T_THN = ($denom_Tahapan_THN>0) ? (($tPlanQ[$i]>0 ? ($rKumulatif[$i]/$tPlanQ[$i]) : 0) / $denom_Tahapan_THN)*100 : 0;
+            $capaian['tahapan']['thn'][$i] = ($raw_T_THN>120) ? 120 : $raw_T_THN;
+
+            $den_TW_O = ($oPlanTotal>0) ? ($oTargetRealQ[$i]/$oPlanTotal) : 0;
+            $raw_O_TW = ($den_TW_O>0) ? (($oPlanTotal>0 ? ($oKumulatif[$i]/$oPlanTotal) : 0) / $den_TW_O)*100 : 0;
+            $capaian['output']['tw'][$i] = ($raw_O_TW>120) ? 120 : $raw_O_TW;
+
+            $raw_O_THN = ($denom_Output_THN>0) ? (($oPlanTotal>0 ? ($oKumulatif[$i]/$oPlanTotal) : 0) / $denom_Output_THN)*100 : 0;
+            $capaian['output']['thn'][$i] = ($raw_O_THN>120) ? 120 : $raw_O_THN;
+        }
+
+        return [
+            'report_name' => $name,
+            'row1_blue' => $row1_Blue, 'row1_green' => $row1_Green,
+            'row2_blue' => $row2_Blue, 'row2_green' => $row2_Green,
+            'row3_blue' => $row3_Blue, 'row3_green' => $row3_Green,
+            'row4_blue' => $row4_Blue, 'row4_green' => $row4_Green,
+            'capaian' => $capaian
+        ];
+    }
+
+    private function generateExcel($year, $laporanKinerja, $fileNamePrefix) {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // --- Header Setup (Sama seperti sebelumnya) ---
+        $sheet->mergeCells('A1:A3')->setCellValue('A1', 'Nama Sasaran/Laporan');
+        $sheet->mergeCells('B1:B3')->setCellValue('B1', 'Jenis');
+        $sheet->mergeCells('C1:F2')->setCellValue('C1', 'Rencana Kegiatan');
+        $sheet->mergeCells('G1:J2')->setCellValue('G1', 'Realisasi Kegiatan');
+        $sheet->mergeCells('K1:R1')->setCellValue('K1', 'Capaian Kinerja (%)');
+        $sheet->mergeCells('K2:N2')->setCellValue('K2', 'Terhadap Target Triwulanan');
+        $sheet->mergeCells('O2:R2')->setCellValue('O2', 'Terhadap Target Setahun');
+
+        $headersTW = ['TW I', 'TW II', 'TW III', 'TW IV'];
+        foreach($headersTW as $idx => $txt) {
+            $sheet->setCellValue(chr(67+$idx).'3', $txt);
+            $sheet->setCellValue(chr(71+$idx).'3', $txt);
+            $sheet->setCellValue(chr(75+$idx).'3', $txt);
+            $sheet->setCellValue(chr(79+$idx).'3', $txt);
+        }
+
+        // Style Header
+        $headerStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => '000000']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'EEEEEE']]
+        ];
+        $sheet->getStyle('A1:R3')->applyFromArray($headerStyle);
+
+        // Isi Data
+        $row = 4;
+        foreach ($laporanKinerja as $item) {
+            $startRow = $row;
+            // Nama
+            $sheet->mergeCells("A{$row}:A".($row+3));
+            $sheet->setCellValue("A{$row}", $item['report_name']);
+            $sheet->getStyle("A{$row}")->getAlignment()->setWrapText(true)->setVertical(Alignment::VERTICAL_TOP);
+
+            // Row 1
+            $sheet->setCellValue("B{$row}", "Realisasi Tahapan");
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(66+$i).$row, $item['row1_blue'][$i]??0);
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(70+$i).$row, $item['row1_green'][$i]??0);
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(74+$i).$row, number_format($item['capaian']['tahapan']['tw'][$i],0).'%');
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(78+$i).$row, number_format($item['capaian']['tahapan']['thn'][$i],0).'%');
+            $sheet->getStyle("B{$row}:R{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('EFF6FF');
+            $row++;
+
+            // Row 2
+            $sheet->setCellValue("B{$row}", "Target Tahapan");
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(66+$i).$row, $item['row2_blue'][$i]??0);
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(70+$i).$row, $item['row2_green'][$i]??0);
+            $row++;
+            
+            // Merge Capaian Row 1-2
+            for ($c = 75; $c <= 82; $c++) $sheet->mergeCells(chr($c)."{$startRow}:".chr($c).($startRow+1));
+
+            // Row 3
+            $outputStartRow = $row;
+            $sheet->setCellValue("B{$row}", "Realisasi Output");
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(66+$i).$row, $item['row3_blue'][$i]??0);
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(70+$i).$row, $item['row3_green'][$i]??0);
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(74+$i).$row, number_format($item['capaian']['output']['tw'][$i],0).'%');
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(78+$i).$row, number_format($item['capaian']['output']['thn'][$i],0).'%');
+            $sheet->getStyle("B{$row}:R{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FAF5FF');
+            $row++;
+
+            // Row 4
+            $sheet->setCellValue("B{$row}", "Target Output");
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(66+$i).$row, $item['row4_blue'][$i]??0);
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(70+$i).$row, $item['row4_green'][$i]??0);
+            $row++;
+
+            // Merge Capaian Row 3-4
+            for ($c = 75; $c <= 82; $c++) $sheet->mergeCells(chr($c)."{$outputStartRow}:".chr($c).($outputStartRow+1));
+        }
+
+        $lastRow = $row - 1;
+        $sheet->getStyle("A1:R{$lastRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle("B4:R{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
+        foreach (range('A', 'R') as $col) $sheet->getColumnDimension($col)->setAutoSize(true);
+        $sheet->getColumnDimension('A')->setWidth(40);
+
+        $fileName = $fileNamePrefix.'_'.$year.'.xlsx';
+        $writer = new Xlsx($spreadsheet);
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $fileName);
+    }
+
+    
+    
 }

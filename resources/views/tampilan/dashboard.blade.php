@@ -43,7 +43,20 @@
          class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         <!-- Chart 1 -->
-        <div class="bg-white shadow-md rounded-xl p-6 border-2 border-gray-100 hover:shadow-lg transition-shadow">
+        <div class="bg-white shadow-md rounded-xl p-6 border-2 border-gray-100 hover:shadow-lg transition-shadow relative">
+            <button onclick="downloadChart('kinerjaChart', 'Status_Publikasi_Tahun.png')"
+                    class="absolute top-4 right-4 p-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors group"
+                    title="Download Chart">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-blue-600">
+                    <path d="M10.75 2.75a.75.75 0 0 0-1.5 0v8.614L6.295 8.235a.75.75 0 1 0-1.09 1.03l4.25 4.5a.75.75 0 0 0 1.09 0l4.25-4.5a.75.75 0 0 0-1.09-1.03l-2.955 3.129V2.75Z" />
+                    <path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" />
+                </svg>
+                {{-- Tooltip untuk tombol download --}}
+                <span class="absolute right-full mr-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                    Download PNG
+                </span>
+            </button>
+        
             <h3 class="text-base font-semibold mb-1 text-gray-800">Status Publikasi Tahunan</h3>
             <p class="text-xs text-gray-500 mb-4">Distribusi status penyelesaian publikasi</p>
             <div class="flex justify-center">
@@ -255,3 +268,179 @@
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Fungsi Print
+    function downloadChart(chartId, filename) {
+        const canvas = document.getElementById(chartId);
+        const url = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = url;
+        link.click();
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        
+        // Chart status publikasi
+        const ctxKinerja = document.getElementById('kinerjaChart');
+        if (ctxKinerja) {
+            new Chart(ctxKinerja, {
+                type: 'bar',
+                data: {
+                    labels: @json($dataGrafikPublikasi['labels']), 
+                    datasets: [{
+                        label: 'Jumlah',
+                        data: @json($dataGrafikPublikasi['data']), 
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], 
+                        borderRadius: 4,
+                        barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false } 
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { display: true, drawBorder: false }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chart Rencana vs Realisasi
+        const ctxTahapan = document.getElementById('tahapanChart');
+        if (ctxTahapan) {
+            new Chart(ctxTahapan, {
+                type: 'bar',
+                data: {
+                    labels: @json($dataGrafikBatang['labels']), 
+                    datasets: [
+                        {
+                            label: 'Rencana',
+                            data: @json($dataGrafikBatang['rencana']), 
+                            backgroundColor: '#1e40af', 
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Realisasi',
+                            data: @json($dataGrafikBatang['realisasi']),
+                            backgroundColor: '#10b981',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { display: false } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // Chart Proporsi
+        const ctxRing = document.getElementById('ringChart');
+        if (ctxRing) {
+            new Chart(ctxRing, {
+                type: 'doughnut',
+                data: {
+                    labels: @json($dataGrafikRing['labels']),
+                    datasets: [{
+                        data: @json($dataGrafikRing['data']),
+                        backgroundColor: ['#10b981', '#e5e7eb'], 
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Grafik Kinerja per tim
+        const ctxTim = document.getElementById('timChart');
+        if (ctxTim) {
+            const timData = @json($dataGrafikPerTim);
+
+            const sisaRencana = timData.plans.map((plan, i) => {
+                const totalSelesai = timData.tepat_waktu[i] + timData.terlambat[i];
+                return Math.max(0, plan - totalSelesai);
+            });
+
+            new Chart(ctxTim, {
+                type: 'bar',
+                data: {
+                    labels: timData.labels,
+                    datasets: [
+                        {
+                            label: 'Tepat Waktu',
+                            data: timData.tepat_waktu,
+                            backgroundColor: '#4472C4', 
+                            barPercentage: 0.6,
+                        },
+                        {
+                            label: 'Terlambat',
+                            data: timData.terlambat,
+                            backgroundColor: '#ED7D31', 
+                            barPercentage: 0.6,
+                        },
+                        {
+                            label: 'Sisa Target', 
+                            data: sisaRencana,
+                            backgroundColor: '#cdcbcbff', 
+                            barPercentage: 0.6,
+                        }
+                        
+                    ]
+                },
+                options: {
+                    indexAxis: 'y', 
+                    responsive: true,
+                    maintainAspectRatio: false,
+
+                    interaction: {
+                        mode: 'index', 
+                        axis: 'y', 
+                        intersect: false 
+                    },
+
+                    scales: {
+                        x: {
+                            stacked: true, 
+                            grid: { display: true } 
+                        },
+                        y: {
+                            stacked: true, 
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { usePointStyle: true, boxWidth: 8 }
+                        },
+                        tooltip: {
+                            position: 'nearest'
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>

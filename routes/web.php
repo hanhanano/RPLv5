@@ -70,6 +70,7 @@ Route::middleware(['auth'])->group(function () {
     // Export
     Route::get('/publications/exportTable', [PublicationExportController::class, 'exportTable'])->name('publications.exportTable');
     Route::get('/publications/export-template/{slug_publication}', [PublicationExportController::class, 'exportTemplate'])->name('publications.export.template');
+    Route::get('publications/export-sasaran', [PublicationExportController::class, 'exportTableSasaran'])->name('publications.exportSasaran');
 
     // Update publikasi
     Route::put('/publications/{publication}', [PublicationController::class, 'update'])->name('publications.update');
