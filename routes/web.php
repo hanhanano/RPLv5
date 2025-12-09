@@ -22,75 +22,14 @@ use Illuminate\Http\Request;
 |---------------------
 */
 
-// Halaman utama
+// ROUTE PUBLIK (BISA DIAKSES TANPA LOGIN)
+
+// Halaman utama redirect ke login
 Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// Tambahkan middleware('auth') agar hanya user yang sudah login bisa akses
-Route::get('/dashboard', [PublicationController::class, 'index'])
-    ->name('daftarpublikasi')
-    ->middleware('auth');
-
-// Laporan
-Route::get('/laporan', [LaporanController::class, 'index'])
-    ->name('laporan')
-    ->middleware('auth');
-
-// Capaian Kinerja
-Route::get('/capaian-kinerja', [CapaianKinerjaController::class, 'index'])
-    ->name('capaian.index')
-    ->middleware('auth');
-
-// Halaman Target Kinerja
-Route::get('/target-kinerja', [TeamTargetController::class, 'index'])
-    ->middleware('auth')
-    ->name('target.index');
-
-// Simpan Target Kinerja
-Route::post('/target-kinerja', [TeamTargetController::class, 'store'])
-    ->middleware('auth')
-    ->name('target.store');
-
-Route::put('/target-kinerja/{id}', [TeamTargetController::class, 'update'])->middleware('auth')->name('target.update');
-Route::delete('/target-kinerja/{id}', [TeamTargetController::class, 'destroy'])->middleware('auth')->name('target.destroy');
-
-// ----- Publications -----
-// Export
-Route::get('/publications/exportTable', [PublicationExportController::class, 'exportTable'])->name('publications.exportTable');
-Route::get('/publications/export-template/{slug_publication}', [PublicationExportController::class, 'exportTemplate'])->name('publications.export.template');
-
-// Update publikasi
-Route::put('/publications/{publication}', [PublicationController::class, 'update'])->name('publications.update');
-
-// Search publications
-Route::get('/publications/search', [PublicationController::class, 'search'])->name('publications.search');
-
-// All function
-Route::resource('publications', PublicationController::class);
-
-// Hapus publication
-Route::delete('/publications/{slug_publication}', [PublicationController::class, 'destroy'])->name('publications.destroy');
-
-// ----- Steps / Tahapan -----
-// Tampilkan tahapan untuk 1 publikasi
-Route::get('/publications/{publication}/steps', [StepsPlanController::class, 'index'])->name('steps.index');
-
-// Tambah tahapan
-Route::post('/publications/{publication}/steps', [StepsPlanController::class, 'store'])->name('steps.store');
-
-// Update tahapan (rencana & realisasi)
-Route::put('/plans/{plan}', [StepsPlanController::class, 'update'])->name('plans.update');
-Route::put('/plans/{plan}/edit-stage', [StepsPlanController::class, 'updateStage'])->name('plans.update_stage');
-Route::put('/finals/{plan}', [StepsFinalController::class, 'update'])->name('finals.update');
-
-// Hapus tahapan
-Route::delete('/plans/{plan}', [StepsPlanController::class, 'destroy'])->name('plans.destroy');
-
-// Export Tahapan
-Route::get('/export/publication/{slug_publication}', [PublicationExportController::class, 'export'])->name('publication.export');
-
-// ----- Auth -----
+// Auth Routes (Login)
 Route::get('/login', [AuthController::class, 'showLoginForm'])
     ->name('login')
     ->middleware('guest'); 
@@ -98,63 +37,99 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])
 Route::post('/login', [AuthController::class, 'login'])
     ->name('login.post');
 
+
+// ROUTE TERPROTEKSI (HARUS LOGIN)
+Route::middleware(['auth'])->group(function () {
+
+    // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Ubah password
-Route::get('/change-password', [AuthController::class, 'showChangePasswordForm'])->name('password.change');
-Route::post('/change-password', [AuthController::class, 'updatePassword'])->name('password.update');
+    // Ubah password
+    Route::get('/change-password', [AuthController::class, 'showChangePasswordForm'])->name('password.change');
+    Route::post('/change-password', [AuthController::class, 'updatePassword'])->name('password.update');
 
-// ----- Admin -----
-Route::get('/admin', [AdminController::class, 'index'])->name('adminpage');
-Route::get('/admin/search', [AdminController::class, 'search'])->name('admin.search');
-Route::post('/admin/store', [AdminController::class, 'store'])->name('admin.store');
-Route::delete('/admin/{id}', [AdminController::class, 'destroy'])->name('admin.destroy');
+    // Dashboard
+    Route::get('/dashboard', [PublicationController::class, 'index'])
+        ->name('daftarpublikasi');
 
-// // Upload files publikasi
-// Route::post('/publications/{publication}/upload-files', [PublicationController::class, 'uploadFiles'])
-//     ->name('publications.uploadFiles')
-//     ->middleware('auth');
+    // Laporan
+    Route::get('/laporan', [LaporanController::class, 'index'])
+        ->name('laporan');
 
-// // Delete file publikasi
-// Route::delete('/publication-files/{file}', [PublicationController::class, 'deleteFile'])
-//     ->name('publications.deleteFile')
-//     ->middleware('auth');
+    // Capaian Kinerja
+    Route::get('/capaian-kinerja', [CapaianKinerjaController::class, 'index'])
+        ->name('capaian.index');
 
-// // Download single file
-// Route::get('/publication-files/{file}/download', [PublicationController::class, 'downloadFile'])
-//     ->name('publications.downloadFile')
-//     ->middleware('auth');
+    // Halaman Target Kinerja
+    Route::get('/target-kinerja', [TeamTargetController::class, 'index'])->name('target.index');
+    Route::post('/target-kinerja', [TeamTargetController::class, 'store'])->name('target.store');
+    Route::put('/target-kinerja/{id}', [TeamTargetController::class, 'update'])->name('target.update');
+    Route::delete('/target-kinerja/{id}', [TeamTargetController::class, 'destroy'])->name('target.destroy');
 
-// // Download all files as ZIP
-// Route::get('/publications/{publication}/download-all', [PublicationController::class, 'downloadAllFiles'])
-//     ->name('publications.downloadAllFiles')
-//     ->middleware('auth');
+    // ----- Publications -----
+    // Export
+    Route::get('/publications/exportTable', [PublicationExportController::class, 'exportTable'])->name('publications.exportTable');
+    Route::get('/publications/export-template/{slug_publication}', [PublicationExportController::class, 'exportTemplate'])->name('publications.export.template');
+    Route::get('publications/export-sasaran', [PublicationExportController::class, 'exportTableSasaran'])->name('publications.exportSasaran');
 
-// Route untuk melihat halaman kelola output
-Route::get('/publications/{slug}/outputs', [PublicationOutputController::class, 'index'])
-    ->name('outputs.index');
+    // Update publikasi
+    Route::put('/publications/{publication}', [PublicationController::class, 'update'])->name('publications.update');
 
-// Route untuk update output (upload file & tanggal rilis)
-Route::put('/publication-plans/{id}', [PublicationOutputController::class, 'update'])
-    ->name('outputs.update');
+    // Search publications
+    Route::get('/publications/search', [PublicationController::class, 'search'])->name('publications.search');
 
-// Simpan Output Baru
-Route::post('/publications/{slug}/outputs', [PublicationOutputController::class, 'store'])
-    ->name('outputs.store');
+    // All function (Resource otomatis membuat route index, create, store, dll)
+    Route::resource('publications', PublicationController::class);
 
-// Hapus Output
-Route::delete('/publication-plans/{id}', [PublicationOutputController::class, 'destroy'])
-    ->name('outputs.destroy');
+    // Hapus publication
+    Route::delete('/publications/{slug_publication}', [PublicationController::class, 'destroy'])->name('publications.destroy');
 
-// Ganti Password Role Lain
-Route::put('/admin/users/{id}/reset-password', [AdminController::class, 'resetPassword'])
-    ->name('admin.resetPassword')
-    ->middleware('auth');
+    // ----- Steps / Tahapan -----
+    // Tampilkan tahapan untuk 1 publikasi
+    Route::get('/publications/{publication}/steps', [StepsPlanController::class, 'index'])->name('steps.index');
 
-// Route untuk mengubah tahun session
-Route::post('/change-year', function (Request $request) {
-    // Simpan tahun ke session
-    session(['selected_year' => $request->input('year')]);
-    // Kembali ke halaman sebelumnya
-    return redirect()->back();
-})->name('change.year');
+    // Tambah tahapan
+    Route::post('/publications/{publication}/steps', [StepsPlanController::class, 'store'])->name('steps.store');
+
+    // Update tahapan (rencana & realisasi)
+    Route::put('/plans/{plan}', [StepsPlanController::class, 'update'])->name('plans.update');
+    Route::put('/plans/{plan}/edit-stage', [StepsPlanController::class, 'updateStage'])->name('plans.update_stage');
+    Route::put('/finals/{plan}', [StepsFinalController::class, 'update'])->name('finals.update');
+
+    // Hapus tahapan
+    Route::delete('/plans/{plan}', [StepsPlanController::class, 'destroy'])->name('plans.destroy');
+
+    // Export Tahapan
+    Route::get('/export/publication/{slug_publication}', [PublicationExportController::class, 'export'])->name('publication.export');
+
+    // ----- Admin -----
+    Route::get('/admin', [AdminController::class, 'index'])->name('adminpage');
+    Route::get('/admin/search', [AdminController::class, 'search'])->name('admin.search');
+    Route::post('/admin/store', [AdminController::class, 'store'])->name('admin.store');
+    Route::delete('/admin/{id}', [AdminController::class, 'destroy'])->name('admin.destroy');
+    Route::put('/admin/users/{id}/reset-password', [AdminController::class, 'resetPassword'])->name('admin.resetPassword');
+
+    // ----- Output / Bukti Fisik -----
+    // Route untuk melihat halaman kelola output
+    Route::get('/publications/{slug}/outputs', [PublicationOutputController::class, 'index'])
+        ->name('outputs.index');
+
+    // Route untuk update output (upload file & tanggal rilis)
+    Route::put('/publication-plans/{id}', [PublicationOutputController::class, 'update'])
+        ->name('outputs.update');
+
+    // Simpan Output Baru
+    Route::post('/publications/{slug}/outputs', [PublicationOutputController::class, 'store'])
+        ->name('outputs.store');
+
+    // Hapus Output
+    Route::delete('/publication-plans/{id}', [PublicationOutputController::class, 'destroy'])
+        ->name('outputs.destroy');
+
+    // Route untuk mengubah tahun session
+    Route::post('/change-year', function (Request $request) {
+        session(['selected_year' => $request->input('year')]);
+        return redirect()->back();
+    })->name('change.year');
+
+});

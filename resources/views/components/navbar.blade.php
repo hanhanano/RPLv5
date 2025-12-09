@@ -1,4 +1,4 @@
-<div class="fixed top-0 left-0 right-0 w-full z-50">
+<div class="fixed top-0 left-0 right-0 w-full z-200">
     <nav class="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 shadow-lg" x-data="{isOpen: false}">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
@@ -15,6 +15,7 @@
                     </div>
                 </div>
 
+                {{-- MENU UTAMA DESKTOP --}}
                 <div class="hidden md:flex items-center space-x-2">
                     <a href="/dashboard" 
                        class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
@@ -34,7 +35,6 @@
                         Laporan
                     </a>
 
-                    {{-- [BARU] MENU CAPAIAN KINERJA DESKTOP --}}
                     <a href="{{ route('capaian.index') }}" 
                        class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
                               {{ request()->routeIs('capaian.index') ? 'bg-white/20 text-white shadow-lg' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
@@ -43,14 +43,8 @@
                         </svg>
                         Capaian Kinerja
                     </a>
-
-                    @if(auth()->check() && in_array(auth()->user()->role, ['ketua_tim', 'admin']))
-                        <a href="{{ route('target.index') }}" 
-                            class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                              {{ request()->is('target-kinerja') ? 'bg-white/20 text-white shadow-lg' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
-                            Target Kinerja
-                        </a>
-                    @endif
+                    
+                    {{-- TARGET KINERJA DIHAPUS DARI SINI --}}
                 </div>
 
                 <div class="hidden md:flex items-center space-x-3">
@@ -91,6 +85,17 @@
                                         @endif
                                     </div>
                                     
+                                    {{-- [BARU] TARGET KINERJA DI MENU USER --}}
+                                    @if(in_array(auth()->user()->role, ['ketua_tim', 'admin']))
+                                        <a href="{{ route('target.index') }}" 
+                                           class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors {{ request()->is('target-kinerja') ? 'bg-blue-50 text-blue-700' : '' }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mr-2">
+                                                <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd" />
+                                            </svg>
+                                            Target Laporan
+                                        </a>
+                                    @endif
+
                                     <a href="{{ route('password.change') }}" 
                                        class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mr-2">
@@ -135,6 +140,7 @@
                     </div>
                 </div>
 
+                {{-- MOBILE MENU --}}
                 <div class="md:hidden">
                     <button @click="isOpen = !isOpen" 
                             class="inline-flex items-center justify-center p-2 rounded-lg text-white hover:bg-white/10 transition-colors">
@@ -184,17 +190,6 @@
                     </svg>
                     Capaian Kinerja
                 </a>
-
-                @if(auth()->check() && in_array(auth()->user()->role, ['ketua_tim', 'admin']))
-                <a href="{{ route('target.index') }}" 
-                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium
-                        {{ request()->is('target-kinerja') ? 'bg-white/20 text-white' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-                        <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd" />
-                    </svg>
-                    Target Kinerja
-                </a>
-                @endif
             </div>
             
             <div class="border-t border-blue-700 pt-4 pb-3">
@@ -204,6 +199,19 @@
                         <div class="text-sm text-blue-200">{{ auth()->user()->email }}</div>
                     </div>
                     
+                    {{-- [BARU] TARGET KINERJA DI MOBILE (MENU USER) --}}
+                    @if(in_array(auth()->user()->role, ['ketua_tim', 'admin']))
+                        <div class="px-2 mb-2">
+                            <a href="{{ route('target.index') }}" 
+                                class="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium text-blue-100 hover:bg-white/10 hover:text-white">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                                    <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd" />
+                                </svg>
+                                Target Kinerja
+                            </a>
+                        </div>
+                    @endif
+
                     <div class="space-y-1 px-2">
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
