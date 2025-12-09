@@ -49,6 +49,19 @@
                 @endif
             </div>
 
+            {{-- [BARU] MENAMPILKAN PESAN ERROR VALIDASI --}}
+            @if ($errors->any())
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                    <strong class="font-bold">Gagal Menyimpan!</strong>
+                    <ul class="mt-1 list-disc list-inside text-sm">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            {{-- Menampilkan Pesan Sukses --}}
             @if(session('success'))
                 <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
                     <span class="block sm:inline">{{ session('success') }}</span>
@@ -116,9 +129,14 @@
                                 @if(auth()->check() && in_array(auth()->user()->role, ['ketua_tim', 'admin']))
                                 <td class="px-6 py-4 text-center">
                                     <div class="flex justify-center items-center gap-2">
-                                        <button onclick="openUploadModal('{{ $plan->id }}', '{{ $plan->plan_name }}', '{{ $plan->actual_date }}')"
+                                        <button onclick="openEditModal(
+                                            '{{ $plan->id }}', 
+                                            '{{ addslashes($plan->plan_name) }}', 
+                                            '{{ \Carbon\Carbon::parse($plan->plan_date)->format('Y-m-d') }}', 
+                                            '{{ $plan->actual_date ? \Carbon\Carbon::parse($plan->actual_date)->format('Y-m-d') : '' }}'
+                                        )"
                                             class="inline-flex items-center px-3 py-1.5 {{ $plan->actual_date ? 'bg-amber-500 hover:bg-amber-600' : 'bg-blue-600 hover:bg-blue-700' }} text-white text-xs font-medium rounded shadow-sm transition">
-                                            {{ $plan->actual_date ? 'Edit' : 'Upload' }}
+                                            {{ $plan->actual_date ? 'Edit' : 'Upload / Edit' }}
                                         </button>
 
                                         <form action="{{ route('outputs.destroy', $plan->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus output ini?')">
@@ -154,6 +172,7 @@
     </main>
 
     @if(auth()->check() && in_array(auth()->user()->role, ['ketua_tim', 'admin']))
+        {{-- MODAL TAMBAH --}}
         <div id="addOutputModal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background-color: rgba(0,0,0,0.5);">
             <div class="relative w-full max-w-lg p-4 mx-auto">
                 <div class="bg-white rounded-xl shadow-2xl overflow-hidden transform transition-all">
@@ -191,42 +210,74 @@
         </div>
     @endif
 
-    <div id="uploadModal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background-color: rgba(0,0,0,0.5);">
+    {{-- MODAL EDIT LENGKAP --}}
+    <div id="editModal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background-color: rgba(0,0,0,0.5);">
         <div class="relative w-full max-w-lg p-4 mx-auto">
             <div class="bg-white rounded-xl shadow-2xl overflow-hidden transform transition-all">
                 
                 <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
-                    <h3 class="text-lg font-bold text-gray-800" id="modal-title">Update Realisasi Output</h3>
-                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition focus:outline-none">
+                    <h3 class="text-lg font-bold text-gray-800" id="modal-title">Edit Data Output</h3>
+                    <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 transition focus:outline-none">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
                             <path fill-rule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
                         </svg>
                     </button>
                 </div>
 
-                <form id="uploadForm" method="POST" enctype="multipart/form-data">
+                <form id="editForm" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
                     <div class="p-6 bg-white space-y-5">
+                        
+                        {{-- 1. Nama Output --}}
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Output</label>
-                            <div id="modalOutputName" class="text-gray-800 p-3 bg-gray-100 rounded-lg border border-gray-200 text-sm font-medium"></div>
-                        </div>
-                        <div>
-                            <label for="modalActualDate" class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Rilis (Realisasi)</label>
-                            <input type="date" name="actual_date" id="modalActualDate" required
+                            <input type="text" name="plan_name" id="modalOutputName" required
                                 class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 border text-sm">
                         </div>
+
+                        {{-- 2. Jadwal Rencana --}}
                         <div>
-                            <label for="file_output" class="block text-sm font-semibold text-gray-700 mb-2">Upload File (PDF/Excel)</label>
-                            <input type="file" name="file_output" id="file_output"
-                                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-300 rounded-lg cursor-pointer">
-                            <p class="mt-2 text-xs text-gray-500">*Maksimal 10MB. Biarkan kosong jika tidak ingin mengubah file.</p>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Jadwal Rencana</label>
+                            {{-- Tambahkan onchange="validateDates()" --}}
+                            <input type="date" name="plan_date" id="modalPlanDate" required oninput="validateDates()"
+                                class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 border text-sm">
                         </div>
+
+                        <div class="border-t pt-4 mt-2">
+                            <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Realisasi (Opsional)</p>
+                            
+                            {{-- 3. Tanggal Realisasi --}}
+                            <div>
+                                <label for="modalActualDate" class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Rilis (Realisasi)</label>
+                                {{-- Tambahkan onchange="validateDates()" --}}
+                                <input type="date" name="actual_date" id="modalActualDate" oninput="validateDates()"
+                                    class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 border text-sm">
+                                
+                                {{-- ERROR MESSAGE CONTAINER (Awalnya Hidden) --}}
+                                <p id="dateErrorMsg" class="hidden mt-2 text-xs text-red-600 font-semibold flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
+                                    </svg>
+                                    Tanggal rilis tidak boleh lebih awal dari rencana!
+                                </p>
+                            </div>
+                            
+                            {{-- 4. File Output --}}
+                            <div class="mt-4">
+                                <label for="file_output" class="block text-sm font-semibold text-gray-700 mb-2">Upload File (PDF/Excel)</label>
+                                <input type="file" name="file_output" id="file_output"
+                                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-300 rounded-lg cursor-pointer">
+                                <p class="mt-2 text-xs text-gray-500">*Maksimal 10MB. Biarkan kosong jika tidak ingin mengubah file.</p>
+                            </div>
+                        </div>
+
                     </div>
                     <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
-                        <button type="button" onclick="closeModal()" class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium text-sm transition shadow-sm">Batal</button>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm shadow-md transition">Simpan Perubahan</button>
+                        <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium text-sm transition shadow-sm">Batal</button>
+                        
+                        {{-- TOMBOL SIMPAN (Tambahkan ID dan disabled style) --}}
+                        <button type="submit" id="btnSimpan" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed">Simpan Perubahan</button>
                     </div>
                 </form>
             </div>
@@ -234,34 +285,78 @@
     </div>
 
     <script>
-        // Modal Tambah Output
+        // Modal Tambah (Tetap)
         function openAddModal() {
-            const modal = document.getElementById('addOutputModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            document.getElementById('addOutputModal').classList.remove('hidden');
+            document.getElementById('addOutputModal').classList.add('flex');
         }
         function closeAddModal() {
-            const modal = document.getElementById('addOutputModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            document.getElementById('addOutputModal').classList.add('hidden');
+            document.getElementById('addOutputModal').classList.remove('flex');
         }
 
-        // Modal Upload/Edit Realisasi
-        function openUploadModal(id, name, date) {
-            const modal = document.getElementById('uploadModal');
-            const form = document.getElementById('uploadForm');
-            const nameLabel = document.getElementById('modalOutputName');
-            const dateInput = document.getElementById('modalActualDate');
+        // --- FUNGSI VALIDASI TANGGAL (BARU) ---
+        function validateDates() {
+            const planDateVal = document.getElementById('modalPlanDate').value;
+            const actualDateVal = document.getElementById('modalActualDate').value;
+            const btnSimpan = document.getElementById('btnSimpan');
+            const errorMsg = document.getElementById('dateErrorMsg');
+            const actualInput = document.getElementById('modalActualDate');
+
+            // Reset state jika realisasi kosong
+            if (!actualDateVal) {
+                btnSimpan.disabled = false;
+                errorMsg.classList.add('hidden');
+                actualInput.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+                actualInput.classList.add('border-gray-300', 'focus:ring-blue-500', 'focus:border-blue-500');
+                return;
+            }
+
+            // Bandingkan Tanggal
+            if (planDateVal && actualDateVal < planDateVal) {
+                // ERROR: Tanggal Rilis Lebih Kecil dari Rencana
+                btnSimpan.disabled = true; // Matikan tombol
+                errorMsg.classList.remove('hidden'); // Munculkan pesan error
+                
+                // Ubah warna input jadi merah
+                actualInput.classList.remove('border-gray-300', 'focus:ring-blue-500', 'focus:border-blue-500');
+                actualInput.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+            } else {
+                // SUKSES
+                btnSimpan.disabled = false; // Hidupkan tombol
+                errorMsg.classList.add('hidden'); // Sembunyikan error
+                
+                // Kembalikan warna input normal
+                actualInput.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+                actualInput.classList.add('border-gray-300', 'focus:ring-blue-500', 'focus:border-blue-500');
+            }
+        }
+
+        // Fungsi Modal Edit
+        function openEditModal(id, name, planDate, actualDate) {
+            const modal = document.getElementById('editModal');
+            const form = document.getElementById('editForm');
+            
+            const nameInput = document.getElementById('modalOutputName');
+            const planDateInput = document.getElementById('modalPlanDate');
+            const actualDateInput = document.getElementById('modalActualDate');
 
             form.action = `/publication-plans/${id}`;
-            nameLabel.textContent = name;
-            dateInput.value = date ? date : new Date().toISOString().split('T')[0];
+            
+            nameInput.value = name;
+            planDateInput.value = planDate;
+            actualDateInput.value = actualDate ? actualDate : '';
+
+            // JALANKAN VALIDASI SAAT MODAL DIBUKA (PENTING!)
+            // Untuk memastikan jika data lama ada yg salah, tombol langsung mati
+            validateDates(); 
 
             modal.classList.remove('hidden');
             modal.classList.add('flex');
         }
-        function closeModal() {
-            const modal = document.getElementById('uploadModal');
+
+        function closeEditModal() {
+            const modal = document.getElementById('editModal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }

@@ -16,104 +16,6 @@
                     Unduh Excel
             </a>
             
-            <!-- <div x-show="open" x-transition class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
-                <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 relative">
-                    <button @click="open = false" class="absolute top-2 right-2 text-gray-600 hover:text-red-600">✖</button>
-                    <h2 class="text-lg font-semibold">Formulir Tambah Sasaran/Laporan</h2>
-                    <p class="text-xs text-gray-500 mb-4">Catatan: Nama Laporan dapat memiliki banyak Nama Kegiatan</p>
-                    
-                    @if ($errors->any())
-                        <div class="mb-4 p-3 rounded bg-red-100 border border-red-300">
-                            <ul class="list-disc ml-4 text-xs text-red-600">
-                                @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
-                            </ul>
-                        </div>
-                    @endif
-
-                    <form method="POST" action="{{ route('publications.store') }}"> 
-                        @csrf
-                        <div class="mb-3">
-                            <label class="block text-sm font-medium text-gray-700">Nama Laporan/Publikasi</label>
-                            <select id="publication_report" name="publication_report" class="px-2 py-2 w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm">
-                                <option value="">-- Pilih Nama Laporan --</option>
-                                <option value="Laporan Statistik Kependudukan dan Ketenagakerjaan">Laporan Statistik Kependudukan dan Ketenagakerjaan</option>
-                                <option value="Laporan Statistik Statistik Kesejahteraan Rakyat">Laporan Statistik Statistik Kesejahteraan Rakyat</option>
-                                <option value="Laporan Statistik Ketahanan Sosial">Laporan Statistik Ketahanan Sosial</option>
-                                <option value="Laporan Statistik Tanaman Pangan">Laporan Statistik Tanaman Pangan</option>
-                                <option value="Laporan Statistik Peternakan, Perikanan, dan Kehutanan">Laporan Statistik Peternakan, Perikanan, dan Kehutanan</option>
-                                <option value="Laporan Statistik Industri">Laporan Statistik Industri</option>
-                                <option value="Laporan Statistik Distribusi">Laporan Statistik Distribusi</option>
-                                <option value="Laporan Statistik Harga">Laporan Statistik Harga</option>
-                                <option value="Laporan Statistik Keuangan, Teknologi Informasi, dan Pariwisata">Laporan Statistik Keuangan, Teknologi Informasi, dan Pariwisata</option>
-                                <option value="Laporan Neraca Produksi">Laporan Neraca Produksi</option>
-                                <option value="Laporan Neraca Pengeluaran">Laporan Neraca Pengeluaran</option>
-                                <option value="Laporan Analisis dan Pengembangan Statistik">Laporan Analisis dan Pengembangan Statistik</option>
-                                <option value="Tingkat Penyelenggaraan Pembinaan Statistik Sektoral sesuai Standar">Tingkat Penyelenggaraan Pembinaan Statistik Sektoral sesuai Standar</option>
-                                <option value="Indeks Pelayanan Publik - Penilaian Mandiri">Indeks Pelayanan Publik - Penilaian Mandiri</option>
-                                <option value="Nilai SAKIP oleh Inspektorat">Nilai SAKIP oleh Inspektorat</option>
-                                <option value="Indeks Implementasi BerAKHLAK">Indeks Implementasi BerAKHLAK</option>
-                                <option value="other" {{ old('publication_report') == 'other' ? 'selected' : '' }}>-- Tambahkan Lainnya --</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3" id="other_input" style="display: {{ old('publication_report') == 'other' ? 'block' : 'none' }};">
-                            <label class="block text-sm font-medium text-gray-700">Nama Laporan Lainnya</label>
-                            <input type="text" name="publication_report_other" value="{{ old('publication_report_other') }}" class="w-full border rounded-lg px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Tulis nama laporan lain di sini...">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="block text-sm font-medium text-gray-700">Nama Kegiatan</label>
-                            <input type="text" name="publication_name" value="{{ old('publication_name') }}" required class="w-full border rounded-lg px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Sakernas">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="block text-sm font-medium text-gray-700">PIC</label>
-                            <select name="publication_pic" required class="px-2 py-2 w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm">
-                                <option value="">-- Pilih PIC --</option>
-                                @php $user = auth()->user(); $teams = ['Umum', 'Produksi', 'Distribusi', 'Neraca', 'Sosial', 'IPDS']; @endphp
-                                @foreach($teams as $team)
-                                    @if($user && in_array($user->role, ['ketua_tim', 'operator']))
-                                        @if($user->team === $team) <option value="{{ $team }}" selected>Tim {{ $team }}</option> @endif
-                                    @else
-                                        <option value="{{ $team }}" {{ old('publication_pic') == $team ? 'selected' : '' }}>Tim {{ $team }}</option>
-                                    @endif
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div x-data="{ isMonthly: {{ old('is_monthly') ? 'true' : 'false' }}, selectAll: true }">
-                            <div class="mb-4">
-                                <label class="flex items-center cursor-pointer">
-                                    <input type="checkbox" name="is_monthly" value="1" {{ old('is_monthly') ? 'checked' : '' }} x-model="isMonthly" class="mr-2 w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
-                                    <span class="text-sm font-medium text-gray-700">Generate Publikasi Bulanan</span>
-                                </label>
-                            </div>
-                            <div x-show="isMonthly" x-transition class="mb-3 border rounded-lg p-3 bg-gray-50">
-                                <div class="flex justify-between items-center mb-2">
-                                    <label class="block text-sm font-medium text-gray-700">Pilih Bulan</label>
-                                    <button type="button" @click="selectAll = !selectAll; document.querySelectorAll('input[name=\'months[]\']').forEach(cb => cb.checked = selectAll)" class="text-xs text-emerald-600 hover:text-emerald-800 underline">
-                                        <span x-text="selectAll ? 'Bersihkan' : '✓ Semua'"></span>
-                                    </button>
-                                </div>
-                                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                                    @for($i = 1; $i <= 12; $i++)
-                                        @php $monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']; @endphp
-                                        <label class="flex items-center p-2 border rounded hover:bg-white cursor-pointer transition">
-                                            <input type="checkbox" name="months[]" value="{{ $i }}" {{ (is_array(old('months')) && in_array($i, old('months'))) || !old('months') ? 'checked' : '' }} class="mr-2 w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
-                                            <span class="text-sm">{{ $monthNames[$i-1] }}</span>
-                                        </label>
-                                    @endfor
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="flex justify-end mt-4 gap-2">
-                            <button type="button" @click="open = false" class="text-xs sm:text-sm bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg">Batal</button>
-                            <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700">Simpan</button>
-                        </div>
-                    </form>
-                </div>
-            </div> -->
         </div>
     </div>
 
@@ -307,7 +209,7 @@
                             {{-- Kolom Aksi dengan Rowspan 4 --}}
                             <td class="px-4 py-4 text-center align-middle" rowspan="4">
                                 <div class="flex flex-col gap-1 w-full items-center">
-                                    <a href="{{ route('steps.index', $publication->slug_publication) }}" class="flex items-center justify-center gap-2 w-full px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-sm">Detail</a>
+                                    <a href="{{ route('steps.index', $publication->slug_publication) }}" class="flex items-center justify-center gap-2 w-full px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-sm">Tahapan</a>
                                     <a href="{{ route('outputs.index', $publication->slug_publication) }}" class="flex items-center justify-center gap-2 w-full px-3 py-1.5 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors shadow-sm">Output</a>
                                     @if(auth()->check() && in_array(auth()->user()->role, ['ketua_tim', 'admin']))
                                         <!-- <button onclick="openEditModal('{{ $publication->slug_publication }}', '{{ $publication->publication_report }}', '{{ $publication->publication_name }}', '{{ $publication->publication_pic }}')" class="flex items-center justify-center gap-2 w-full px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm">Edit</button> -->
@@ -338,30 +240,59 @@
                             <td class="px-4 py-2 text-center text-emerald-700 font-bold text-xs">{{ $publication->teamTarget->q4_real ?? '-' }}</td>
                         </tr>
 
-                        {{-- BARIS 3: Realisasi Output (Logika Lama) --}}
+                        {{-- BARIS 3: Realisasi Output --}}
                         <tr>
                             @php
+                                // 1. Inisialisasi Variabel
                                 $pubPlansQ = [1=>0, 2=>0, 3=>0, 4=>0];
                                 $pubFinalsQ = [1=>0, 2=>0, 3=>0, 4=>0];
+                                $pubLintasQ = [1=>0, 2=>0, 3=>0, 4=>0]; // Variabel Lintas Output
+                                
                                 $pubListPlansQ = [1=>[], 2=>[], 3=>[], 4=>[]];
                                 $pubListFinalsQ = [1=>[], 2=>[], 3=>[], 4=>[]];
+                                $pubListLintasQ = [1=>[], 2=>[], 3=>[], 4=>[]]; // Detail Lintas untuk Tooltip
+
                                 foreach($publication->publicationPlans as $plan) {
+                                    $qPlan = null;
+                                    $qActual = null;
+
+                                    // 2. Hitung RENCANA
                                     if ($plan->plan_date) {
-                                        $month = \Carbon\Carbon::parse($plan->plan_date)->month;
-                                        $q = ceil($month / 3);
-                                        $pubPlansQ[$q]++;
-                                        $pubListPlansQ[$q][] = $plan->plan_name;
-                                        if($plan->actual_date) {
-                                            $pubFinalsQ[$q]++;
-                                            $pubListFinalsQ[$q][] = $plan->plan_name;
+                                        $monthPlan = \Carbon\Carbon::parse($plan->plan_date)->month;
+                                        $qPlan = ceil($monthPlan / 3);
+                                        
+                                        $pubPlansQ[$qPlan]++;
+                                        $pubListPlansQ[$qPlan][] = $plan->plan_name;
+                                    }
+
+                                    // 3. Hitung REALISASI
+                                    if ($plan->actual_date) {
+                                        $monthActual = \Carbon\Carbon::parse($plan->actual_date)->month;
+                                        $qActual = ceil($monthActual / 3);
+
+                                        $pubFinalsQ[$qActual]++;
+                                        $pubListFinalsQ[$qActual][] = $plan->plan_name;
+
+                                        // 4. Hitung LINTAS TRIWULAN (Jika Realisasi > Rencana)
+                                        if ($qPlan && $qActual > $qPlan) {
+                                            $pubLintasQ[$qActual]++; // Dihitung di kuartal saat SELESAI
+                                            
+                                            // Simpan detail untuk tooltip
+                                            $pubListLintasQ[$qActual][] = [
+                                                'name' => $plan->plan_name,
+                                                'from' => $qPlan,
+                                                'to'   => $qActual
+                                            ];
                                         }
                                     }
                                 }
+
                                 $totalPubPlans = array_sum($pubPlansQ);
                                 $totalPubFinals = array_sum($pubFinalsQ);
                                 $percentPub = $totalPubPlans > 0 ? ($totalPubFinals / $totalPubPlans) * 100 : 0;
                             @endphp
 
+                            {{-- Kolom Judul Baris --}}
                             <td class="px-4 py-4 align-top bg-purple-50">
                                 <div class="text-sm font-medium text-gray-700">Realisasi Output</div>
                                 <div class="text-xs text-gray-500 mt-1">{{ $totalPubFinals }}/{{ $totalPubPlans }} Item</div>
@@ -370,26 +301,22 @@
                                 </div>
                             </td>
 
-                            {{-- LOOP RENCANA OUTPUT: TAMPILKAN TOTAL (BUKAN PER Q) --}}
+                            {{-- KOLOM RENCANA (TAMPILAN TOTAL TAHUNAN) --}}
                             @for($q = 1; $q <= 4; $q++)
                                 <td class="px-4 py-4 text-center bg-purple-50 align-top">
-                                    {{-- Logika Baru: Cek jika ada TOTAL rencana setahun, bukan cuma rencana di Q ini --}}
                                     @if($totalPubPlans > 0)
                                         <div class="relative group inline-block">
-                                            {{-- TAMPILKAN TOTAL RENCANA --}}
                                             <div class="px-3 py-1 rounded-full bg-blue-700 text-white inline-block cursor-pointer hover:bg-blue-600 transition text-xs">
                                                 {{ $totalPubPlans }} Rencana
                                             </div>
-
-                                            {{-- Tooltip: Tetap tampilkan detail apa saja yang ada di Q ini --}}
+                                            {{-- Tooltip Rencana --}}
                                             <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64 text-sm text-gray-700 z-50">
                                                 @if(count($pubListPlansQ[$q]) > 0)
                                                     <p class="font-semibold text-gray-800 mb-1">Jadwal Q{{ $q }}:</p>
-                                                    <ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto text-left">
+                                                    <ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto text-left text-xs">
                                                         @foreach($pubListPlansQ[$q] as $itemName) <li>{{ $itemName }}</li> @endforeach
                                                     </ul>
                                                 @else
-                                                    {{-- Pesan jika di Q ini kosong tapi ada target tahunan --}}
                                                     <p class="text-xs text-gray-500 italic">Bagian dari total {{ $totalPubPlans }} target output tahunan.</p>
                                                 @endif
                                             </div>
@@ -400,19 +327,20 @@
                                 </td>
                             @endfor
 
-                            {{-- LOOP REALISASI OUTPUT (KUMULATIF) --}}
-                            @php $cumulativeOutput = 0; @endphp {{-- Variabel penampung --}}
+                            {{-- KOLOM REALISASI (KUMULATIF + LINTAS) --}}
+                            @php $cumulativeOutput = 0; @endphp 
 
                             @for($q = 1; $q <= 4; $q++)
                                 @php 
-                                    $currentQCount = $pubFinalsQ[$q] ?? 0; // Jumlah selesai spesifik di Q ini
-                                    $cumulativeOutput += $currentQCount;   // Tambahkan ke total kumulatif
+                                    $currentQCount = $pubFinalsQ[$q] ?? 0; 
+                                    $cumulativeOutput += $currentQCount;   
+                                    $lintasCount = $pubLintasQ[$q] ?? 0; // Ambil jumlah lintas di Q ini
                                 @endphp
 
                                 <td class="px-4 py-4 text-center bg-purple-50 align-top">
                                     @if($cumulativeOutput > 0)
                                         <div class="relative inline-block group">
-                                            {{-- Tampilkan Angka KUMULATIF --}}
+                                            {{-- Angka Kumulatif --}}
                                             <div class="px-3 py-1 rounded-full bg-green-600 text-white inline-block cursor-pointer text-xs">
                                                 {{ $cumulativeOutput }} Selesai
                                             </div>
@@ -421,14 +349,31 @@
                                             <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64 text-sm text-gray-700 z-50">
                                                 @if($currentQCount > 0)
                                                     <p class="font-semibold text-gray-800 mb-1">Selesai di Q{{ $q }}:</p>
-                                                    <ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto text-left">
+                                                    <ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto text-left text-xs">
                                                         @foreach($pubListFinalsQ[$q] as $itemName) <li>{{ $itemName }}</li> @endforeach
                                                     </ul>
                                                 @else
                                                     <p class="text-xs text-gray-500 italic">Total akumulasi {{ $cumulativeOutput }} output selesai.</p>
                                                 @endif
+
+                                                {{-- Info Detail Lintas di Tooltip --}}
+                                                @if($lintasCount > 0)
+                                                    <div class="mt-2 pt-2 border-t border-gray-200">
+                                                        <p class="text-xs text-orange-500 font-medium">+{{ $lintasCount }} Lintas Triwulan:</p>
+                                                        <ul class="list-disc pl-4 text-xs text-left">
+                                                            @foreach($pubListLintasQ[$q] ?? [] as $lintas)
+                                                                <li>{{ $lintas['name'] }} (Q{{ $lintas['from'] }} → Q{{ $lintas['to'] }})</li>
+                                                            @endforeach
+                                                        </ul>
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
+
+                                        {{-- Teks Lintas di Bawah Badge (Visual Utama) --}}
+                                        @if($lintasCount > 0)
+                                            <p class="text-xs text-orange-500 mt-1 font-semibold">+{{ $lintasCount }} Lintas</p>
+                                        @endif
                                     @else
                                         <div class="px-3 py-1 text-gray-400 inline-block text-xs"> - </div>
                                     @endif
@@ -487,172 +432,11 @@
                 </button>
             </div>
         </div>
-        
-        <!-- {{-- {{-- Edit Modal --}}
-        <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-             <div class="bg-white rounded-xl shadow-lg w-full max-w-lg p-6 relative" x-data="{ editReport: '', editOther: false, editReportOther: '' }">
-                <button type="button" onclick="closeEditModal()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✖</button>
-                <h2 class="text-lg font-semibold mb-4">Edit Publikasi</h2>
-                <form id="editForm" method="POST" action="">
-                    @csrf @method('PUT')
-                    <div class="mb-3">
-                        <label class="block text-sm font-medium text-gray-700">Nama Laporan/Publikasi</label>
-                        <select id="edit_publication_report" name="publication_report" x-model="editReport" @change="editReport === 'other' ? editOther = true : editOther = false" class="px-2 py-2 w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm">
-                            <option value="">-- Pilih Nama Laporan --</option>
-                            <option value="Laporan Statistik Kependudukan dan Ketenagakerjaan">Laporan Statistik Kependudukan dan Ketenagakerjaan</option>
-                            {{-- (Opsi lain disingkat agar ringkas, gunakan opsi lengkap Anda) --}}
-                            <option value="other"> -- Tambahkan Lainnya -- </option>
-                        </select>
-                    </div>
-                    <div class="mb-3" x-show="editOther" x-transition>
-                        <label class="block text-sm font-medium text-gray-700">Nama Laporan Lainnya</label>
-                        <input type="text" name="publication_report_other" x-model="editReportOther" class="w-full border rounded-lg px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                    <div class="mb-3">
-                        <label class="block text-sm font-medium">Nama Kegiatan</label>
-                        <input type="text" id="edit_name" name="publication_name" class="w-full border rounded-lg p-2">
-                    </div>
-                    <div class="mb-3">
-                        <label class="block text-sm font-medium text-gray-700">PIC</label>
-                        <select id="edit_pic" name="publication_pic" required class="px-2 py-2 w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm">
-                            <option value="">-- Pilih PIC --</option>
-                            {{-- LOGIKA PEMBATASAN TIM --}}
-                                @php
-                                    $user = auth()->user();
-                                    $teams = ['Umum', 'Produksi', 'Distribusi', 'Neraca', 'Sosial', 'IPDS'];
-                                @endphp
-
-                                @if($user->role === 'ketua_tim')
-                                    {{-- Jika Ketua Tim: Hanya tampilkan timnya sendiri & otomatis selected --}}
-                                    <option value="{{ $user->team }}" selected>Tim {{ $user->team }}</option>
-                                @else
-                                    {{-- Jika Admin: Tampilkan semua pilihan --}}
-                                    <option value="">-- Pilih Tim --</option>
-                                    @foreach($teams as $team)
-                                        <option value="{{ $team }}">Tim {{ $team }}</option>
-                                    @endforeach
-                                @endif
-                        </select>
-                    </div>
-                    <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg mt-3">Update</button>
-                </form>
-            </div>
-        </div> --}} -->
 
     </div>
 </div>
 
 <script>
-// // (Bagian Open/Close Modal Edit Tetap Sama)
-// function openEditModal(slug, report, name, pic) {
-//     let modal = document.getElementById('editModal');
-//     modal.classList.remove('hidden'); modal.classList.add('flex');
-//     let form = document.getElementById('editForm');
-//     form.action = `/publications/${slug}`;
-//     document.getElementById('edit_name').value = name;
-//     document.getElementById('edit_pic').value = pic;
-//     // Alpine Logic untuk Edit Report (Tetap sama)
-//     const alpineElement = modal.querySelector('[x-data]');
-//     if (alpineElement && alpineElement._x_dataStack) {
-//         const alpineData = alpineElement._x_dataStack[0];
-//         alpineData.editReport = report;
-//         alpineData.editOther = (report === 'other');
-//     }
-// }
-// function closeEditModal() {
-//     let modal = document.getElementById('editModal');
-//     modal.classList.add('hidden'); modal.classList.remove('flex');
-// }
-
-// // Search Logic Updated for 4 Rows
-// document.getElementById('search').addEventListener('keyup', function() {
-//     let query = this.value;
-//     let tbody = document.getElementById('publication-table-body');
-
-//     fetch(`/publications/search?query=${query}`)
-//         .then(res => res.json())
-//         .then(data => {
-//             if (data.length === 0) {
-//                 tbody.innerHTML = `<tr><td colspan="15" class="text-center text-gray-500 py-4">Tidak ada data ditemukan</td></tr>`;
-//                 return;
-//             }
-
-//             // Generate HTML HTML sesuai struktur 4 Baris
-//             state.dataHtml = data.map((item, index) => {
-//                 let outputCount = item.filesCount || 0;
-                
-//                 // BARIS 1: Realisasi Tahapan (Blue)
-//                 let row1 = `
-//                 <tr class="border-t border-gray-200">
-//                     <td class="px-4 py-4 align-top" rowspan="4">${index + 1}</td>
-//                     <td class="px-4 py-4 align-top font-semibold text-gray-700" rowspan="4">${item.publication_report}</td>
-//                     <td class="px-4 py-4 align-top font-semibold text-gray-700" rowspan="4">${item.publication_name}</td>
-//                     <td class="px-4 py-4 align-top font-semibold text-gray-700" rowspan="4">${item.publication_pic}</td>
-                    
-//                     <td class="px-4 py-4 align-top bg-blue-50">
-//                         <div class="text-sm font-medium text-gray-700">Realisasi Tahapan</div>
-//                         <div class="text-xs text-gray-500 mt-1">
-//                             ${(Object.values(item.rekapFinals ?? {}).reduce((a,b)=>a+b,0))}/${(Object.values(item.rekapPlans ?? {}).reduce((a,b)=>a+b,0))} Item
-//                         </div>
-//                         <div class="mt-1"><span class="px-2 py-0.5 text-xs bg-blue-100 border rounded-full">${Math.round(item.progressKumulatif ?? 0)}% selesai</span></div>
-//                     </td>
-//                     ${generateQuarterColumns(item)}
-//                     <td class="px-4 py-4 text-center" rowspan="4">${generateActionButtons(item)}</td>
-//                 </tr>`;
-
-//                 // BARIS 2: Target Tahapan (Blue Light)
-//                 let row2 = `
-//                 <tr class="bg-blue-50/50 border-b border-white">
-//                     <td class="px-4 py-2 align-top bg-blue-100">
-//                         <div class="text-xs font-bold text-blue-900">Target Tahapan</div>
-//                     </td>
-//                     <td class="px-4 py-2 text-center text-blue-900 font-bold text-xs">${item.target_q1_plan ?? '-'}</td>
-//                     <td class="px-4 py-2 text-center text-blue-900 font-bold text-xs">${item.target_q2_plan ?? '-'}</td>
-//                     <td class="px-4 py-2 text-center text-blue-900 font-bold text-xs">${item.target_q3_plan ?? '-'}</td>
-//                     <td class="px-4 py-2 text-center text-blue-900 font-bold text-xs">${item.target_q4_plan ?? '-'}</td>
-//                     <td class="px-4 py-2 text-center text-emerald-700 font-bold text-xs">${item.target_q1_real ?? '-'}</td>
-//                     <td class="px-4 py-2 text-center text-emerald-700 font-bold text-xs">${item.target_q2_real ?? '-'}</td>
-//                     <td class="px-4 py-2 text-center text-emerald-700 font-bold text-xs">${item.target_q3_real ?? '-'}</td>
-//                     <td class="px-4 py-2 text-center text-emerald-700 font-bold text-xs">${item.target_q4_real ?? '-'}</td>
-//                 </tr>`;
-
-//                 // BARIS 3: Realisasi Output (Purple)
-//                 let row3 = `
-//                 <tr>
-//                     <td class="px-4 py-4 align-top bg-purple-50">
-//                         <div class="text-sm font-medium text-gray-700">Realisasi Output</div>
-//                         <div class="text-xs text-gray-500 mt-1">${totOutFinal}/${totOutPlan} Item</div>
-//                         <div class="mt-1"><span class="px-2 py-0.5 text-xs bg-purple-100 border rounded-full">${Math.round(percentOut)}% selesai</span></div>
-//                     </td>
-//                     ${generateOutputColumns(item)} 
-//                 </tr>`;
-//                 // Perhatikan: kita memanggil generateOutputColumns(item) bukan generateEmptyPurpleColumns()
-
-//                 // BARIS 4: Target Output (Purple Light)
-//                 let row4 = `
-//                 <tr class="bg-purple-50/50">
-//                     <td class="px-4 py-2 align-top bg-purple-100">
-//                         <div class="text-xs font-bold text-purple-900">Target Output</div>
-//                     </td>
-//                     <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_plan ?? '-'}</td>
-//                     <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_plan ?? '-'}</td>
-//                     <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_plan ?? '-'}</td>
-//                     <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_plan ?? '-'}</td>
-                    
-//                     <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_real_q1 ?? '-'}</td>
-//                     <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_real_q2 ?? '-'}</td>
-//                     <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_real_q3 ?? '-'}</td>
-//                     <td class="px-4 py-2 text-center text-purple-900 font-bold text-xs">${item.target_output_real_q4 ?? '-'}</td>
-//                 </tr>`;
-
-//                 return row1 + row2 + row3 + row4;
-//             });
-
-//             state.currentPage = 1;
-//             updatePagination();
-//         });
-// });
-
 
 // Fungsi Helper untuk Modal (Jika diperlukan untuk tombol Edit/Hapus)
 window.userRole = "{{ auth()->check() ? auth()->user()->role : 'viewer' }}";
@@ -802,158 +586,6 @@ document.addEventListener("DOMContentLoaded", function() {
     // Jalankan saat load pertama kali
     updatePagination();
 });
-
-// // Helper: Quarter Columns untuk AJAX (Row 1)
-// function generateQuarterColumns(item) {
-//     let html = '';
-    
-//     let totalAnnualPlan = 0;
-//     for(let i = 1; i <= 4; i++) {
-//         totalAnnualPlan += (item.rekapPlans?.[i] || 0);
-//     }
-//     // Render kolom Rencana
-//     for (let q = 1; q <= 4; q++) {
-//         let quarterInput = item.rekapPlans?.[q] || 0;
-//         let content = '';
-//         if (totalAnnualPlan > 0) {
-//             let tooltipText = quarterInput > 0 ? `Jadwal Q${q}` : `Bagian dari target tahunan`;
-//             content = `<div class="px-3 py-1 rounded-full bg-blue-900 text-white inline-block text-xs" title="${tooltipText}">${totalAnnualPlan} Rencana</div>`;
-//         } else {
-//             content = `<div class="text-xs text-gray-400">-</div>`;
-//         }
-//         html += `<td class="px-4 py-4 text-center bg-blue-50 align-top">${content}</td>`;
-//     }
-
-//     let cumulativeRealization = 0; // Reset penampung
-
-//     for (let q = 1; q <= 4; q++) {
-//         let currentReal = item.rekapFinals?.[q] || 0;
-        
-//         cumulativeRealization += currentReal;
-
-//         let content = '';
-//         if (cumulativeRealization > 0) {
-//             // Tampilkan TOTAL kumulatif
-//             content = `<div class="px-3 py-1 rounded-full bg-emerald-600 text-white inline-block text-xs" title="Total Selesai s.d Q${q}: ${cumulativeRealization}">${cumulativeRealization} Selesai</div>`;
-            
-//             if (item.lintasTriwulan?.[q] > 0) {
-//                 content += `<p class="text-xs text-orange-500 mt-1">+${item.lintasTriwulan[q]} Lintas</p>`;
-//             }
-//         } else {
-//             content = `<div class="text-xs text-gray-400">-</div>`;
-//         }
-//         html += `<td class="px-4 py-4 text-center bg-blue-50 align-top">${content}</td>`;
-//     }
-    
-//     return html;
-// }
-
-// // Helper: Output Columns (Kumulatif pada Realisasi)
-// function generateOutputColumns(item) {
-//     let html = '';
-    
-//     // 1. Parsing Data
-//     let plansQ = {1:0, 2:0, 3:0, 4:0};
-//     let finalsQ = {1:0, 2:0, 3:0, 4:0};
-//     let listPlansQ = {1:[], 2:[], 3:[], 4:[]};
-//     let listFinalsQ = {1:[], 2:[], 3:[], 4:[]};
-
-//     if (item.publicationPlans && Array.isArray(item.publicationPlans)) {
-//         item.publicationPlans.forEach(plan => {
-//             if (plan.plan_date) {
-//                 let date = new Date(plan.plan_date);
-//                 let month = date.getMonth() + 1;
-//                 let q = Math.ceil(month / 3);
-                
-//                 plansQ[q]++;
-//                 listPlansQ[q].push(plan.plan_name);
-                
-//                 if (plan.actual_date) {
-//                     finalsQ[q]++;
-//                     listFinalsQ[q].push(plan.plan_name);
-//                 }
-//             }
-//         });
-//     }
-
-//     let totalPubPlans = Object.values(plansQ).reduce((a, b) => a + b, 0);
-
-//     // 2. Render RENCANA (Tetap Total Tahunan)
-//     for (let q = 1; q <= 4; q++) {
-//         let content = '';
-//         if (totalPubPlans > 0) {
-//             let tooltipContent = listPlansQ[q].length > 0 
-//                 ? `<p class="font-semibold text-gray-800 mb-1">Rencana Q${q}:</p><ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto text-left text-xs">${listPlansQ[q].map(name => `<li>${name}</li>`).join('')}</ul>`
-//                 : `<p class="text-xs text-gray-500 italic">Bagian dari total ${totalPubPlans} output tahunan.</p>`;
-
-//             content = `
-//                 <div class="relative group inline-block">
-//                     <div class="px-3 py-1 rounded-full bg-blue-700 text-white inline-block cursor-pointer hover:bg-blue-600 transition text-xs">
-//                         ${totalPubPlans} Rencana
-//                     </div>
-//                     <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64 text-sm text-gray-700 z-50">
-//                         ${tooltipContent}
-//                     </div>
-//                 </div>`;
-//         } else {
-//             content = `<div class="px-3 py-1 text-gray-400 inline-block text-xs"> - </div>`;
-//         }
-//         html += `<td class="px-4 py-4 text-center bg-purple-50 align-top">${content}</td>`;
-//     }
-
-//     // 3. Render REALISASI (LOGIKA KUMULATIF)
-//     let cumulativeOutput = 0; // Reset counter
-
-//     for (let q = 1; q <= 4; q++) {
-//         let count = finalsQ[q]; // Jumlah spesifik di Q ini
-//         cumulativeOutput += count; // Tambahkan ke kumulatif
-
-//         let content = '';
-//         if (cumulativeOutput > 0) {
-//             let tooltipContent = '';
-//             if (count > 0) {
-//                 tooltipContent = `<p class="font-semibold text-gray-800 mb-1">Selesai di Q${q}:</p><ul class="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto text-left text-xs">${listFinalsQ[q].map(name => `<li>${name}</li>`).join('')}</ul>`;
-//             } else {
-//                 tooltipContent = `<p class="text-xs text-gray-500 italic">Total akumulasi: ${cumulativeOutput} Selesai</p>`;
-//             }
-            
-//             content = `
-//                 <div class="relative inline-block group">
-//                     <div class="px-3 py-1 rounded-full bg-green-600 text-white inline-block cursor-pointer text-xs">
-//                         ${cumulativeOutput} Selesai
-//                     </div>
-//                     <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block bg-white border border-gray-200 shadow-lg rounded-lg p-2 w-64 text-sm text-gray-700 z-50">
-//                         ${tooltipContent}
-//                     </div>
-//                 </div>`;
-//         } else {
-//             content = `<div class="px-3 py-1 text-gray-400 inline-block text-xs"> - </div>`;
-//         }
-//         html += `<td class="px-4 py-4 text-center bg-purple-50 align-top">${content}</td>`;
-//     }
-
-//     return html;
-// }
-
-// // Helper: Action Buttons untuk AJAX
-// function generateActionButtons(item) {
-//     const escapeQuotes = (str) => (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-//     let html = `
-//         <a href="/publications/${item.slug_publication}/steps" class="flex gap-1 sm:text-xs px-3 py-1 text-sm text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg mb-1 justify-center items-center w-full">Detail</a>
-//         <a href="/publications/${item.slug_publication}/outputs" class="flex gap-1 sm:text-xs px-3 py-1 text-sm text-white bg-purple-600 hover:bg-purple-700 rounded-lg mb-1 justify-center items-center w-full">Output</a>
-//     `;
-//     if (window.userRole === 'ketua_tim' || window.userRole === 'admin') {
-//         html += `
-//             <button onclick="openEditModal('${item.slug_publication}', '${escapeQuotes(item.publication_report)}', '${escapeQuotes(item.publication_name)}', '${escapeQuotes(item.publication_pic)}')" class="flex gap-1 sm:text-xs px-3 py-1 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg mb-1 justify-center items-center w-full">Edit</button>
-//             <form action="/publications/${item.slug_publication}" method="POST" onsubmit="return confirm('Yakin hapus publikasi ini?')" class="w-full">
-//                 <input type="hidden" name="_token" value="${csrfToken}">
-//                 <input type="hidden" name="_method" value="DELETE">
-//                 <button type="submit" class="flex gap-1 sm:text-xs px-3 py-1 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg mb-1 justify-center items-center w-full">Hapus</button>
-//             </form>
-//         `;
-//     }
-//     return html;
-// }
 </script>
 
 {{-- Auto-open modal jika error --}}

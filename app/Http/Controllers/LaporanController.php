@@ -12,11 +12,12 @@ class LaporanController extends Controller
     {
         $user = auth()->user();
 
-        // 1. Ambil Data (Query disamakan dengan PublicationController)
+        // 1. QUERY DATA (Tambahkan 'teamTarget' agar Baris 2 & 4 muncul)
         $query = Publication::with([
             'user',
-            'stepsPlans.stepsFinals.struggles', // Gunakan stepsPlans sesuai controller asli
-            'files'
+            'stepsPlans.stepsFinals', // Untuk Baris 1 (Tahapan)
+            'files',                  // Untuk Baris 3 (Output)
+            'teamTarget'              // PENTING: Untuk Baris 2 & 4 (Target Manual)
         ]);
 
         if ($user && in_array($user->role, ['ketua_tim', 'operator'])) {
@@ -25,117 +26,90 @@ class LaporanController extends Controller
 
         $publications = $query->get();
 
-        // 2. Lakukan Perhitungan Statistik (Logika disamakan PERSIS dengan PublicationController)
-        foreach ($publications as $publication) {
+        // 2. HITUNG LOGIKA PER BARIS
+        foreach ($publications as $pub) {
+            
+            // --- A. DATA BARIS 1: REALISASI TAHAPAN (OTOMATIS) ---
             $rekapPlans = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
             $rekapFinals = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
-            $lintasTriwulan = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
-            $tepatWaktu = [1 => 0, 2 => 0, 3 => 0, 4 => 0]; 
-            $terlambat = [1 => 0, 2 => 0, 3 => 0, 4 => 0];  
-            
             $listPlans = [1 => [], 2 => [], 3 => [], 4 => []];
             $listFinals = [1 => [], 2 => [], 3 => [], 4 => []];
             $listLintas = [1 => [], 2 => [], 3 => [], 4 => []];
+            $lintasTriwulan = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
 
-            // Loop Tahapan
-            foreach ($publication->stepsPlans as $plan) {
-                // Gunakan fungsi helper private di bawah
+            foreach ($pub->stepsPlans as $plan) {
+                // Hitung Triwulan Rencana
                 $q = $this->getQuarter($plan->plan_start_date);
-                
                 if ($q) {
-                    // LOGIKA KUMULATIF: tambahkan ke quarter ini dan semua quarter setelahnya
+                    // Logika Akumulasi: Jika rencana di Q2, maka Q2, Q3, Q4 dihitung ada (+1)
                     for ($i = $q; $i <= 4; $i++) {
                         $rekapPlans[$i]++;
-                        $listPlans[$i][] = $plan->plan_name;
+                        // Simpan nama rencana hanya di kuartal aslinya untuk tooltip
+                        if($i == $q) $listPlans[$i][] = $plan->plan_name;
                     }
                 }
-                
+
+                // Hitung Triwulan Realisasi
                 if ($plan->stepsFinals) {
                     $fq = $this->getQuarter($plan->stepsFinals->actual_started);
-                    
                     if ($fq) {
-                        // KUMULATIF Realisasi
                         for ($i = $fq; $i <= 4; $i++) {
                             $rekapFinals[$i]++;
-                            $listFinals[$i][] = $plan->plan_name;
+                            if($i == $fq) $listFinals[$i][] = $plan->plan_name;
                         }
-
-                        // Cek Tepat Waktu / Terlambat
-                        if ($q && $fq <= $q) {
-                            // Tepat waktu
-                            for ($i = $fq; $i <= 4; $i++) {
-                                $tepatWaktu[$i]++;
-                            }
-                        } else {
-                            // Terlambat
-                            for ($i = $fq; $i <= 4; $i++) {
-                                $terlambat[$i]++;
-                                $lintasTriwulan[$i]++;
-                                
-                                // Detail lintas triwulan (hanya di Q kejadian)
-                                if ($i == $fq) {
-                                    $listLintas[$i][] = [
-                                        'plan_name' => $plan->plan_name,
-                                        'from_quarter' => $q,
-                                        'to_quarter' => $fq,
-                                    ];
-                                }
-                            }
+                        
+                        // Cek Lintas Triwulan (Telat nyebrang kuartal)
+                        if ($q && $fq > $q) {
+                            $lintasTriwulan[$fq]++; // Catat di kuartal kejadian
+                            $listLintas[$fq][] = [
+                                'plan_name' => $plan->plan_name,
+                                'from_quarter' => $q,
+                                'to_quarter' => $fq,
+                            ];
                         }
                     }
-                }
-            }        
-
-            // Hitung Progress Kumulatif Total
-            $totalPlans = array_sum($rekapPlans); // Note: ini jadi sangat besar karena kumulatif, tapi logika controller aslinya begini
-            // Jika ingin total unik, gunakan count($publication->stepsPlans)
-            // Tapi kita ikuti logic controller asli:
-            $totalPlansKumulatifQ4 = $rekapPlans[4]; // Ambil data Q4 sebagai total akhir
-            $totalFinalsKumulatifQ4 = $rekapFinals[4];
-
-            $publication->progressKumulatif = ($totalPlansKumulatifQ4 > 0) 
-                ? ($totalFinalsKumulatifQ4 / $totalPlansKumulatifQ4) * 100 
-                : 0;
-
-            // Progress per triwulan
-            $progressTriwulan = [];
-            foreach ([1, 2, 3, 4] as $q) {
-                if ($rekapPlans[$q] > 0) {
-                    $progressTriwulan[$q] = ($rekapFinals[$q] / $rekapPlans[$q]) * 100;
-                } else {
-                    $progressTriwulan[$q] = 0;
                 }
             }
 
-            // Simpan data ke object publication untuk dikirim ke View
-            $publication->rekapPlans = $rekapPlans;
-            $publication->rekapFinals = $rekapFinals;
-            $publication->lintasTriwulan = $lintasTriwulan;
-            $publication->progressTriwulan = $progressTriwulan;
-            $publication->listPlans = $listPlans;
-            $publication->listFinals = $listFinals;
-            $publication->listLintas = $listLintas;
+            // --- B. DATA BARIS 3: REALISASI OUTPUT (OTOMATIS) ---
+            // Hitung berdasarkan file yang diupload
+            $outputRealQ = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
+            $hasFile = $pub->files->count() > 0;
             
-            // Tambahan untuk kolom Output (File)
-            $publication->filesCount = $publication->files->count();
-            // Mapping untuk tooltip output jika diperlukan
-            $publication->publicationPlansList = $publication->stepsPlans->map(function($p) {
-                return (object) [
-                    'name' => $p->plan_name,
-                    'hasFinal' => !empty($p->stepsFinals), // cek relasi stepsFinals
-                    'planDate' => $p->plan_start_date,
-                    'actualDate' => $p->stepsFinals->actual_started ?? null
-                ];
-            });
+            if ($hasFile) {
+                // Ambil file pertama sebagai patokan tanggal realisasi output
+                $firstFile = $pub->files->sortBy('created_at')->first();
+                $qFile = $this->getQuarter($firstFile->created_at);
+                
+                // Akumulasi: Jika upload di Q2, maka Q2, Q3, Q4 nilainya 1
+                for ($i = $qFile; $i <= 4; $i++) {
+                    $outputRealQ[$i] = 1;
+                }
+            }
+
+            // --- SIMPAN DATA KE OBJECT ---
+            // Tempelkan hasil hitungan ke object $pub supaya bisa dibaca di View
+            $pub->rekapPlans = $rekapPlans;
+            $pub->rekapFinals = $rekapFinals;
+            $pub->listPlans = $listPlans;
+            $pub->listFinals = $listFinals;
+            $pub->lintasTriwulan = $lintasTriwulan;
+            $pub->listLintas = $listLintas;
+            $pub->outputRealQ = $outputRealQ; // Data baru untuk Baris 3
+
+            // Hitung Progress Total (%)
+            $totalRencana = $rekapPlans[4]; // Ambil kumulatif terakhir
+            $totalRealisasi = $rekapFinals[4];
+            $pub->progressKumulatif = ($totalRencana > 0) 
+                ? ($totalRealisasi / $totalRencana) * 100 
+                : 0;
+                
+            $pub->filesCount = $pub->files->count();
         }
 
-        // 3. Kirim ke View
         return view('tampilan.laporan', compact('publications'));
     }
 
-    /**
-     * Helper Function: Mendapatkan Kuartal (1-4) dari tanggal
-     */
     private function getQuarter($date)
     {
         if (empty($date)) return null;

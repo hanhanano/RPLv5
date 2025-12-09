@@ -18,7 +18,7 @@
                 <div class="hidden md:flex items-center space-x-2">
                     <a href="/dashboard" 
                        class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                              {{ request()->is('/dashboard') ? 'bg-white/20 text-white shadow-lg' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+                              {{ request()->is('dashboard') ? 'bg-white/20 text-white shadow-lg' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
                             <path fill-rule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clip-rule="evenodd" />
                         </svg>
@@ -34,10 +34,20 @@
                         Laporan
                     </a>
 
+                    {{-- [BARU] MENU CAPAIAN KINERJA DESKTOP --}}
+                    <a href="{{ route('capaian.index') }}" 
+                       class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                              {{ request()->routeIs('capaian.index') ? 'bg-white/20 text-white shadow-lg' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                            <path d="M15.5 2A1.5 1.5 0 0014 3.5v8a1.5 1.5 0 001.5 1.5h1.5A1.5 1.5 0 0018.5 11.5v-8A1.5 1.5 0 0017 2h-1.5zM9 9a1.5 1.5 0 00-1.5 1.5v2A1.5 1.5 0 009 14h1.5a1.5 1.5 0 001.5-1.5v-2A1.5 1.5 0 0010.5 9H9zM2 10.5a1.5 1.5 0 011.5-1.5h1.5A1.5 1.5 0 016.5 10.5v2a1.5 1.5 0 01-1.5 1.5h-1.5A1.5 1.5 0 012 12.5v-2z" />
+                        </svg>
+                        Capaian Kinerja
+                    </a>
+
                     @if(auth()->check() && in_array(auth()->user()->role, ['ketua_tim', 'admin']))
                         <a href="{{ route('target.index') }}" 
                             class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                              {{ request()->is('target.index') ? 'bg-white/20 text-white shadow-lg' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+                              {{ request()->is('target-kinerja') ? 'bg-white/20 text-white shadow-lg' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
                             Target Kinerja
                         </a>
                     @endif
@@ -156,9 +166,9 @@
                     </svg>
                     Dashboard
                 </a>
-                
+
                 <a href="/laporan" 
-                   class="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium
                           {{ request()->is('laporan') ? 'bg-white/20 text-white' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
                         <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
@@ -166,12 +176,24 @@
                     Laporan
                 </a>
 
+                <a href="{{ route('capaian.index') }}" 
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium
+                           {{ request()->routeIs('capaian.index') ? 'bg-white/20 text-white' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                        <path d="M15.5 2A1.5 1.5 0 0014 3.5v8a1.5 1.5 0 001.5 1.5h1.5A1.5 1.5 0 0018.5 11.5v-8A1.5 1.5 0 0017 2h-1.5zM9 9a1.5 1.5 0 00-1.5 1.5v2A1.5 1.5 0 009 14h1.5a1.5 1.5 0 001.5-1.5v-2A1.5 1.5 0 0010.5 9H9zM2 10.5a1.5 1.5 0 011.5-1.5h1.5A1.5 1.5 0 016.5 10.5v2a1.5 1.5 0 01-1.5 1.5h-1.5A1.5 1.5 0 012 12.5v-2z" />
+                    </svg>
+                    Capaian Kinerja
+                </a>
+
                 @if(auth()->check() && in_array(auth()->user()->role, ['ketua_tim', 'admin']))
-                    <a href="{{ route('target.index') }}" 
-                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium
-                          {{ request()->is('target.index') ? 'bg-white/20 text-white' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
-                        Target Kinerja
-                    </a>
+                <a href="{{ route('target.index') }}" 
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium
+                        {{ request()->is('target-kinerja') ? 'bg-white/20 text-white' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                        <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd" />
+                    </svg>
+                    Target Kinerja
+                </a>
                 @endif
             </div>
             
@@ -180,37 +202,13 @@
                     <div class="px-4 pb-3">
                         <div class="text-base font-medium text-white">{{ auth()->user()->name }}</div>
                         <div class="text-sm text-blue-200">{{ auth()->user()->email }}</div>
-                        @if(auth()->user()->team)
-                            <div class="text-xs text-emerald-300 mt-1">Tim {{ auth()->user()->team }}</div>
-                        @endif
                     </div>
                     
                     <div class="space-y-1 px-2">
-                        <a href="{{ route('password.change') }}" 
-                           class="flex items-center px-3 py-2 rounded-lg text-base font-medium text-blue-100 hover:bg-white/10 hover:text-white">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-2">
-                                <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd" />
-                            </svg>
-                            Ubah Password
-                        </a>
-                        
-                        @if(auth()->user()->role === 'admin')
-                            <a href="/admin" 
-                               class="flex items-center px-3 py-2 rounded-lg text-base font-medium text-blue-100 hover:bg-white/10 hover:text-white">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-2">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
-                                </svg>
-                                Halaman Admin
-                            </a>
-                        @endif
-                        
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
                             <button type="submit" 
                                     class="flex items-center w-full px-3 py-2 rounded-lg text-base font-medium text-red-300 hover:bg-red-500/20 hover:text-red-200">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-2">
-                                    <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
-                                </svg>
                                 Keluar
                             </button>
                         </form>
@@ -219,9 +217,6 @@
                     <div class="px-2">
                         <a href="/login" 
                            class="flex items-center px-3 py-2 rounded-lg text-base font-medium text-blue-100 hover:bg-white/10 hover:text-white">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-2">
-                                <path fill-rule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clip-rule="evenodd" />
-                            </svg>
                             Masuk
                         </a>
                     </div>
