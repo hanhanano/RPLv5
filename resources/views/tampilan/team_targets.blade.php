@@ -324,9 +324,7 @@
             // 5. LOGIKA DROPDOWN SASARAN
             const options = [
                 "Laporan Statistik Kependudukan dan Ketenagakerjaan",
-                "Laporan Statistik Statistik Kesejahteraan Rakyat",
-                // ... (list opsi lainnya tetap sama) ...
-                "Indeks Implementasi BerAKHLAK"
+                "Laporan Statistik Statistik Kesejahteraan Rakyat"
             ];
 
             // UBAH SELECTOR: [name="report_name_select"] ke [name="publication_report"]
