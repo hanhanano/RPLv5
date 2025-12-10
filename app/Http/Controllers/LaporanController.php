@@ -24,7 +24,7 @@ class LaporanController extends Controller
             $query->where('publication_pic', $user->team);
         }
 
-        $publications = $query->get();
+        $publications = $query->orderBy('publication_id', 'desc')->get();
 
         // 2. HITUNG LOGIKA PER BARIS
         foreach ($publications as $pub) {
