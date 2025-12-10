@@ -10,9 +10,9 @@ class HomeController extends Controller
     public function index()
         {
             $publications = Publication::with('stepsPlans')
-            ->orderBy('id', 'desc')
+            ->orderBy('publication_id', 'desc')
             ->get();
-            
+
             return view('tampilan.daftarpublikasi', compact('publications'));
             // return view('tampilan.homeketua');
         }
