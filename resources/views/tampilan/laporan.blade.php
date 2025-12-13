@@ -23,14 +23,9 @@
         <x-navbar></x-navbar>
     </div>
 
-    <main class="pt-24 px-4 max-w-7xl mx-auto">
+    <main class="pt-12 px-4 max-w-7xl mx-auto mt-8 md:mt-0">
         
         <h1 class="text-2xl font-bold text-blue-900 mb-6">Halaman Laporan</h1>
-
-        {{-- BAGIAN INI YANG KITA UBAH --}}
-        {{-- DULU: @include('tampilan.daftarpublikasi') --}}
-        
-        {{-- SEKARANG: Tampilan Coming Soon --}}
         <div class="bg-white border shadow-sm rounded-lg min-h-[400px] flex flex-col items-center justify-center p-8 text-center">
             <div class="bg-blue-50 p-6 rounded-full mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 text-blue-600">

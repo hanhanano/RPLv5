@@ -28,8 +28,8 @@
         <x-navbar></x-navbar>
     </div>
 
-    <main>
-        <div class="max-w-7xl mx-auto px-4 pt-0 space-y-6">
+    <main class="pt-12 md:pt-0"> 
+        <div class="max-w-7xl mx-auto px-4 space-y-6">
             
             <!-- Statistik Dashboard -->
             @include('tampilan.statistik') 
@@ -37,14 +37,13 @@
             <!-- Daftar Publikasi Survei -->
             @include('tampilan.daftarpublikasi')
             
-            {{-- TAMBAHAN: Filter Panel --}}
+            {{-- Filter Panel --}}
             <div class="max-w-6xl mx-auto mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl shadow-md" 
                  x-data="{
                      showFilters: false,
                      filterTim: 'semua',
                      filterTriwulan: 'semua',
                      applyFilters() {
-                         // Trigger refresh charts dengan filter
                          this.refreshCharts();
                      },
                      resetFilters() {
@@ -173,116 +172,167 @@
     </footer>
 </body>
 
+   {{-- PERBAIKAN 1: Menambahkan outputPlans & outputFinals agar terbaca JS --}}
     @php
-        // Kita map data agar properti yang dibutuhkan JS tersedia
         $chartPublicationsData = $publications->map(function($p) {
             return [
                 'publication_pic' => $p->publication_pic,
-                'rekapPlans' => $p->rekapPlans,     // Format: [1=>int, 2=>int, 3=>int, 4=>int]
-                'rekapFinals' => $p->rekapFinals,   // Format: [1=>int, 2=>int, 3=>int, 4=>int]
+                'rekapPlans' => $p->rekapPlans,
+                'rekapFinals' => $p->rekapFinals,
                 'tepatWaktu' => $p->tepatWaktu,
                 'terlambat' => $p->terlambat,
+                // Tambahkan dua baris ini:
+                'outputPlans' => $p->outputPlans,
+                'outputFinals' => $p->outputFinals,
             ];
         })->values();
     @endphp
 
 <script>
-    // Variabel Global Chart
+    function downloadChart(chartId, filename) {
+        const canvas = document.getElementById(chartId);
+        if (canvas) {
+            // Buat link download virtual
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        } else {
+            console.error("Canvas tidak ditemukan: " + chartId);
+        }
+    }
+
+    // --- 1. INISIALISASI VARIABEL GLOBAL ---
     let kinerjaChart = null;
     let tahapanChart = null;
     let ringChart = null;
     let timChart = null;
 
-    // Data Master
+    // --- 2. DATA MASTER DARI CONTROLLER ---
     const originalData = {
-        publications: @json($chartPublicationsData),
-        defaultPublikasi: @json($dataGrafikPublikasi),
-        defaultTahapan: @json($dataGrafikBatang),
-        defaultRing: @json($dataGrafikRing),
-        defaultTim: @json($dataGrafikPerTim)
+        publications: @json($chartPublicationsData ?? []), 
+        defaultPublikasi: @json($dataGrafikPublikasi ?? []),
+        defaultTahapan: @json($dataGrafikBatang ?? []),
+        defaultRing: @json($dataGrafikRing ?? []),
+        defaultTim: @json($dataGrafikPerTim ?? [])
     };
 
-    // --- 1. LOGIKA PERHITUNGAN DATA ---
+    // --- 3. LOGIKA FILTER UTAMA ---
     function filterData(filterTim, filterTriwulan) {
         let filteredPubs = originalData.publications;
+
+        // A. Filter Tim
         if (filterTim !== 'semua') {
-            filteredPubs = filteredPubs.filter(pub => pub.publication_pic === filterTim);
+            filteredPubs = filteredPubs.filter(pub => {
+                let dbTeam = pub.publication_pic || "";
+                return dbTeam.includes(filterTim); 
+            });
         }
 
+        // B. Siapkan Variabel Penampung
         let stats = {
             selesai: 0, berlangsung: 0, belum: 0, 
-            rencana: [0, 0, 0, 0], realisasi: [0, 0, 0, 0], tepat: [0, 0, 0, 0], terlambat: [0, 0, 0, 0],
-            pubSelesai: 0, totalPub: 0, tahapanSelesai: 0, totalTahapan: 0,
-            perTim: {} 
+            rencana: [0, 0, 0, 0], realisasi: [0, 0, 0, 0], 
+            perTim: {} // Key: Nama Tim, Value: {plans, tepat, terlambat}
+        };
+        
+        // Penampung untuk Summary Chart 3 (Donut) & Teks
+        let summary = {
+            pubSelesai: 0, totalPub: 0, 
+            tahapanSelesai: 0, totalTahapan: 0,
+            outputSelesai: 0, totalOutput: 0
         };
 
+        // Data lengkap untuk Kotak Kecil (selalu 4 triwulan meskipun difilter)
+        let fullYearStats = {
+            rencana: [0, 0, 0, 0],
+            realisasi: [0, 0, 0, 0]
+        };
+
+        // C. Loop Data untuk Kalkulasi
         filteredPubs.forEach(pub => {
-            let globalPlans = 0;
-            let globalFinals = 0;
-            let scopePlans = 0;
-            let scopeFinals = 0;
+            let scopePlans = 0; let scopeFinals = 0;
+            let scopeOutputPlans = 0; let scopeOutputFinals = 0;
 
+            // Loop Triwulan 1-4
             for(let i=1; i<=4; i++) {
-                let p = pub.rekapPlans[i] || 0;
-                let f = pub.rekapFinals[i] || 0;
-                let tw = pub.tepatWaktu[i] || 0;
-                let tl = pub.terlambat[i] || 0;
+                let p = (pub.rekapPlans && pub.rekapPlans[i]) ? pub.rekapPlans[i] : 0;
+                let f = (pub.rekapFinals && pub.rekapFinals[i]) ? pub.rekapFinals[i] : 0;
+                let pOut = (pub.outputPlans && pub.outputPlans[i]) ? pub.outputPlans[i] : 0;
+                let fOut = (pub.outputFinals && pub.outputFinals[i]) ? pub.outputFinals[i] : 0;
+                
+                let tw = (pub.tepatWaktu && pub.tepatWaktu[i]) ? pub.tepatWaktu[i] : 0;
+                let tl = (pub.terlambat && pub.terlambat[i]) ? pub.terlambat[i] : 0;
 
-                globalPlans += p;
-                globalFinals += f;
+                // Hitung data tahunan (untuk kotak kecil chart 2)
+                fullYearStats.rencana[i-1] += p;
+                fullYearStats.realisasi[i-1] += f;
 
-                if (filterTriwulan === 'semua' || parseInt(filterTriwulan) === i) {
+                // --- LOGIKA FILTER TRIWULAN ---
+                let isInTriwulan = (filterTriwulan === 'semua' || parseInt(filterTriwulan) === i);
+
+                if (isInTriwulan) {
+                    // Masukkan ke array Chart Batang
                     stats.rencana[i-1] += p;
                     stats.realisasi[i-1] += f;
-                    stats.tepat[i-1] += tw;
-                    stats.terlambat[i-1] += tl;
 
-                    stats.totalTahapan += p;
-                    stats.tahapanSelesai += f;
+                    // Update Summary Angka
+                    summary.totalTahapan += p;
+                    summary.tahapanSelesai += f;
+                    summary.totalOutput += pOut;
+                    summary.outputSelesai += fOut;
                     
                     scopePlans += p;
                     scopeFinals += f;
+                    scopeOutputPlans += pOut;
+                    scopeOutputFinals += fOut;
 
-                    if (!stats.perTim[pub.publication_pic]) {
-                        stats.perTim[pub.publication_pic] = { plans: 0, tepat: 0, terlambat: 0 };
+                    // Hitung Agregat Chart Tim
+                    // Ambil nama tim bersih (hapus 'Tim ')
+                    let timName = pub.publication_pic.replace('Tim ', '').trim(); 
+                    if (!stats.perTim[timName]) {
+                        stats.perTim[timName] = { plans: 0, tepat: 0, terlambat: 0 };
                     }
-                    stats.perTim[pub.publication_pic].plans += p;
-                    stats.perTim[pub.publication_pic].tepat += tw;
-                    stats.perTim[pub.publication_pic].terlambat += tl;
+                    stats.perTim[timName].plans += p;
+                    stats.perTim[timName].tepat += tw;
+                    stats.perTim[timName].terlambat += tl;
                 }
             }
 
-            // Chart 1 Logic
-            if (globalPlans === 0) stats.belum++;
-            else if (globalFinals >= globalPlans) stats.selesai++;
-            else stats.berlangsung++;
+            // D. Tentukan Status Publikasi (Dalam Scope Filter)
+            let scopeActivity = scopePlans + scopeOutputPlans;
+            if (scopeActivity > 0) {
+                summary.totalPub++;
+                
+                let isStagesDone = (scopePlans === 0) ? true : (scopeFinals >= scopePlans);
+                let isOutputsDone = (scopeOutputPlans === 0) ? true : (scopeOutputFinals >= scopeOutputPlans);
 
-            // Chart 3 Logic
-            if (filterTriwulan === 'semua') {
-                stats.totalPub++;
-                if (globalPlans > 0 && globalFinals >= globalPlans) stats.pubSelesai++;
-            } else {
-                if (scopePlans > 0) {
-                    stats.totalPub++;
-                    if (scopeFinals >= scopePlans) stats.pubSelesai++;
+                if (isStagesDone && isOutputsDone) {
+                    stats.selesai++;
+                    summary.pubSelesai++;
+                } else {
+                    stats.berlangsung++;
                 }
+            } else {
+                 // Jika filter triwulan aktif dan tidak ada kegiatan di triwulan itu, jangan dihitung 'Belum'
+                 if (filterTriwulan === 'semua') stats.belum++;
             }
         });
 
-        // Format Data Return
+        // E. Format Return untuk Chart.js
         let labelsBatang, dataRencana, dataRealisasi;
         if (filterTriwulan === 'semua') {
             labelsBatang = ['Triwulan 1', 'Triwulan 2', 'Triwulan 3', 'Triwulan 4'];
             dataRencana = stats.rencana;
             dataRealisasi = stats.realisasi;
         } else {
-            // Untuk grafik batang, kita potong arraynya agar hanya menampilkan 1 batang
             let idx = parseInt(filterTriwulan) - 1;
             labelsBatang = [`Triwulan ${filterTriwulan}`];
             dataRencana = [stats.rencana[idx]];
             dataRealisasi = [stats.realisasi[idx]];
         }
 
+        // Siapkan data Tim untuk Chart
         let timLabels = Object.keys(stats.perTim);
         let timPlans = timLabels.map(t => stats.perTim[t].plans);
         let timTepat = timLabels.map(t => stats.perTim[t].tepat);
@@ -291,29 +341,21 @@
         return {
             c1: [stats.selesai, stats.berlangsung, stats.belum],
             c2: { 
-                labels: labelsBatang, 
-                rencana: dataRencana, 
-                realisasi: dataRealisasi,
-                fullRencana: stats.rencana,
-                fullRealisasi: stats.realisasi
+                labels: labelsBatang, rencana: dataRencana, realisasi: dataRealisasi,
+                fullYear: fullYearStats // Return data lengkap untuk kotak kecil
             },
             c3: { 
-                data: [stats.pubSelesai, stats.tahapanSelesai], 
-                pubSelesai: stats.pubSelesai,
-                totalPub: stats.totalPub,
-                tahapanSelesai: stats.tahapanSelesai,
-                totalTahapan: stats.totalTahapan
+                data: [summary.pubSelesai, summary.tahapanSelesai, summary.outputSelesai], 
+                summary: summary 
             },
-            c4: { labels: timLabels, 
-                plans: timPlans, 
-                tepat: timTepat, 
-                terlambat: timTerlambat,
-                rawPerTim: stats.perTim
+            c4: { 
+                labels: timLabels, plans: timPlans, tepat: timTepat, terlambat: timTerlambat,
+                rawTim: stats.perTim // Return raw object untuk update kotak tim
             }
         };
     }
 
-    // --- 2. FUNGSI UPDATE TAMPILAN KE LAYAR ---
+    // --- 4. FUNGSI UPDATE TAMPILAN KE DOM ---
     function updateAllCharts(filterTim = 'semua', filterTriwulan = 'semua') {
         const newData = filterData(filterTim, filterTriwulan);
 
@@ -323,64 +365,61 @@
             kinerjaChart.update();
         }
 
-        // Update Chart 2 (Batang)
+        // Update Chart 2 (Batang & Kotak Kecil)
         if(tahapanChart) {
             tahapanChart.data.labels = newData.c2.labels;
             tahapanChart.data.datasets[0].data = newData.c2.rencana;
             tahapanChart.data.datasets[1].data = newData.c2.realisasi; 
             tahapanChart.update();
-        }
 
-        for(let i = 1; i <= 4; i++) {
-            // Ambil elemen berdasarkan ID yang baru kita buat
-            const ratioEl = document.getElementById(`tw-ratio-${i}`);
-            const percentEl = document.getElementById(`tw-percent-${i}`);
+            // Update Kotak Kecil (Triwulan 1-4)
+            for(let i=1; i<=4; i++) {
+                // Ambil elemen container (Card), Angka, dan Persen
+                const cardEl = document.getElementById(`tw-card-${i}`);
+                const ratioEl = document.getElementById(`tw-ratio-${i}`);
+                const percentEl = document.getElementById(`tw-percent-${i}`);
+                
+                if (cardEl && ratioEl && percentEl) {
+                    // 1. Logika Update Angka
+                    let r = newData.c2.fullYear.rencana[i-1];
+                    let f = newData.c2.fullYear.realisasi[i-1];
+                    let percent = (r > 0) ? Math.round((f / r) * 100) : 0;
 
-            if (ratioEl && percentEl) {
-                // Ambil data dari array full (index array dimulai dari 0, jadi i-1)
-                let r = newData.c2.fullRencana[i-1];
-                let f = newData.c2.fullRealisasi[i-1];
-                
-                // Hitung Persentase
-                let percent = (r > 0) ? Math.round((f / r) * 100) : 0;
-                
-                // Update Teks
-                ratioEl.innerText = `${f}/${r}`;
-                percentEl.innerText = `${percent}% selesai`;
+                    ratioEl.innerText = `${f}/${r}`;
+                    percentEl.innerText = `${percent}% selesai`;
+                    
+                    // Update Warna Teks
+                    percentEl.className = "text-[10px] font-bold leading-none";
+                    if (percent == 100) percentEl.classList.add('text-green-600');
+                    else if (percent >= 67) percentEl.classList.add('text-yellow-600');
+                    else if (percent >= 50) percentEl.classList.add('text-orange-600');
+                    else percentEl.classList.add('text-red-600');
 
-                // Update Warna Teks (Logic Warna Tailwind)
-                // Hapus class warna lama dulu
-                percentEl.classList.remove('text-green-600', 'text-yellow-600', 'text-orange-600', 'text-red-600');
-                
-                // Tambahkan class warna baru sesuai persentase
-                if (percent == 100) { percentEl.classList.add('text-green-600'); }
-                else if (percent >= 67) { percentEl.classList.add('text-yellow-600'); }
-                else if (percent >= 50) { percentEl.classList.add('text-orange-600'); }
-                else { percentEl.classList.add('text-red-600'); }
+                    if (filterTriwulan === 'semua' || parseInt(filterTriwulan) === i) {
+                        cardEl.style.display = ''; 
+                    } else {
+                        cardEl.style.display = 'none'; // Sembunyikan
+                    }
+                }
             }
         }
 
-        // Update Chart 3 (Doughnut & TEKS)
+        // Update Chart 3 (Ringkasan & Teks)
         if(ringChart) {
-            // Update Grafik Lingkaran
             ringChart.data.datasets[0].data = newData.c3.data;
             ringChart.update();
 
-            // Update Teks Angka di bawah grafik
-            // Pastikan ID di dashboard.blade.php sudah ditambahkan sesuai instruksi sebelumnya
-            const elPubSelesai = document.getElementById('summary-pub-selesai');
-            const elPubTotal = document.getElementById('summary-pub-total');
-            const elTahapSelesai = document.getElementById('summary-tahap-selesai');
-            const elTahapTotal = document.getElementById('summary-tahap-total');
-
-            // Kita cek dulu apakah datanya undefined atau tidak
-            if(elPubSelesai) elPubSelesai.innerText = newData.c3.pubSelesai ?? 0;
-            if(elPubTotal) elPubTotal.innerText = newData.c3.totalPub ?? 0;
-            if(elTahapSelesai) elTahapSelesai.innerText = newData.c3.tahapanSelesai ?? 0;
-            if(elTahapTotal) elTahapTotal.innerText = newData.c3.totalTahapan ?? 0;
+            // Helper set text
+            const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val ?? 0; };
+            setVal('summary-pub-selesai', newData.c3.summary.pubSelesai);
+            setVal('summary-pub-total', newData.c3.summary.totalPub);
+            setVal('summary-tahap-selesai', newData.c3.summary.tahapanSelesai);
+            setVal('summary-tahap-total', newData.c3.summary.totalTahapan);
+            setVal('summary-output-selesai', newData.c3.summary.outputSelesai);
+            setVal('summary-output-total', newData.c3.summary.totalOutput);
         }
 
-        // Update Chart 4 (Tim)
+        // Update Chart 4 (Kinerja Tim & Kotak Tim)
         if(timChart) {
             timChart.data.labels = newData.c4.labels;
             timChart.data.datasets[0].data = newData.c4.tepat;
@@ -388,109 +427,106 @@
             let sisa = newData.c4.plans.map((p, i) => Math.max(0, p - (newData.c4.tepat[i] + newData.c4.terlambat[i])));
             timChart.data.datasets[2].data = sisa;
             timChart.update();
-        }
 
-        const allTeams = originalData.defaultTim.labels;
+            // Update Kotak Tim
+           const allTeams = originalData.defaultTim.labels;
+            allTeams.forEach((teamName, idx) => {
+                const cardEl = document.getElementById(`tim-card-${idx}`);
+                const statsEl = document.getElementById(`tim-stats-${idx}`);
+                const percentEl = document.getElementById(`tim-percent-${idx}`);
 
-        allTeams.forEach((teamName, i) => {
-            const cardEl = document.getElementById(`tim-card-${i}`);
-            const statsEl = document.getElementById(`tim-stats-${i}`);
-            const percentEl = document.getElementById(`tim-percent-${i}`);
+                if (cardEl && statsEl && percentEl) {
+                    // 1. Logika Update Angka
+                    const teamData = newData.c4.rawTim[teamName] || { plans: 0, tepat: 0, terlambat: 0 };
+                    
+                    const final = teamData.tepat + teamData.terlambat;
+                    const plan = teamData.plans;
+                    const percent = (plan > 0) ? Math.round((final / plan) * 100) : 0;
 
-            if(cardEl && statsEl && percentEl) {
-                const teamData = newData.c4.rawPerTim[teamName] || { plans: 0, tepat: 0, terlambat: 0 };
-                const final = teamData.tepat + teamData.terlambat;
-                const plan = teamData.plans;
-                const percent = (plan > 0) ? Math.round((final / plan) * 100) : 0;
+                    statsEl.innerText = `${final}/${plan} tahapan`;
+                    percentEl.innerText = `${percent}%`;
 
-                // Update Teks
-                statsEl.innerText = `${final}/${plan} tahapan`;
-                percentEl.innerText = `${percent}%`;
+                    // Update Warna Card
+                    cardEl.className = "p-2 border rounded-lg transition-shadow hover:shadow";
+                    if (percent >= 80) cardEl.classList.add('bg-green-100', 'text-green-700', 'border-green-300');
+                    else if (percent >= 60) cardEl.classList.add('bg-yellow-100', 'text-yellow-700', 'border-yellow-300');
+                    else cardEl.classList.add('bg-red-100', 'text-red-700', 'border-red-300');
 
-                // Reset Class Warna
-                cardEl.className = "p-2 border rounded-lg hover:shadow transition-shadow"; 
-
-                // Set Warna Baru Berdasarkan Persentase
-                if (percent >= 80) {
-                    cardEl.classList.add('bg-green-100', 'text-green-700', 'border-green-300');
-                } else if (percent >= 60) {
-                    cardEl.classList.add('bg-yellow-100', 'text-yellow-700', 'border-yellow-300');
-                } else {
-                    cardEl.classList.add('bg-red-100', 'text-red-700', 'border-red-300');
+                    // 2. Logika Sembunyikan Card (Fitur Baru)
+                    // Tampilkan jika filter 'semua' ATAU jika nama tim sama persis dengan filter
+                    if (filterTim === 'semua' || teamName === filterTim) {
+                        cardEl.style.display = ''; // Tampilkan
+                    } else {
+                        cardEl.style.display = 'none'; // Sembunyikan
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
-    // --- 3. INISIALISASI CHART SAAT LOAD HALAMAN ---
+    // --- 5. INITIAL RENDER (Saat Halaman Dimuat) ---
+    // Kode ini dipindahkan dari dashboard.blade.php ke sini agar scope-nya global
     document.addEventListener("DOMContentLoaded", function() {
         
-        // Chart 1: Status Publikasi
+        // Chart 1
         const ctxKinerja = document.getElementById('kinerjaChart');
         if (ctxKinerja) {
             kinerjaChart = new Chart(ctxKinerja, {
                 type: 'bar',
                 data: {
-                    labels: @json($dataGrafikPublikasi['labels']), 
+                    labels: originalData.defaultPublikasi.labels, 
                     datasets: [{
                         label: 'Jumlah',
-                        data: @json($dataGrafikPublikasi['data']), 
+                        data: originalData.defaultPublikasi.data, 
                         backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], 
                         borderRadius: 4, barPercentage: 0.6
                     }]
                 },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, grid: { display: true, drawBorder: false } }, x: { grid: { display: false } } }
-                }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { display: true, drawBorder: false } }, x: { grid: { display: false } } } }
             });
         }
 
-        // Chart 2: Rencana vs Realisasi
+        // Chart 2
         const ctxTahapan = document.getElementById('tahapanChart');
         if (ctxTahapan) {
             tahapanChart = new Chart(ctxTahapan, {
                 type: 'bar',
                 data: {
-                    labels: @json($dataGrafikBatang['labels']), 
+                    labels: originalData.defaultTahapan.labels, 
                     datasets: [
-                        { label: 'Rencana', data: @json($dataGrafikBatang['rencana']), backgroundColor: '#1e40af', borderRadius: 4 },
-                        { label: 'Realisasi', data: @json($dataGrafikBatang['realisasi']), backgroundColor: '#10b981', borderRadius: 4 }
+                        { label: 'Rencana', data: originalData.defaultTahapan.rencana, backgroundColor: '#1e40af', borderRadius: 4 },
+                        { label: 'Realisasi', data: originalData.defaultTahapan.realisasi, backgroundColor: '#10b981', borderRadius: 4 }
                     ]
                 },
-                options: { responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { legend: { display: false } }, 
-                    scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } } 
-                }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } } }
             });
         }
 
-        // Chart 3: Proporsi (Doughnut)
+        // Chart 3
         const ctxRing = document.getElementById('ringChart');
         if (ctxRing) {
             ringChart = new Chart(ctxRing, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Publikasi Selesai', 'Tahapan Selesai'],
+                    labels: originalData.defaultRing.labels,
                     datasets: [{
-                        data: @json($dataGrafikRing['data']),
-                        backgroundColor: ['#10b981', '#1e40af'], borderWidth: 0
+                        data: originalData.defaultRing.data,
+                        backgroundColor: ['#10b981', '#1e40af', '#9333ea'], 
+                        borderWidth: 0
                     }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
         }
 
-        // Chart 4: Kinerja Per Tim
+        // Chart 4
         const ctxTim = document.getElementById('timChart');
         if (ctxTim) {
-            const timData = @json($dataGrafikPerTim);
-            const sisaRencana = timData.plans.map((plan, i) => {
-                const totalSelesai = timData.tepat_waktu[i] + timData.terlambat[i];
-                return Math.max(0, plan - totalSelesai);
-            });
+            const timData = originalData.defaultTim;
+            let sisaRencana = [];
+            if(timData.plans) {
+                sisaRencana = timData.plans.map((plan, i) => Math.max(0, plan - (timData.tepat_waktu[i] + timData.terlambat[i])));
+            }
 
             timChart = new Chart(ctxTim, {
                 type: 'bar',
@@ -512,7 +548,7 @@
         }
     });
 
-    // Event Listener Filter
+    // Event Listener dari AlpineJS (Filter Changed)
     window.addEventListener('filter-changed', (e) => {
         updateAllCharts(e.detail.tim, e.detail.triwulan);
     });

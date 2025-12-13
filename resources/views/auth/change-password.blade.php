@@ -23,7 +23,7 @@
         <x-navbar ></x-navbar>
     </div>
 
-    <main>
+    <main class="py-8 mt-4 md:mt-0">
         <div class="max-w-md mx-auto mt-10 bg-white rounded-lg shadow p-6">
             <p class="mb-4 text-gray-700">
                 Halo, <strong>{{ auth()->user()->name }}</strong>!

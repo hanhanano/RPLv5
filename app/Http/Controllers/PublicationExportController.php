@@ -18,75 +18,21 @@ use ZipArchive;
 
 class PublicationExportController extends Controller
 {
-    // --- Method export (ZIP) dibiarkan tetap ---
+    // --- Method export Excel ---
     public function export($slug_publication)
     {
-        $publication = Publication::with(['stepsplans.stepsFinals.struggles'])->where('slug_publication', $slug_publication)->firstOrFail();
+        $publication = Publication::where('slug_publication', $slug_publication)->firstOrFail();
 
-        $excelFileName = sprintf(
+        $fileName = sprintf(
             "%s_%s.xlsx",
             str_replace(' ', '_', $publication->publication_name),
             str_replace(' ', '_', $publication->publication_report)
         );
-        $excelPath = "exports/{$excelFileName}";
-        Excel::store(new PublicationExport($slug_publication), $excelPath);
 
-        $zipFileName = sprintf(
-            "%s_%s.zip",
-            str_replace(' ', '_', $publication->publication_name),
-            str_replace(' ', '_', $publication->publication_report)
-        );
-        $zipPath = "exports/{$zipFileName}";
-        $zip = new ZipArchive;
-
-        if (!Storage::exists('exports')) {
-            Storage::makeDirectory('exports');
-        }
-
-        if ($zip->open(Storage::path($zipPath), ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
-            
-            $excelFullPath = Storage::path($excelPath);
-            if (file_exists($excelFullPath)) {
-                $zip->addFile($excelFullPath, $excelFileName);
-            }
-
-            foreach ($publication->stepsplans as $plan) {
-                if ($plan->plan_doc && Storage::disk('public')->exists($plan->plan_doc)) {
-                    $filename = Str::slug($plan->plan_type . '_' . $plan->plan_name, '_') 
-                        . '.' . pathinfo($plan->plan_doc, PATHINFO_EXTENSION);
-                    
-                    $zip->addFile(Storage::disk('public')->path($plan->plan_doc), "bukti_dukung_rencana/" . $filename);
-                }
-                
-                if ($plan->stepsFinals) {
-                    $final = $plan->stepsFinals;
-                    if ($final->final_doc && Storage::disk('public')->exists($final->final_doc)) {
-                        $filename = Str::slug($plan->plan_type . '_' . $plan->plan_name, '_') 
-                            . '.' . pathinfo($plan->plan_doc, PATHINFO_EXTENSION);
-                        
-                        $zip->addFile(Storage::disk('public')->path($final->final_doc), "bukti_dukung_realisasi/" . $filename);
-                    }
-                    foreach ($final->struggles as $struggle) {
-                        if ($struggle->solution_doc && Storage::disk('public')->exists($struggle->solution_doc)) {
-                            $filename = Str::slug($plan->plan_type . '_' . $plan->plan_name, '_') 
-                                . '.' . pathinfo($plan->plan_doc, PATHINFO_EXTENSION);
-                            
-                            $zip->addFile(Storage::disk('public')->path($struggle->solution_doc), "bukti_dukung_kendala_solusi/" . $filename);
-                        }
-                    }
-                }
-            }
-            $zip->close();
-        }
-
-        if (Storage::exists($zipPath)) {
-            return Storage::download($zipPath);
-        } else {
-            return redirect()->back()->with('error', 'Gagal membuat file ZIP.');
-        }
+        return Excel::download(new \App\Exports\PublicationExport($slug_publication), $fileName);
     }
 
-    // --- EXPORT TABLE (DENGAN PERBAIKAN TAMPILAN MERGE) ---
+    // --- EXPORT TABLE ---
     public function exportTable()
     {
         $year = session('selected_year', now()->year);
