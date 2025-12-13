@@ -19,7 +19,7 @@
         <x-navbar ></x-navbar>
     </div>
 
-    <main>
+    <main class="py-8 mt-4 md:mt-0">
         <div class="max-w-7xl mx-auto px-4 space-y-6">
             {{-- PERBAIKAN: x-data dipindahkan ke sini agar mencakup Modal, Tabel, dan Tombol --}}
             <div class="max-w-6xl mx-auto mt-6 p-6 bg-white bordershadow border rounded-lg"

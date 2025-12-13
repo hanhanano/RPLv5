@@ -18,75 +18,21 @@ use ZipArchive;
 
 class PublicationExportController extends Controller
 {
-    // --- Method export (ZIP) dibiarkan tetap ---
+    // --- Method export Excel ---
     public function export($slug_publication)
     {
-        $publication = Publication::with(['stepsplans.stepsFinals.struggles'])->where('slug_publication', $slug_publication)->firstOrFail();
+        $publication = Publication::where('slug_publication', $slug_publication)->firstOrFail();
 
-        $excelFileName = sprintf(
+        $fileName = sprintf(
             "%s_%s.xlsx",
             str_replace(' ', '_', $publication->publication_name),
             str_replace(' ', '_', $publication->publication_report)
         );
-        $excelPath = "exports/{$excelFileName}";
-        Excel::store(new PublicationExport($slug_publication), $excelPath);
 
-        $zipFileName = sprintf(
-            "%s_%s.zip",
-            str_replace(' ', '_', $publication->publication_name),
-            str_replace(' ', '_', $publication->publication_report)
-        );
-        $zipPath = "exports/{$zipFileName}";
-        $zip = new ZipArchive;
-
-        if (!Storage::exists('exports')) {
-            Storage::makeDirectory('exports');
-        }
-
-        if ($zip->open(Storage::path($zipPath), ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
-            
-            $excelFullPath = Storage::path($excelPath);
-            if (file_exists($excelFullPath)) {
-                $zip->addFile($excelFullPath, $excelFileName);
-            }
-
-            foreach ($publication->stepsplans as $plan) {
-                if ($plan->plan_doc && Storage::disk('public')->exists($plan->plan_doc)) {
-                    $filename = Str::slug($plan->plan_type . '_' . $plan->plan_name, '_') 
-                        . '.' . pathinfo($plan->plan_doc, PATHINFO_EXTENSION);
-                    
-                    $zip->addFile(Storage::disk('public')->path($plan->plan_doc), "bukti_dukung_rencana/" . $filename);
-                }
-                
-                if ($plan->stepsFinals) {
-                    $final = $plan->stepsFinals;
-                    if ($final->final_doc && Storage::disk('public')->exists($final->final_doc)) {
-                        $filename = Str::slug($plan->plan_type . '_' . $plan->plan_name, '_') 
-                            . '.' . pathinfo($plan->plan_doc, PATHINFO_EXTENSION);
-                        
-                        $zip->addFile(Storage::disk('public')->path($final->final_doc), "bukti_dukung_realisasi/" . $filename);
-                    }
-                    foreach ($final->struggles as $struggle) {
-                        if ($struggle->solution_doc && Storage::disk('public')->exists($struggle->solution_doc)) {
-                            $filename = Str::slug($plan->plan_type . '_' . $plan->plan_name, '_') 
-                                . '.' . pathinfo($plan->plan_doc, PATHINFO_EXTENSION);
-                            
-                            $zip->addFile(Storage::disk('public')->path($struggle->solution_doc), "bukti_dukung_kendala_solusi/" . $filename);
-                        }
-                    }
-                }
-            }
-            $zip->close();
-        }
-
-        if (Storage::exists($zipPath)) {
-            return Storage::download($zipPath);
-        } else {
-            return redirect()->back()->with('error', 'Gagal membuat file ZIP.');
-        }
+        return Excel::download(new \App\Exports\PublicationExport($slug_publication), $fileName);
     }
 
-    // --- EXPORT TABLE (DENGAN PERBAIKAN TAMPILAN MERGE) ---
+    // --- EXPORT TABLE ---
     public function exportTable()
     {
         $year = session('selected_year', now()->year);
@@ -103,11 +49,7 @@ class PublicationExportController extends Controller
             "Laporan Statistik Keuangan, Teknologi Informasi, dan Pariwisata",
             "Laporan Neraca Produksi",
             "Laporan Neraca Pengeluaran",
-            "Laporan Analisis dan Pengembangan Statistik",
-            "Tingkat Penyelenggaraan Pembinaan Statistik Sektoral sesuai Standar",
-            "Indeks Pelayanan Publik - Penilaian Mandiri",
-            "Nilai SAKIP oleh Inspektorat",
-            "Indeks Implementasi BerAKHLAK"
+            "Laporan Analisis dan Pengembangan Statistik"
         ];
 
         // 1. QUERY DATA
@@ -393,10 +335,7 @@ class PublicationExportController extends Controller
             "Terwujudnya Penyediaan Data dan Insight Statistik Distribusi yang Berkualitas" => ["Laporan Statistik Distribusi"],
             "Terwujudnya Penyediaan Data dan Insight Statistik Harga yang Berkualitas" => ["Laporan Statistik Harga"],
             "Terwujudnya Penyediaan Data dan Insight Statistik Keuangan, Teknologi Informasi, dan Pariwisata yang Berkualitas" => ["Laporan Statistik Keuangan, Teknologi Informasi, dan Pariwisata"],
-            "Terwujudnya Penyediaan Data dan Insight Statistik Lintas Sektor yang Berkualitas" => ["Laporan Neraca Produksi", "Laporan Neraca Pengeluaran", "Laporan Analisis dan Pengembangan Statistik"],
-            "Terwujudnya Penguatan Penyelenggaraan Pembinaan Statistik Sektoral K/L/Pemda" => ["Tingkat Penyelenggaraan Pembinaan Statistik Sektoral sesuai Standar"],
-            "Terwujudnya Kemudahan Akses Data Bps" => ["Indeks Pelayanan Publik - Penilaian Mandiri"],
-            "Terwujudnya Dukungan Manajemen pada BPS Provinsi dan BPS Kabupaten/Kota" => ["Nilai SAKIP oleh Inspektorat", "Indeks Implementasi BerAKHLAK"]
+            "Terwujudnya Penyediaan Data dan Insight Statistik Lintas Sektor yang Berkualitas" => ["Laporan Neraca Produksi", "Laporan Neraca Pengeluaran", "Laporan Analisis dan Pengembangan Statistik"]
         ];
     }
 

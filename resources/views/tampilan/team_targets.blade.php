@@ -15,7 +15,7 @@
         <x-navbar></x-navbar>
     </div>
 
-    <main class="py-8" x-data="{ openAdd: false }">
+    <main class="py-8 mt-12 md:mt-0" x-data="{ openAdd: false }">
         <div class="max-w-7xl mx-auto px-4 space-y-6">            
             <div class="bg-white border shadow rounded-lg p-6">
                 <div class="flex justify-between items-center mb-3">
@@ -27,7 +27,7 @@
                     <div class="flex gap-2">
                         @if(auth()->check() && in_array(auth()->user()->role, ['ketua_tim', 'admin']))
                             <button @click="openAdd = true" 
-                                class="flex items-center justify-center gap-1 bg-emerald-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm shadow hover:bg-emerald-800 whitespace-nowrap">
+                                class="flex items-center justify-center gap-1 bg-emerald-600 text-white px-3 py-2 rounded-lg hover:bg-emerald-700 shadow-md hover:shadow-lg transition-all text-sm font-medium">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
                                     <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
                                 </svg>
@@ -97,35 +97,35 @@
 
                                     {{-- 5. Jenis: Tahapan (Baris 1 - Biru) --}}
                                     <td class="px-4 py-4 align-top bg-blue-50 border-b border-white">
-                                        <div class="text-sm font-bold text-blue-900">Tahapan</div>
+                                        <div class="text-sm font-medium text-blue-900">Tahapan</div>
                                     </td>
 
                                     {{-- Rencana TAHAPAN Q1-Q4 --}}
                                     <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
-                                        <div class="font-bold text-blue-900">{{ $item->q1_plan ?: '-' }}</div>
+                                        <div class="font-medium text-blue-900">{{ $item->q1_plan ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
-                                        <div class="font-bold text-blue-900">{{ $item->q2_plan ?: '-' }}</div>
+                                        <div class="font-medium text-blue-900">{{ $item->q2_plan ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
-                                        <div class="font-bold text-blue-900">{{ $item->q3_plan ?: '-' }}</div>
+                                        <div class="font-medium text-blue-900">{{ $item->q3_plan ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
-                                        <div class="font-bold text-blue-900">{{ $item->q4_plan ?: '-' }}</div>
+                                        <div class="font-medium text-blue-900">{{ $item->q4_plan ?: '-' }}</div>
                                     </td>
 
                                     {{-- Realisasi TAHAPAN Q1-Q4 --}}
                                     <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
-                                        <div class="font-bold text-emerald-700">{{ $item->q1_real ?: '-' }}</div>
+                                        <div class="font-medium text-emerald-700">{{ $item->q1_real ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
-                                        <div class="font-bold text-emerald-700">{{ $item->q2_real ?: '-' }}</div>
+                                        <div class="font-medium text-emerald-700">{{ $item->q2_real ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
-                                        <div class="font-bold text-emerald-700">{{ $item->q3_real ?: '-' }}</div>
+                                        <div class="font-medium text-emerald-700">{{ $item->q3_real ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
-                                        <div class="font-bold text-emerald-700">{{ $item->q4_real ?: '-' }}</div>
+                                        <div class="font-medium text-emerald-700">{{ $item->q4_real ?: '-' }}</div>
                                     </td>
 
                                     {{-- Aksi (Rowspan 2) --}}
@@ -152,40 +152,39 @@
                                 <tr class="target-row-item">                       
                                     {{-- Jenis: Output (Baris 2 - Ungu) --}}
                                     <td class="px-4 py-4 align-top bg-purple-50">
-                                        <div class="text-sm font-bold text-purple-900">Output</div>
+                                        <div class="text-sm font-medium text-purple-900">Output</div>
                                     </td>
 
                                     {{-- Rencana OUTPUT Q1-Q4 --}}
                                     {{-- Menampilkan angka Target yang sama di setiap triwulan agar rapi (sesuai request 'seperti sebelumnya') --}}
                                     <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="text-purple-900 font-bold text-xs">{{ $item->output_plan ?: '-' }}</div>
+                                        <div class="text-purple-900 font-medium">{{ $item->output_plan ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="text-purple-900 font-bold text-xs">{{ $item->output_plan ?: '-' }}</div>
+                                        <div class="text-purple-900 font-medium">{{ $item->output_plan ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="text-purple-900 font-bold text-xs">{{ $item->output_plan ?: '-' }}</div>
+                                        <div class="text-purple-900 font-medium">{{ $item->output_plan ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="text-purple-900 font-bold text-xs">{{ $item->output_plan ?: '-' }}</div>
+                                        <div class="text-purple-900 font-medium">{{ $item->output_plan ?: '-' }}</div>
                                     </td>
 
-                                    {{-- Realisasi OUTPUT Q1-Q4 (SESUAI INPUT FORM) --}}
+                                    {{-- Realisasi OUTPUT Q1-Q4 --}}
                                     {{-- Menggunakan kolom baru yang Anda tambahkan (output_real_q1, dst) --}}
                                     <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="font-bold text-purple-900 text-xs">{{ $item->output_real_q1 ?: '-' }}</div>
+                                        <div class="font-medium text-purple-900">{{ $item->output_real_q1 ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="font-bold text-purple-900 text-xs">{{ $item->output_real_q2 ?: '-' }}</div>
+                                        <div class="font-medium text-purple-900">{{ $item->output_real_q2 ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="font-bold text-purple-900 text-xs">{{ $item->output_real_q3 ?: '-' }}</div>
+                                        <div class="font-medium text-purple-900">{{ $item->output_real_q3 ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="font-bold text-purple-900 text-xs">{{ $item->output_real_q4 ?: '-' }}</div>
+                                        <div class="font-medium text-purple-900">{{ $item->output_real_q4 ?: '-' }}</div>
                                     </td>
                                     
-                                    {{-- Kolom Aksi DILEWATI karena rowspan --}}
                                 </tr>
                                 @empty
                                 <tr>
@@ -223,47 +222,69 @@
             </div>
         </div>
 
-        <div x-show="openAdd" style="display: none; background-color: rgba(0,0,0,0.5);" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden" @click.away="openAdd = false">
-                <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
-                    <h3 class="text-lg font-bold text-gray-800">Tambah Target Kinerja</h3>
-                    <button @click="openAdd = false" class="text-gray-400 hover:text-gray-600">✖</button>
-                </div>
-                <form action="{{ route('target.store') }}" method="POST">
-                    @csrf
-                    @include('tampilan.partials.form_target') 
-                    <div class="bg-gray-50 px-6 py-4 flex justify-end gap-2 border-t">
-                        <button type="button" @click="openAdd = false" class="px-4 py-2 bg-white border rounded-lg text-sm">Batal</button>
-                        <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-700">Simpan</button>
+        {{-- MODAL TAMBAH --}}
+        <div x-show="openAdd" style="display: none;" 
+             class="relative z-[250]" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="fixed inset-0 bg-gray-900/50 transition-opacity"></div>
+            <div class="fixed inset-0 z-[250] w-screen overflow-y-auto">
+                <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                    <div class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:my-8 w-full max-w-2xl" 
+                         @click.away="openAdd = false">
+                        <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
+                            <h3 class="text-lg font-bold text-gray-800">Tambah Target Kinerja</h3>
+                            <button @click="openAdd = false" class="text-gray-400 hover:text-gray-500">
+                                <span class="sr-only">Close</span>
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <form action="{{ route('target.store') }}" method="POST">
+                            @csrf
+                            @include('tampilan.partials.form_target') 
+                            <div class="bg-gray-50 px-6 py-4 flex justify-end gap-2 border-t">
+                                <button type="button" @click="openAdd = false" class="px-4 py-2 bg-white border rounded-lg text-sm">Batal</button>
+                                <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-700">Simpan</button>
+                            </div>
+                        </form>
                     </div>
-                </form>
+
+                </div>
             </div>
         </div>
 
-        <div id="editModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4" style="background-color: rgba(0,0,0,0.5);">
-            <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden">
-                
-                <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
-                    <h3 class="text-lg font-bold text-gray-800">Edit Target Kinerja</h3>
-                    <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">✖</button>
-                </div>
-
-                <form id="editForm" method="POST" action="">
-                    @csrf
-                    @method('PUT') @include('tampilan.partials.form_target') 
-
-                    <div class="bg-gray-50 px-6 py-4 flex justify-end gap-2 border-t">
-                        <button type="button" onclick="closeEditModal()" 
-                            class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50">
-                            Batal
-                        </button>
-                        
-                        <button type="submit" 
-                            class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 shadow-sm">
-                            Update
-                        </button>
+        {{-- MODAL EDIT --}}
+        <div id="editModal" class="relative z-[250] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="fixed inset-0 bg-gray-900/50 transition-opacity"></div>
+            <div class="fixed inset-0 z-[250] w-screen overflow-y-auto">
+                <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                    <div class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:my-8 w-full max-w-2xl">
+                        <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
+                            <h3 class="text-lg font-bold text-gray-800">Edit Target Kinerja</h3>
+                            <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-500">
+                                <span class="sr-only">Close</span>
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <form id="editForm" method="POST" action="">
+                            @csrf
+                            @method('PUT') 
+                            @include('tampilan.partials.form_target') 
+                            <div class="bg-gray-50 px-6 py-4 flex justify-end gap-2 border-t">
+                                <button type="button" onclick="closeEditModal()" 
+                                    class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50">
+                                    Batal
+                                </button>
+                                <button type="submit" 
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 shadow-sm">
+                                    Update
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     </main>
@@ -286,11 +307,9 @@
             if (monthlySection) monthlySection.style.display = 'none';
 
             // 3. ISI DATA INPUT BIASA (Non-Alpine)
-            // UBAH SELECTOR: dari [name="team_name"] ke [name="publication_pic"]
             const teamInput = form.querySelector('[name="publication_pic"]');
             if(teamInput) teamInput.value = data.team_name;
             
-            // UBAH SELECTOR: dari [name="activity_name"] ke [name="publication_name"]
             const activityInput = form.querySelector('[name="publication_name"]');
             if(activityInput) activityInput.value = data.activity_name;
 
@@ -303,10 +322,8 @@
                 }
             };
 
-            // Isi Target Tahapan (Satu input untuk 4 Q)
             setAlpineValue('input[x-model="plan_tahapan"]', data.q1_plan || 0);
 
-            // Isi Realisasi Tahapan (Dipecah jadi 4)
             setAlpineValue('input[x-model="t_q1"]', data.q1_real || 0);
             setAlpineValue('input[x-model="t_q2"]', data.q2_real || 0);
             setAlpineValue('input[x-model="t_q3"]', data.q3_real || 0);
@@ -315,7 +332,6 @@
             // Isi Target Output
             setAlpineValue('input[x-model="plan_output"]', data.output_plan || 0);
 
-            // [BARU] Isi Realisasi Output PER TRIWULAN (Ambil dari kolom baru)
             setAlpineValue('input[x-model="o_q1"]', data.output_real_q1 || 0);
             setAlpineValue('input[x-model="o_q2"]', data.output_real_q2 || 0);
             setAlpineValue('input[x-model="o_q3"]', data.output_real_q3 || 0);
@@ -324,14 +340,10 @@
             // 5. LOGIKA DROPDOWN SASARAN
             const options = [
                 "Laporan Statistik Kependudukan dan Ketenagakerjaan",
-                "Laporan Statistik Statistik Kesejahteraan Rakyat",
-                // ... (list opsi lainnya tetap sama) ...
-                "Indeks Implementasi BerAKHLAK"
+                "Laporan Statistik Statistik Kesejahteraan Rakyat"
             ];
 
-            // UBAH SELECTOR: [name="report_name_select"] ke [name="publication_report"]
             const selectReport = form.querySelector('[name="publication_report"]');
-            // UBAH SELECTOR: [name="report_name_manual"] ke [name="publication_report_other"]
             const manualInput = form.querySelector('[name="publication_report_other"]');
 
             if (selectReport) {
@@ -386,7 +398,7 @@
             // Variabel State
             let currentPage = 1;
             let rowsPerPage = 10;
-            let filteredData = [...dataItems]; // Data yang akan ditampilkan (hasil search)
+            let filteredData = [...dataItems];
 
             function updatePagination() {
                 const totalItems = filteredData.length;

@@ -50,10 +50,6 @@
                     <option value="Laporan Neraca Produksi">Laporan Neraca Produksi</option>
                     <option value="Laporan Neraca Pengeluaran">Laporan Neraca Pengeluaran</option>
                     <option value="Laporan Analisis dan Pengembangan Statistik">Laporan Analisis dan Pengembangan Statistik</option>
-                    <option value="Tingkat Penyelenggaraan Pembinaan Statistik Sektoral sesuai Standar">Tingkat Penyelenggaraan Pembinaan Statistik Sektoral sesuai Standar</option>
-                    <option value="Indeks Pelayanan Publik - Penilaian Mandiri">Indeks Pelayanan Publik - Penilaian Mandiri</option>
-                    <option value="Nilai SAKIP oleh Inspektorat">Nilai SAKIP oleh Inspektorat</option>
-                    <option value="Indeks Implementasi BerAKHLAK">Indeks Implementasi BerAKHLAK</option>
                     <option value="other">-- Tambahkan Lainnya (Manual) --</option>
                 </select>
 

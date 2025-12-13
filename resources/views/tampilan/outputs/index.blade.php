@@ -17,39 +17,53 @@
         <x-navbar></x-navbar>
     </div>
 
-    <main class="py-8">
+    <main class="py-8 mt-4 md:mt-0">
         <div class="max-w-7xl mx-auto px-4 space-y-6">
             
-            <div class="flex items-center justify-between pt-4">
-                <a href="{{ url('/dashboard') }}" 
-                class="flex gap-1 items-center bg-white-600 text-black px-4 py-2 rounded-lg hover:bg-green-700 hover:text-white shadow transition text-sm font-medium">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">
-                        <path fill-rule="evenodd" d="M14 8a.75.75 0 0 1-.75.75H4.56l3.22 3.22a.75.75 0 1 1-1.06 1.06l-4.5-4.5a.75.75 0 0 1 0-1.06l4.5-4.5a.75.75 0 0 1 1.06 1.06L4.56 7.25h8.69A.75.75 0 0 1 14 8Z" clip-rule="evenodd" />
-                    </svg>
-                    Kembali ke Dashboard
-                </a>
-            </div>
+            <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 pt-4 mb-6">
+                
+                <div class="space-y-4">
+                    <a href="{{ url('/dashboard') }}" 
+                        class="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-colors text-sm font-medium shadow-sm w-fit">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">
+                            <path fill-rule="evenodd" d="M14 8a.75.75 0 0 1-.75.75H4.56l3.22 3.22a.75.75 0 1 1-1.06 1.06l-4.5-4.5a.75.75 0 0 1 0-1.06l4.5-4.5a.75.75 0 0 1 1.06 1.06L4.56 7.25h8.69A.75.75 0 0 1 14 8Z" clip-rule="evenodd" />
+                        </svg>
+                        Kembali ke Dashboard
+                    </a>
 
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h1 class="text-2xl font-bold mb-1 text-gray-900">Kelola Output Publikasi</h1>
-                    <p class="text-sm text-gray-600 font-medium">{{ $publication->publication_report }}</p>
-                    <p class="text-xs text-gray-500">{{ $publication->publication_name }}</p>
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Kelola Output Publikasi</h1>
+                        <div class="flex flex-wrap gap-3 mt-2 text-sm text-gray-600">
+                            <span class="flex items-center gap-1 bg-gray-100 text-gray-800 px-2.5 py-1 rounded border border-gray-200">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                {{ $publication->publication_report }}
+                            </span>
+                            <span class="flex items-center gap-1 bg-blue-50 text-blue-700 px-2.5 py-1 rounded border border-blue-100">
+                                <svg class="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                                </svg>
+                                {{ $publication->publication_name }}
+                            </span>
+                        </div>
+                    </div>
                 </div>
                 
-                {{-- Tombol Tambah Output Baru --}}
-                @if(auth()->check() && in_array(auth()->user()->role, ['ketua_tim', 'admin']))
-                    <button onclick="openAddModal()" 
-                        class="flex gap-1 items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 shadow transition text-sm font-medium">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">
-                            <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
-                        </svg>
-                        Tambah Output
-                    </button>
-                @endif
+                <div class="md:self-center">
+                    @if(auth()->check() && in_array(auth()->user()->role, ['ketua_tim', 'admin']))
+                        <button onclick="openAddModal()" 
+                            class="flex gap-2 items-center bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 shadow-md hover:shadow-lg transition-all text-sm font-medium">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">
+                                <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
+                            </svg>
+                            Tambah Output
+                        </button>
+                    @endif
+                </div>
             </div>
 
-            {{-- [BARU] MENAMPILKAN PESAN ERROR VALIDASI --}}
+            {{-- PESAN ERROR & SUKSES--}}
             @if ($errors->any())
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
                     <strong class="font-bold">Gagal Menyimpan!</strong>
@@ -61,14 +75,14 @@
                 </div>
             @endif
 
-            {{-- Menampilkan Pesan Sukses --}}
             @if(session('success'))
                 <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
                     <span class="block sm:inline">{{ session('success') }}</span>
                 </div>
             @endif
 
-            <div class="bg-white rounded-xl shadow p-6 border">
+            {{-- TABEL OUTPUT (TETAP SAMA) --}}
+            <div class="bg-white rounded-xl shadow p-6 border border-gray-100">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-5 h-5 text-blue-600">
@@ -136,7 +150,7 @@
                                             '{{ $plan->actual_date ? \Carbon\Carbon::parse($plan->actual_date)->format('Y-m-d') : '' }}'
                                         )"
                                             class="inline-flex items-center px-3 py-1.5 {{ $plan->actual_date ? 'bg-amber-500 hover:bg-amber-600' : 'bg-blue-600 hover:bg-blue-700' }} text-white text-xs font-medium rounded shadow-sm transition">
-                                            {{ $plan->actual_date ? 'Edit' : 'Upload / Edit' }}
+                                            {{ $plan->actual_date ? 'Edit' : 'Upload' }}
                                         </button>
 
                                         <form action="{{ route('outputs.destroy', $plan->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus output ini?')">
@@ -176,7 +190,6 @@
         <div id="addOutputModal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background-color: rgba(0,0,0,0.5);">
             <div class="relative w-full max-w-lg p-4 mx-auto">
                 <div class="bg-white rounded-xl shadow-2xl overflow-hidden transform transition-all">
-                    
                     <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
                         <h3 class="text-lg font-bold text-gray-800">Tambah Rencana Output</h3>
                         <button onclick="closeAddModal()" class="text-gray-400 hover:text-gray-600 transition focus:outline-none">
@@ -185,7 +198,6 @@
                             </svg>
                         </button>
                     </div>
-
                     <form action="{{ route('outputs.store', $publication->slug_publication) }}" method="POST">
                         @csrf
                         <div class="p-6 bg-white space-y-5">
@@ -210,11 +222,10 @@
         </div>
     @endif
 
-    {{-- MODAL EDIT LENGKAP --}}
-    <div id="editModal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background-color: rgba(0,0,0,0.5);">
-        <div class="relative w-full max-w-lg p-4 mx-auto">
+    {{-- MODAL EDIT --}}
+    <div id="editModal" class="fixed inset-0 z-[100] hidden justify-center overflow-y-auto" style="background-color: rgba(0,0,0,0.5);">
+        <div class="relative w-full max-w-4xl p-4 mx-auto mt-32 mb-10">
             <div class="bg-white rounded-xl shadow-2xl overflow-hidden transform transition-all">
-                
                 <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
                     <h3 class="text-lg font-bold text-gray-800" id="modal-title">Edit Data Output</h3>
                     <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 transition focus:outline-none">
@@ -223,60 +234,48 @@
                         </svg>
                     </button>
                 </div>
-
                 <form id="editForm" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
-                    <div class="p-6 bg-white space-y-5">
-                        
-                        {{-- 1. Nama Output --}}
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Output</label>
-                            <input type="text" name="plan_name" id="modalOutputName" required
-                                class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 border text-sm">
-                        </div>
-
-                        {{-- 2. Jadwal Rencana --}}
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Jadwal Rencana</label>
-                            {{-- Tambahkan onchange="validateDates()" --}}
-                            <input type="date" name="plan_date" id="modalPlanDate" required oninput="validateDates()"
-                                class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 border text-sm">
-                        </div>
-
-                        <div class="border-t pt-4 mt-2">
-                            <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Realisasi (Opsional)</p>
-                            
-                            {{-- 3. Tanggal Realisasi --}}
-                            <div>
-                                <label for="modalActualDate" class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Rilis (Realisasi)</label>
-                                {{-- Tambahkan onchange="validateDates()" --}}
-                                <input type="date" name="actual_date" id="modalActualDate" oninput="validateDates()"
-                                    class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 border text-sm">
-                                
-                                {{-- ERROR MESSAGE CONTAINER (Awalnya Hidden) --}}
-                                <p id="dateErrorMsg" class="hidden mt-2 text-xs text-red-600 font-semibold flex items-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
-                                    </svg>
-                                    Tanggal rilis tidak boleh lebih awal dari rencana!
-                                </p>
+                    <div class="p-6 bg-white">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="space-y-5">
+                                <h4 class="text-sm font-bold text-blue-600 tracking-wide border-b pb-2 mb-4">Rencana Kegiatan</h4>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Output</label>
+                                    <input type="text" name="plan_name" id="modalOutputName" required
+                                        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 border text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Jadwal Rencana</label>
+                                    <input type="date" name="plan_date" id="modalPlanDate" required oninput="validateDates()"
+                                        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 border text-sm">
+                                </div>
                             </div>
-                            
-                            {{-- 4. File Output --}}
-                            <div class="mt-4">
-                                <label for="file_output" class="block text-sm font-semibold text-gray-700 mb-2">Upload File (PDF/Excel)</label>
-                                <input type="file" name="file_output" id="file_output"
-                                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-300 rounded-lg cursor-pointer">
-                                <p class="mt-2 text-xs text-gray-500">*Maksimal 10MB. Biarkan kosong jika tidak ingin mengubah file.</p>
+                            <div class="space-y-5 md:border-l md:pl-8 border-gray-100">
+                                <h4 class="text-sm font-bold text-gray-500 tracking-wide border-b pb-2 mb-4">Realisasi</h4>
+                                <div>
+                                    <label for="modalActualDate" class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Rilis (Realisasi)</label>
+                                    <input type="date" name="actual_date" id="modalActualDate" oninput="validateDates()"
+                                        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 border text-sm">
+                                    <p id="dateErrorMsg" class="hidden mt-2 text-xs text-red-600 font-semibold flex items-center gap-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
+                                        </svg>
+                                        Tanggal rilis tidak boleh lebih awal dari rencana!
+                                    </p>
+                                </div>
+                                <div>
+                                    <label for="file_output" class="block text-sm font-semibold text-gray-700 mb-2">Upload File (PDF/Excel)</label>
+                                    <input type="file" name="file_output" id="file_output"
+                                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-300 rounded-lg cursor-pointer">
+                                    <p class="mt-2 text-xs text-gray-500">*Maksimal 10MB. Biarkan kosong jika tidak ingin mengubah file.</p>
+                                </div>
                             </div>
                         </div>
-
                     </div>
                     <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
                         <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium text-sm transition shadow-sm">Batal</button>
-                        
-                        {{-- TOMBOL SIMPAN (Tambahkan ID dan disabled style) --}}
                         <button type="submit" id="btnSimpan" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed">Simpan Perubahan</button>
                     </div>
                 </form>

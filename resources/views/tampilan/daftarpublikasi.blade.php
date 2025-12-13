@@ -17,10 +17,10 @@
                 <thead class="bg-gray-100 text-gray-800 text-xs border-y">
                     <tr class="border-y">
                         <th class="px-3 py-2" rowspan="2">No</th>
-                        <th class="px-3 py-2 min-w-[160px]" rowspan="2">Nama Sasaran/Laporan</th>
+                        <th class="px-3 py-2 min-w-[150px]" rowspan="2">Nama Sasaran/Laporan</th>
                         <th class="px-3 py-2 min-w-[130px]" rowspan="2">Nama Kegiatan</th>
                         <th class="px-3 py-2" rowspan="2">PIC</th>
-                        <th class="px-3 py-2 min-w-[110px]" rowspan="2">Jenis</th>
+                        <th class="px-3 py-2 min-w-[120px]" rowspan="2">Jenis</th>
                         <th class="px-3 py-2" colspan="4">Rencana Kegiatan</th>
                         <th class="px-3 py-2" colspan="4">Realisasi Kegiatan</th>
                         <th class="px-3 py-2" rowspan="2">Aksi</th>

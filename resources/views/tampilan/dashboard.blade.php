@@ -10,7 +10,7 @@
         </h2>
 
         <button onclick="window.print()" 
-                class="flex items-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium print:hidden mb-3 ml-auto"
+                class="flex items-center gap-2 px-2 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium print:hidden mb-3 ml-auto"
                 >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
                 <path fill-rule="evenodd" d="M5 2.75C5 1.784 5.784 1 6.75 1h6.5c.966 0 1.75.784 1.75 1.75v3.552c.377.046.752.097 1.126.153A2.212 2.212 0 0 1 18 8.653v4.097A2.25 2.25 0 0 1 15.75 15h-.241l.305 1.984A1.75 1.75 0 0 1 14.084 19H5.915a1.75 1.75 0 0 1-1.73-2.016L4.492 15H4.25A2.25 2.25 0 0 1 2 12.75V8.653c0-1.082.775-2.034 1.874-2.198.374-.056.75-.107 1.127-.153L5 2.75ZM6.75 2.5a.25.25 0 0 0-.25.25v3.05c.59-.033 1.181-.058 1.775-.075V2.5h-1.525Zm5.025 0v3.225c.594.017 1.185.042 1.775.075V2.75a.25.25 0 0 0-.25-.25h-1.525ZM5.618 15.25l-.356 2.316a.25.25 0 0 0 .247.284h8.382a.25.25 0 0 0 .247-.284l-.356-2.316H5.618Z" clip-rule="evenodd" />
@@ -116,16 +116,19 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-2 mt-4 text-xs">
+            <div class="grid grid-cols-4 gap-2 mt-4 text-center">
                 @foreach($dataTahapanSummary as $index => $data)
-                    <div class="bg-gray-50 p-2 rounded-lg border hover:bg-gray-100 transition-colors">
-                        <p class="font-bold text-gray-800">{{ $data['q'] }}</p>
+                    <div id="tw-card-{{ $index + 1 }}" class="bg-white border border-gray-200 rounded-xl p-2.5 shadow-sm flex flex-col justify-center h-full">
                         
-                        <p id="tw-ratio-{{ $index + 1 }}" class="text-gray-600">
+                        <p class="text-[10px] font-bold text-gray-900 leading-none mb-1.5">
+                            {{ $data['q'] }}
+                        </p>
+                        
+                        <p id="tw-ratio-{{ $index + 1 }}" class="text-[10px] font-medium text-gray-500 leading-none mb-1">
                             {{ $data['ratio'] }}
                         </p>
                         
-                        <p id="tw-percent-{{ $index + 1 }}" class="font-semibold {{ $data['color'] }}">
+                        <p id="tw-percent-{{ $index + 1 }}" class="text-[10px] font-bold leading-none {{ $data['color'] }}">
                             {{ $data['percent_text'] }}
                         </p>
                     </div>
@@ -155,7 +158,7 @@
                 <canvas id="ringChart" class="max-h-48"></canvas>
             </div>
             
-            <div class="grid grid-cols-2 gap-2 mt-4 text-xs">
+            <div class="grid grid-cols-3 gap-2 mt-4 text-xs">
                 <div class="bg-emerald-50 p-3 rounded-lg border border-emerald-200 text-center hover:bg-emerald-100 transition-colors">
                     <p class="text-emerald-700 text-2xl font-bold">
                         <span id="summary-pub-selesai">{{ $dataRingSummary['publikasiSelesai'] }}</span>
@@ -173,6 +176,16 @@
                     <p class="text-gray-600 font-medium mt-1">Tahapan Selesai</p>
                     <p class="text-gray-500 text-[10px]">
                         dari <span id="summary-tahap-total">{{ $dataRingSummary['totalTahapan'] }}</span> total
+                    </p>
+                </div>
+
+                <div class="bg-purple-50 p-3 rounded-lg border border-purple-200 text-center hover:bg-purple-100 transition-colors">
+                    <p class="text-purple-700 text-2xl font-bold">
+                        <span id="summary-output-selesai">{{ $dataRingSummary['outputSelesai'] }}</span>
+                    </p>
+                    <p class="text-gray-600 font-medium mt-1">Output Selesai</p>
+                    <p class="text-gray-500 text-[10px]">
+                        dari <span id="summary-output-total">{{ $dataRingSummary['totalOutput'] }}</span> total
                     </p>
                 </div>
             </div>
@@ -266,181 +279,3 @@
     }
 }
 </style>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
-    // Fungsi Print
-    function downloadChart(chartId, filename) {
-        const canvas = document.getElementById(chartId);
-        const url = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.download = filename;
-        link.href = url;
-        link.click();
-    }
-
-    document.addEventListener("DOMContentLoaded", function() {
-        
-        // Chart status publikasi
-        const ctxKinerja = document.getElementById('kinerjaChart');
-        if (ctxKinerja) {
-            new Chart(ctxKinerja, {
-                type: 'bar',
-                data: {
-                    labels: @json($dataGrafikPublikasi['labels']), 
-                    datasets: [{
-                        label: 'Jumlah',
-                        data: @json($dataGrafikPublikasi['data']), 
-                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], 
-                        borderRadius: 4,
-                        barPercentage: 0.6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false } 
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { display: true, drawBorder: false }
-                        },
-                        x: {
-                            grid: { display: false }
-                        }
-                    }
-                }
-            });
-        }
-
-        // Chart Rencana vs Realisasi
-        const ctxTahapan = document.getElementById('tahapanChart');
-        if (ctxTahapan) {
-            new Chart(ctxTahapan, {
-                type: 'bar',
-                data: {
-                    labels: @json($dataGrafikBatang['labels']), 
-                    datasets: [
-                        {
-                            label: 'Rencana',
-                            data: @json($dataGrafikBatang['rencana']), 
-                            backgroundColor: '#1e40af', 
-                            borderRadius: 4
-                        },
-                        {
-                            label: 'Realisasi',
-                            data: @json($dataGrafikBatang['realisasi']),
-                            backgroundColor: '#10b981',
-                            borderRadius: 4
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { display: false } },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
-        }
-
-        // Chart Proporsi
-        const ctxRing = document.getElementById('ringChart');
-        if (ctxRing) {
-            new Chart(ctxRing, {
-                type: 'doughnut',
-                data: {
-                    labels: @json($dataGrafikRing['labels']),
-                    datasets: [{
-                        data: @json($dataGrafikRing['data']),
-                        backgroundColor: ['#10b981', '#e5e7eb'], 
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    }
-                }
-            });
-        }
-
-        // Grafik Kinerja per tim
-        const ctxTim = document.getElementById('timChart');
-        if (ctxTim) {
-            const timData = @json($dataGrafikPerTim);
-
-            const sisaRencana = timData.plans.map((plan, i) => {
-                const totalSelesai = timData.tepat_waktu[i] + timData.terlambat[i];
-                return Math.max(0, plan - totalSelesai);
-            });
-
-            new Chart(ctxTim, {
-                type: 'bar',
-                data: {
-                    labels: timData.labels,
-                    datasets: [
-                        {
-                            label: 'Tepat Waktu',
-                            data: timData.tepat_waktu,
-                            backgroundColor: '#4472C4', 
-                            barPercentage: 0.6,
-                        },
-                        {
-                            label: 'Terlambat',
-                            data: timData.terlambat,
-                            backgroundColor: '#ED7D31', 
-                            barPercentage: 0.6,
-                        },
-                        {
-                            label: 'Sisa Target', 
-                            data: sisaRencana,
-                            backgroundColor: '#cdcbcbff', 
-                            barPercentage: 0.6,
-                        }
-                        
-                    ]
-                },
-                options: {
-                    indexAxis: 'y', 
-                    responsive: true,
-                    maintainAspectRatio: false,
-
-                    interaction: {
-                        mode: 'index', 
-                        axis: 'y', 
-                        intersect: false 
-                    },
-
-                    scales: {
-                        x: {
-                            stacked: true, 
-                            grid: { display: true } 
-                        },
-                        y: {
-                            stacked: true, 
-                            grid: { display: false }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { usePointStyle: true, boxWidth: 8 }
-                        },
-                        tooltip: {
-                            position: 'nearest'
-                        }
-                    }
-                }
-            });
-        }
-    });
-</script>

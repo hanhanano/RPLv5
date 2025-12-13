@@ -45,16 +45,6 @@ class CapaianKinerjaController extends Controller
                 "Laporan Neraca Produksi",
                 "Laporan Neraca Pengeluaran",
                 "Laporan Analisis dan Pengembangan Statistik"
-            ],
-            "Terwujudnya Penguatan Penyelenggaraan Pembinaan Statistik Sektoral K/L/Pemda" => [
-                "Tingkat Penyelenggaraan Pembinaan Statistik Sektoral sesuai Standar"
-            ],
-            "Terwujudnya Kemudahan Akses Data Bps" => [
-                "Indeks Pelayanan Publik - Penilaian Mandiri"
-            ],
-            "Terwujudnya Dukungan Manajemen pada BPS Provinsi dan BPS Kabupaten/Kota" => [
-                "Nilai SAKIP oleh Inspektorat",
-                "Indeks Implementasi BerAKHLAK"
             ]
         ];
 
