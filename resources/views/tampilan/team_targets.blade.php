@@ -38,7 +38,6 @@
                 </div>
 
                 <div class="mb-4 mt-1 border rounded-lg">
-                    {{-- Hapus Form, gunakan ID untuk JavaScript --}}
                     <input 
                         type="text"
                         id="searchInput" 
@@ -95,7 +94,7 @@
                                         {{ $item->team_name }}
                                     </td>
 
-                                    {{-- 5. Jenis: Tahapan (Baris 1 - Biru) --}}
+                                    {{-- 5. Jenis: Tahapan --}}
                                     <td class="px-4 py-4 align-top bg-blue-50 border-b border-white">
                                         <div class="text-sm font-medium text-blue-900">Tahapan</div>
                                     </td>
@@ -156,7 +155,6 @@
                                     </td>
 
                                     {{-- Rencana OUTPUT Q1-Q4 --}}
-                                    {{-- Menampilkan angka Target yang sama di setiap triwulan agar rapi (sesuai request 'seperti sebelumnya') --}}
                                     <td class="px-4 py-4 text-center bg-purple-50">
                                         <div class="text-purple-900 font-medium">{{ $item->output_plan ?: '-' }}</div>
                                     </td>
@@ -171,7 +169,6 @@
                                     </td>
 
                                     {{-- Realisasi OUTPUT Q1-Q4 --}}
-                                    {{-- Menggunakan kolom baru yang Anda tambahkan (output_real_q1, dst) --}}
                                     <td class="px-4 py-4 text-center bg-purple-50">
                                         <div class="font-medium text-purple-900">{{ $item->output_real_q1 ?: '-' }}</div>
                                     </td>
@@ -239,7 +236,7 @@
                                 </svg>
                             </button>
                         </div>
-                        <form action="{{ route('target.store') }}" method="POST">
+                        <form action="{{ route('target.store') }}" method="POST" onsubmit="return validateTargetForm(this)">
                             @csrf
                             @include('tampilan.partials.form_target') 
                             <div class="bg-gray-50 px-6 py-4 flex justify-end gap-2 border-t">
@@ -268,7 +265,7 @@
                                 </svg>
                             </button>
                         </div>
-                        <form id="editForm" method="POST" action="">
+                        <form id="editForm" method="POST" action="" onsubmit="return validateTargetForm(this)">
                             @csrf
                             @method('PUT') 
                             @include('tampilan.partials.form_target') 
@@ -290,30 +287,69 @@
     </main>
 
     <script>
-        // Fungsi menerima 2 parameter: data object dan URL update
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            const monitoredInputs = [
+                'plan_tahapan', 'plan_output', 
+                't_q1', 't_q2', 't_q3', 't_q4',
+                'o_q1', 'o_q2', 'o_q3', 'o_q4' 
+            ];
+
+            document.body.addEventListener('input', function(e) {
+                const el = e.target;
+                const xModel = el.getAttribute('x-model');
+
+                if (xModel && monitoredInputs.includes(xModel)) {
+                    
+                    if (el.value < 0) {
+                        el.value = Math.abs(el.value); 
+                    }
+
+                    if (['plan_tahapan', 'plan_output'].includes(xModel)) {
+                        if (el.value.trim() === '') {
+                            el.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+                            el.classList.remove('border-gray-300'); 
+                            
+                            el.setAttribute('placeholder', '⚠️ Wajib diisi!');
+                        } else {
+                            el.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+                            el.classList.add('border-gray-300');
+                        }
+                    }
+                }
+            });
+
+            document.body.addEventListener('keydown', function(e) {
+                const el = e.target;
+                const xModel = el.getAttribute('x-model');
+
+                if (xModel && monitoredInputs.includes(xModel)) {
+                    if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+                        e.preventDefault();
+                    }
+                }
+            });
+        });
+
         function openEditModal(data, updateUrl) {
             const modal = document.getElementById('editModal');
             const form = document.getElementById('editForm');
             
-            // 1. CEK URL & SET ACTION FORM
             if (!updateUrl) {
                 alert("Error: URL Update tidak ditemukan. Pastikan Route sudah benar.");
                 return;
             }
             form.action = updateUrl;
 
-            // 2. SEMBUNYIKAN BAGIAN GENERATE BULANAN
             const monthlySection = form.querySelector('.monthly-options-wrapper');
             if (monthlySection) monthlySection.style.display = 'none';
 
-            // 3. ISI DATA INPUT BIASA (Non-Alpine)
             const teamInput = form.querySelector('[name="publication_pic"]');
             if(teamInput) teamInput.value = data.team_name;
             
             const activityInput = form.querySelector('[name="publication_name"]');
             if(activityInput) activityInput.value = data.activity_name;
 
-            // 4. ISI DATA INPUT ALPINE JS
             const setAlpineValue = (selector, value) => {
                 const el = form.querySelector(selector);
                 if (el) {
@@ -329,7 +365,6 @@
             setAlpineValue('input[x-model="t_q3"]', data.q3_real || 0);
             setAlpineValue('input[x-model="t_q4"]', data.q4_real || 0);
 
-            // Isi Target Output
             setAlpineValue('input[x-model="plan_output"]', data.output_plan || 0);
 
             setAlpineValue('input[x-model="o_q1"]', data.output_real_q1 || 0);
@@ -337,7 +372,6 @@
             setAlpineValue('input[x-model="o_q3"]', data.output_real_q3 || 0);
             setAlpineValue('input[x-model="o_q4"]', data.output_real_q4 || 0);
             
-            // 5. LOGIKA DROPDOWN SASARAN
             const options = [
                 "Laporan Statistik Kependudukan dan Ketenagakerjaan",
                 "Laporan Statistik Statistik Kesejahteraan Rakyat"
@@ -363,7 +397,6 @@
                 }
             }
 
-            // Tampilkan Modal
             modal.classList.remove('hidden');
             modal.classList.add('flex');
         }
@@ -382,11 +415,9 @@
             const pageInfo = document.getElementById('pageInfo');
             const searchInput = document.getElementById('searchInput'); // Ambil elemen search
 
-            // 1. Ambil semua baris dari DOM
             const allRows = Array.from(tbody.querySelectorAll('tr'));
             let dataItems = [];
 
-            // 2. Grouping: 1 Item = 2 Baris (Tahapan + Output)
             for (let i = 0; i < allRows.length; i += 2) {
                 if (allRows[i] && allRows[i+1]) {
                     dataItems.push([allRows[i], allRows[i+1]]);
@@ -395,7 +426,6 @@
                 }
             }
 
-            // Variabel State
             let currentPage = 1;
             let rowsPerPage = 10;
             let filteredData = [...dataItems];
@@ -403,10 +433,8 @@
             function updatePagination() {
                 const totalItems = filteredData.length;
                 
-                // Sembunyikan SEMUA baris terlebih dahulu
                 allRows.forEach(row => row.style.display = 'none');
 
-                // Cek jika data kosong
                 if (totalItems === 0) {
                     pageInfo.innerText = "0 data";
                     btnPrev.disabled = true;
@@ -417,35 +445,28 @@
 
                 const totalPages = Math.ceil(totalItems / rowsPerPage);
 
-                // Validasi Halaman
                 if (currentPage < 1) currentPage = 1;
                 if (currentPage > totalPages) currentPage = totalPages;
 
-                // Hitung Slice Data
                 const start = (currentPage - 1) * rowsPerPage;
                 const end = start + rowsPerPage;
 
-                // Ambil data yang sesuai halaman & filter
                 const pageItems = filteredData.slice(start, end);
 
-                // Tampilkan baris yang terpilih
                 pageItems.forEach(itemPair => {
                     itemPair.forEach(tr => tr.style.display = ''); // Reset display ke default (table-row)
                 });
 
-                // Update Info Text
                 pageInfo.innerText = `${start + 1}-${Math.min(end, totalItems)} dari ${totalItems} data`;
 
-                // Update Tombol Navigasi
                 btnPrev.disabled = (currentPage === 1);
                 btnNext.disabled = (currentPage >= totalPages);
             }
 
-            // --- FITUR SEARCH (BARU) ---
+            // --- FITUR SEARCH ---
             searchInput.addEventListener('keyup', function() {
                 const query = this.value.toLowerCase();
 
-                // Filter dataItems berdasarkan teks yang ada di baris pertama (Nama Laporan/Kegiatan/PIC)
                 filteredData = dataItems.filter(itemPair => {
                     const rowText = itemPair[0].innerText.toLowerCase();
                     return rowText.includes(query);
@@ -455,14 +476,12 @@
                 updatePagination();
             });
 
-            // Event Listener: Ganti Jumlah Rows
             rowsSelect.addEventListener('change', function() {
                 rowsPerPage = parseInt(this.value);
                 currentPage = 1;
                 updatePagination();
             });
 
-            // Event Listener: Prev
             btnPrev.addEventListener('click', function() {
                 if (currentPage > 1) {
                     currentPage--;
@@ -470,7 +489,6 @@
                 }
             });
 
-            // Event Listener: Next
             btnNext.addEventListener('click', function() {
                 const totalPages = Math.ceil(filteredData.length / rowsPerPage);
                 if (currentPage < totalPages) {
@@ -479,7 +497,6 @@
                 }
             });
 
-            // Jalankan Pertama Kali
             updatePagination();
         });
     </script>

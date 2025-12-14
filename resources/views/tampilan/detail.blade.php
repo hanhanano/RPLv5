@@ -563,8 +563,78 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // --- 1. Script Form Struggle (Biarkan tetap ada) ---
-            const addButtons = document.querySelectorAll('.add-struggle-button');
+            function updateStruggleIndices(wrapper) {
+                const items = wrapper.querySelectorAll('.struggle-item');
+                
+                items.forEach((item, index) => {
+                    const titleSpan = item.querySelector('.struggle-number');
+                    if (titleSpan) {
+                        titleSpan.innerText = `#${index + 1} Kendala & Solusi`;
+                    }
+
+                    item.querySelectorAll('input, textarea, select').forEach(input => {
+                        const name = input.getAttribute('name');
+                        if (name) {
+                            const newName = name.replace(/\[\d+\]/, `[${index}]`);
+                            input.setAttribute('name', newName);
+                        }
+                    });
+
+                    const removeBtn = item.querySelector('.remove-struggle-btn');
+                    if (removeBtn) {
+                        if (index === 0) {
+                            removeBtn.classList.add('hidden');
+                        } else {
+                            removeBtn.classList.remove('hidden');
+                        }
+                    }
+                });
+            }
+
+            // --- EVENT LISTENER UTAMA ---
+            document.addEventListener('click', function(e) {
+                
+                if (e.target.closest('.add-struggle-button')) {
+                    e.preventDefault();
+                    const button = e.target.closest('.add-struggle-button');
+                    const form = button.closest('form');
+                    
+                    let wrapper = form.querySelector('.struggles-wrapper');
+                    if (!wrapper) wrapper = button.previousElementSibling;
+
+                    if (wrapper) {
+                        const items = wrapper.querySelectorAll('.struggle-item');
+                        if (items.length > 0) {
+                            const lastItem = items[items.length - 1];
+                            const clone = lastItem.cloneNode(true);
+                            
+                            clone.querySelectorAll('input, textarea, select').forEach(input => {
+                                input.value = ''; 
+                            });
+
+                            const oldFile = clone.querySelector('.file-preview-old');
+                            if (oldFile) oldFile.remove();
+                            wrapper.appendChild(clone);
+                            updateStruggleIndices(wrapper);
+                        }
+                    }
+                }
+
+                // B. LOGIKA TOMBOL HAPUS 
+                if (e.target.closest('.remove-struggle-btn')) {
+                    e.preventDefault();
+                    const btn = e.target.closest('.remove-struggle-btn');
+                    const item = btn.closest('.struggle-item');
+                    const wrapper = item.closest('.struggles-wrapper');
+                    
+                    item.remove();
+                    
+                    if (wrapper) {
+                        updateStruggleIndices(wrapper);
+                    }
+                }
+            });
+                
             const searchInput = document.getElementById('search-input');
             const items = document.querySelectorAll('.searchable-item');
 
@@ -572,20 +642,19 @@
                 searchInput.addEventListener('input', function(e) {
                     const term = e.target.value.toLowerCase();
                     const noResultsMsg = document.getElementById('no-results-message');
-                    let visibleCount = 0; // Hitung item yang tampil
+                    let visibleCount = 0;
 
                     items.forEach(item => {
                         const text = item.innerText.toLowerCase();
                         
                         if(text.includes(term)) {
-                            item.style.display = ''; // Tampilkan
-                            visibleCount++; // Tambah hitungan
+                            item.style.display = ''; 
+                            visibleCount++; 
                         } else {
-                            item.style.display = 'none'; // Sembunyikan
+                            item.style.display = 'none'; 
                         }
                     });
-
-                    // Tampilkan pesan jika hitungan 0, sembunyikan jika ada item
+                    
                     if (visibleCount === 0) {
                         noResultsMsg.classList.remove('hidden');
                     } else {
