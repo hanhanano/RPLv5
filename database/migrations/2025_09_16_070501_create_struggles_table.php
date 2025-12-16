@@ -12,18 +12,16 @@ return new class extends Migration
     public function up()
     {
         Schema::create('struggles', function (Blueprint $table) {
-            $table->id('struggle_id'); // Primary Key custom 
+            $table->id('struggle_id');
             $table->text('struggle_desc');
             $table->text('solution_desc');
             $table->string('solution_doc')->nullable();
-            $table->timestamp('created_at')->useCurrent();
-            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+            $table->timestamps();
             
-            // Foreign Key kedua ke strugles
             $table->foreignId('step_final_id')
-                  ->constrained('steps_finals', 'step_final_id')
-                  ->onDelete('cascade')
-                  ->onUpdate('cascade');
+                ->constrained('steps_finals', 'step_final_id')
+                ->onDelete('cascade')
+                ->onUpdate('cascade');
         });
     }
 

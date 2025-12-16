@@ -18,6 +18,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->enum('role', ['admin', 'ketua_tim', 'operator', 'viewer'])->default('viewer');
+            $table->string('team')->nullable(); // Umum, Produksi, Distribusi, Neraca, Sosial, IPDS
             $table->rememberToken();
             $table->timestamps();
         });
@@ -43,8 +44,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('users');
     }
 };

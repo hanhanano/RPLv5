@@ -13,6 +13,23 @@ use Carbon\Carbon;
 
 class TeamTargetController extends Controller
 {
+    private const SPECIAL_INDICATORS = [
+        "Tingkat Penyelenggaraan Pembinaan Statistik Sektoral sesuai Standar",
+        "Indeks Pelayanan Publik - Penilaian Mandiri",
+        "Nilai SAKIP oleh Inspektorat",
+        "Indeks Implementasi BerAKHLAK",
+    ];
+
+    public static function isSpecialIndicator($reportName): bool
+    {
+        return in_array($reportName, self::SPECIAL_INDICATORS);
+    }
+
+    public static function getSpecialIndicators(): array
+    {
+        return self::SPECIAL_INDICATORS;
+    }
+
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -41,8 +58,14 @@ class TeamTargetController extends Controller
         $query->whereYear('created_at', $year); 
 
         $targets = $query->orderBy('id', 'desc')->get();
+
+        foreach ($targets as $target) {
+            $target->is_special = self::isSpecialIndicator($target->report_name);
+        }
+
+        $specialIndicators = self::SPECIAL_INDICATORS;
         
-        return view('tampilan.team_targets', compact('targets'));
+        return view('tampilan.team_targets', compact('targets', 'specialIndicators'));
     }
 
     public function store(Request $request)
@@ -55,6 +78,11 @@ class TeamTargetController extends Controller
             'is_monthly' => 'nullable|boolean',
             'months' => 'nullable|array',
             'months.*' => 'integer|between:1,12',
+            // Tambahkan validasi untuk poin (boleh desimal)
+            'output_real_q1' => 'nullable|numeric|min:0',
+            'output_real_q2' => 'nullable|numeric|min:0',
+            'output_real_q3' => 'nullable|numeric|min:0',
+            'output_real_q4' => 'nullable|numeric|min:0',
         ]);
 
         $user = auth()->user();
@@ -71,10 +99,11 @@ class TeamTargetController extends Controller
             ? $request->publication_report_other
             : $request->publication_report;
 
+        $isSpecial = self::isSpecialIndicator($publicationReport);
+
         DB::beginTransaction();
 
         try {
-            // LOGIKA GENERATE BULANAN
             if ($request->has('is_monthly') && $request->has('months') && is_array($request->months)) {
                 
                 $this->generateMonthlyPublications(
@@ -82,15 +111,13 @@ class TeamTargetController extends Controller
                     $publicationReport,
                     $request->publication_pic,
                     $request->months,
-                    $request 
+                    $request,
+                    $isSpecial // Pass flag
                 );
                 
                 $successMessage = count($request->months) . ' publikasi bulanan berhasil ditambahkan!';
 
             } else {
-                // LOGIKA PUBLIKASI TUNGGAL (Manual)
-                
-                // 1. Simpan ke tabel PUBLICATIONS
                 $publicationId = DB::table('publications')->insertGetId([
                     'publication_name'   => $request->publication_name,
                     'publication_report' => $publicationReport,
@@ -102,7 +129,6 @@ class TeamTargetController extends Controller
                     'updated_at'         => now(),
                 ]);
 
-                // 2. Simpan ke tabel TEAM_TARGETS
                 $targetTahapan = $request->input('q1_plan', 0);
                 $targetOutput  = $request->input('output_plan', 0);
                 $realOutput    = $request->input('output_real', 0);
@@ -114,9 +140,9 @@ class TeamTargetController extends Controller
                     'publication_id' => $publicationId,
                     
                     'q1_plan' => $request->input('q1_plan', 0), 
-                    'q2_plan' => $request->input('q2_plan', 0),
-                    'q3_plan' => $request->input('q3_plan', 0), 
-                    'q4_plan' => $request->input('q4_plan', 0),
+                    'q2_plan' => $request->input('q1_plan', 0),
+                    'q3_plan' => $request->input('q1_plan', 0), 
+                    'q4_plan' => $request->input('q1_plan', 0),
                     
                     'q1_real' => $request->input('q1_real', 0), 
                     'q2_real' => $request->input('q2_real', 0),
@@ -126,19 +152,26 @@ class TeamTargetController extends Controller
                     'output_plan' => $request->input('output_plan', 0),
                     'output_real' => $request->input('output_real', 0),
 
+                    // TARGET poin per TW (di-lock)
                     'output_real_q1' => $request->input('output_real_q1', 0),
                     'output_real_q2' => $request->input('output_real_q2', 0),
                     'output_real_q3' => $request->input('output_real_q3', 0),
                     'output_real_q4' => $request->input('output_real_q4', 0),
+
+                    'actual_output_q1' => 0,
+                    'actual_output_q2' => 0,
+                    'actual_output_q3' => 0,
+                    'actual_output_q4' => 0,
+                    
+                    'is_special_indicator' => $isSpecial,
                 ]);
 
-                // [GENERATE DETAIL OTOMATIS]
-                // 1. Tahapan
-                $this->syncSimpleSteps($publicationId, $targetTahapan);
-                // 2. Output (LOGIKA BARU)
-                $this->syncSimpleOutputs($publicationId, $targetOutput, $realOutput);
+                if (!$isSpecial) {
+                    $this->syncSimpleSteps($publicationId, $targetTahapan);
+                    $this->syncSimpleOutputs($publicationId, $targetOutput, $realOutput);
+                }
 
-                $successMessage = 'Publikasi berhasil ditambahkan beserta detail Tahapan & Output!';
+                $successMessage = 'Publikasi berhasil ditambahkan!';
             }
 
             DB::commit();
@@ -152,6 +185,16 @@ class TeamTargetController extends Controller
 
     public function update(Request $request, $id) 
     {
+        $request->validate([
+            'publication_name' => 'required|string|max:255|min:3',
+            'publication_pic'  => 'required|string|max:255|min:3',
+            // Tambahkan validasi untuk poin (boleh desimal)
+            'output_real_q1' => 'nullable|numeric|min:0',
+            'output_real_q2' => 'nullable|numeric|min:0',
+            'output_real_q3' => 'nullable|numeric|min:0',
+            'output_real_q4' => 'nullable|numeric|min:0',
+        ]);
+
         $reportName = ($request->publication_report === 'other') 
             ? $request->publication_report_other 
             : $request->publication_report;
@@ -163,15 +206,17 @@ class TeamTargetController extends Controller
 
         $target = TeamTarget::findOrFail($id);
 
+        $isSpecial = self::isSpecialIndicator($reportName);
+
         $target->update([
             'team_name'     => $request->publication_pic,
             'activity_name' => $request->publication_name,
             'report_name'   => $reportName,
             
             'q1_plan' => $request->input('q1_plan', 0), 
-            'q2_plan' => $request->input('q2_plan', 0),
-            'q3_plan' => $request->input('q3_plan', 0), 
-            'q4_plan' => $request->input('q4_plan', 0),
+            'q2_plan' => $request->input('q1_plan', 0),
+            'q3_plan' => $request->input('q1_plan', 0), 
+            'q4_plan' => $request->input('q1_plan', 0),
             
             'q1_real' => $request->input('q1_real', 0), 
             'q2_real' => $request->input('q2_real', 0),
@@ -181,10 +226,13 @@ class TeamTargetController extends Controller
             'output_plan' => $request->input('output_plan', 0),
             'output_real' => $request->input('output_real', 0),
 
+            // TARGET poin per TW
             'output_real_q1' => $request->input('output_real_q1', 0),
             'output_real_q2' => $request->input('output_real_q2', 0),
             'output_real_q3' => $request->input('output_real_q3', 0),
             'output_real_q4' => $request->input('output_real_q4', 0),
+            
+            'is_special_indicator' => $isSpecial,
         ]);
         
         if($target->publication) {
@@ -194,24 +242,45 @@ class TeamTargetController extends Controller
                 'publication_pic'    => $request->publication_pic,
             ]);
 
-            // [SINKRONISASI TAHAPAN SAAT UPDATE]
-            $targetTahapan = $request->input('q1_plan', 0);
-            $this->syncSimpleSteps($target->publication_id, $targetTahapan);
+            if (!$isSpecial) {
+                $targetTahapan = $request->input('q1_plan', 0);
+                $this->syncSimpleSteps($target->publication_id, $targetTahapan);
 
-            // [SINKRONISASI OUTPUT SAAT UPDATE]
-            $targetOutput = $request->input('output_plan', 0);
-            $realOutput   = $request->input('output_real', 0);
-            $this->syncSimpleOutputs($target->publication_id, $targetOutput, $realOutput);
+                $targetOutput = $request->input('output_plan', 0);
+                $realOutput   = $request->input('output_real', 0);
+                $this->syncSimpleOutputs($target->publication_id, $targetOutput, $realOutput);
+            }
         }
         
         return redirect()->back()->with('success', 'Data berhasil diupdate');
     }
 
-    // --- HELPER FUNCTIONS ---
+    public function updateRealisasiPoin(Request $request, $id)
+    {
+        $request->validate([
+            'actual_output_q1' => 'nullable|numeric|min:0',
+            'actual_output_q2' => 'nullable|numeric|min:0',
+            'actual_output_q3' => 'nullable|numeric|min:0',
+            'actual_output_q4' => 'nullable|numeric|min:0',
+        ]);
 
-    /**
-     * Membuat Tahapan otomatis untuk PUBLIKASI TUNGGAL / MANUAL
-     */
+        $target = TeamTarget::findOrFail($id);
+
+        if (!self::isSpecialIndicator($target->report_name)) {
+            return redirect()->back()->with('error', 'Hanya indikator spesial yang bisa diupdate realisasi poinnya.');
+        }
+
+        $target->update([
+            'actual_output_q1' => $request->input('actual_output_q1', 0),
+            'actual_output_q2' => $request->input('actual_output_q2', 0),
+            'actual_output_q3' => $request->input('actual_output_q3', 0),
+            'actual_output_q4' => $request->input('actual_output_q4', 0),
+        ]);
+
+        return redirect()->back()->with('success', 'Realisasi poin berhasil diupdate!');
+    }
+
+    // --- HELPER FUNCTIONS ---
     private function syncSimpleSteps($publicationId, $targetCount)
     {
         $targetCount = (int)$targetCount;
@@ -241,26 +310,18 @@ class TeamTargetController extends Controller
         }
     }
 
-    /**
-     * [BARU] Membuat Detail Output otomatis (di tabel publication_plans)
-     */
     private function syncSimpleOutputs($publicationId, $targetCount, $realCount)
     {
         $targetCount = (int)$targetCount;
         $realCount   = (int)$realCount;
         if ($targetCount <= 0) return;
 
-        // Gunakan tabel 'publication_plans' untuk detail output
-        
         $year = now()->year;
-        // Kita set default di Q1 (Januari akhir) atau sesuaikan logika tanggalnya
         $planDate = "$year-01-31"; 
 
-        // 1. Cek jumlah output yang sudah ada
         $existing = DB::table('publication_plans')->where('publication_id', $publicationId)->get();
         $existingCount = $existing->count();
 
-        // 2. Tambah Detail Output jika kurang (berdasarkan Target)
         if ($targetCount > $existingCount) {
             $needed = $targetCount - $existingCount;
             for ($i = 1; $i <= $needed; $i++) {
@@ -269,38 +330,12 @@ class TeamTargetController extends Controller
                     'publication_id' => $publicationId,
                     'plan_name'      => "Output $counter",
                     'plan_date'      => $planDate,
-                    'actual_date'    => null, // Awalnya belum terealisasi
+                    'actual_date'    => null,
                     'created_at'     => now(),
                     'updated_at'     => now(),
                 ]);
             }
         }
-
-        // 3. Update Realisasi (Isi actual_date) sejumlah 'output_real'
-        // Ambil lagi data terbaru
-        $allOutputs = DB::table('publication_plans')
-                        ->where('publication_id', $publicationId)
-                        ->orderBy('id')
-                        ->get();
-        
-        $currentRealized = $allOutputs->whereNotNull('actual_date')->count();
-
-        // Jika realisasi di form bertambah, update item yang belum selesai
-        // if ($realCount > $currentRealized) {
-        //     $toUpdate = $realCount - $currentRealized;
-        //     foreach ($allOutputs as $out) {
-        //         if ($toUpdate <= 0) break;
-        //         if (is_null($out->actual_date)) {
-        //             DB::table('publication_plans')
-        //                 ->where('id', $out->id)
-        //                 ->update([
-        //                     'actual_date' => $planDate, // Anggap selesai di tanggal plan
-        //                     'updated_at' => now()
-        //                 ]);
-        //             $toUpdate--;
-        //         }
-        //     }
-        // }
     }
 
     private function getMonthName($monthNumber)
@@ -314,11 +349,10 @@ class TeamTargetController extends Controller
         return $months[$monthNumber] ?? '';
     }
 
-    private function generateMonthlyPublications($baseName, $report, $pic, array $months, $request)
+    private function generateMonthlyPublications($baseName, $report, $pic, array $months, $request, $isSpecial = false)
     {
         $currentYear = now()->year;
 
-        // Ambil nilai target
         $targetTahapan = (int)$request->input('q1_plan', 0);
         $targetOutput  = (int)$request->input('output_plan', 0);
         $realOutput    = (int)$request->input('output_real', 0);
@@ -336,7 +370,6 @@ class TeamTargetController extends Controller
             
             $publicationName = $baseName . ' - ' . $monthName . ' ' . $year;
 
-            // 1. Buat Publikasi
             $publicationId = DB::table('publications')->insertGetId([
                 'publication_name'   => $publicationName,
                 'publication_report' => $report,
@@ -348,7 +381,6 @@ class TeamTargetController extends Controller
                 'updated_at'         => now(),
             ]);
 
-            // 2. Buat TeamTarget
             TeamTarget::create([
                 'team_name'      => $pic,
                 'activity_name'  => $publicationName,
@@ -356,9 +388,9 @@ class TeamTargetController extends Controller
                 'publication_id' => $publicationId,
                 
                 'q1_plan' => $request->input('q1_plan', 0), 
-                'q2_plan' => $request->input('q2_plan', 0), 
-                'q3_plan' => $request->input('q3_plan', 0), 
-                'q4_plan' => $request->input('q4_plan', 0),
+                'q2_plan' => $request->input('q1_plan', 0), 
+                'q3_plan' => $request->input('q1_plan', 0), 
+                'q4_plan' => $request->input('q1_plan', 0),
                 'q1_real' => $request->input('q1_real', 0), 
                 'q2_real' => $request->input('q2_real', 0), 
                 'q3_real' => $request->input('q3_real', 0), 
@@ -371,13 +403,19 @@ class TeamTargetController extends Controller
                 'output_real_q2' => $request->input('output_real_q2', 0), 
                 'output_real_q3' => $request->input('output_real_q3', 0), 
                 'output_real_q4' => $request->input('output_real_q4', 0),
+
+                'actual_output_q1' => 0,
+                'actual_output_q2' => 0,
+                'actual_output_q3' => 0,
+                'actual_output_q4' => 0,
+                
+                'is_special_indicator' => $isSpecial,
             ]);
             
-            // 3. Buat Detail Tahapan
-            $this->createMonthlySteps($publicationId, $targetTahapan, $startDate, $endDate, $baseName, $monthName, $year);
-
-            // 4. [BARU] Buat Detail Output
-            $this->createMonthlyOutputs($publicationId, $targetOutput, $realOutput, $endDate, $baseName, $monthName, $year);
+            if (!$isSpecial) {
+                $this->createMonthlySteps($publicationId, $targetTahapan, $startDate, $endDate, $baseName, $monthName, $year);
+                $this->createMonthlyOutputs($publicationId, $targetOutput, $realOutput, $endDate, $baseName, $monthName, $year);
+            }
         }
     }
 
@@ -401,23 +439,15 @@ class TeamTargetController extends Controller
         }
     }
 
-    /**
-     * [BARU] Helper khusus untuk membuat detail output bulanan
-     */
     private function createMonthlyOutputs($publicationId, $targetCount, $realCount, $endDate, $baseName, $monthName, $year)
     {
         if ($targetCount <= 0) return;
 
-        // Buat Plan Output sejumlah target
         for ($i = 1; $i <= $targetCount; $i++) {
-            // Cek apakah item ini sudah terealisasi (berdasarkan jumlah realCount)
-            $isRealized = ($i <= $realCount);
-            
             DB::table('publication_plans')->insert([
                 'publication_id' => $publicationId,
                 'plan_name'      => "Output $i - " . $baseName . " (" . $monthName . ")",
-                'plan_date'      => $endDate, // Target selesai di akhir bulan
-                // 'actual_date'    => $isRealized ? $endDate : null, // Jika terealisasi, set tanggal sama
+                'plan_date'      => $endDate,
                 'created_at'     => now(),
                 'updated_at'     => now(),
             ]);
@@ -431,10 +461,8 @@ class TeamTargetController extends Controller
             $target = TeamTarget::with('publication')->findOrFail($id);
             
             if ($target->publication) {
-                // Hapus Tahapan
                 $target->publication->stepsPlans()->delete();
                 
-                // [BARU] Hapus Output (publication_plans)
                 if (\Schema::hasTable('publication_plans')) {
                     DB::table('publication_plans')->where('publication_id', $target->publication_id)->delete();
                 }

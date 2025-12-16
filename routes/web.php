@@ -65,12 +65,16 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/target-kinerja', [TeamTargetController::class, 'store'])->name('target.store');
     Route::put('/target-kinerja/{id}', [TeamTargetController::class, 'update'])->name('target.update');
     Route::delete('/target-kinerja/{id}', [TeamTargetController::class, 'destroy'])->name('target.destroy');
+    Route::put('/target/{id}/update-realisasi-poin', [TeamTargetController::class, 'updateRealisasiPoin'])->name('target.updateRealisasiPoin');
 
     // ----- Publications -----
     // Export
     Route::get('/publications/exportTable', [PublicationExportController::class, 'exportTable'])->name('publications.exportTable');
     Route::get('/publications/export-template/{slug_publication}', [PublicationExportController::class, 'exportTemplate'])->name('publications.export.template');
     Route::get('publications/export-sasaran', [PublicationExportController::class, 'exportTableSasaran'])->name('publications.exportSasaran');
+    
+    Route::get('publications/export-spesial-indikator', [PublicationExportController::class, 'exportTableSpesialIndikator'])->name('publications.exportSpesialIndikator');
+    Route::get('publications/export-spesial-sasaran', [PublicationExportController::class, 'exportTableSpesialSasaran'])->name('publications.exportSpesialSasaran');
 
     // Update publikasi
     Route::put('/publications/{publication}', [PublicationController::class, 'update'])->name('publications.update');

@@ -12,21 +12,19 @@ return new class extends Migration
     public function up()
     {
         Schema::create('steps_plans', function (Blueprint $table) {
-            $table->id('step_plan_id'); // Primary Key custom
+            $table->id('step_plan_id');
             $table->string('plan_type');
             $table->string('plan_name');
-            $table->date('plan_start_date')->nullable();;
-            $table->date('plan_end_date')->nullable();;
-            $table->text('plan_desc')->nullable();;
+            $table->date('plan_start_date')->nullable();
+            $table->date('plan_end_date')->nullable();
+            $table->text('plan_desc')->nullable();
             $table->string('plan_doc')->nullable();
-            $table->timestamp('created_at')->useCurrent();
-            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+            $table->timestamps();
             
-            // Foreign Key ke publications table
             $table->foreignId('publication_id')
-                  ->constrained('publications', 'publication_id')
-                  ->onDelete('no action')
-                  ->onUpdate('no action');
+                ->constrained('publications', 'publication_id')
+                ->onDelete('no action')
+                ->onUpdate('no action');
         });
     }
 
