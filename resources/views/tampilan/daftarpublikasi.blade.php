@@ -137,21 +137,12 @@
 
                             {{-- BARIS 2: Realisasi Poin (Label) --}}
                             <tr class="bg-emerald-50/50 border-b border-white">
-                                <!-- <td class="px-4 py-2 align-top bg-emerald-100">
-                                    <div class="text-sm font-medium text-emerald-800">Realisasi Poin</div>
-                                </td>
-                                {{-- Kolom Target (kosong untuk baris realisasi) --}}
-                                <td class="px-4 py-2 text-center text-gray-400 text-xs" colspan="4">221</td>
-                                {{-- Kolom Realisasi sudah di baris atas --}}
-                                <td class="px-4 py-2 text-center text-gray-400 text-xs" colspan="4">Lihat kolom realisasi di atas</td> -->
                             </tr>
 
                         @else
                             {{-- ========== TAMPILAN INDIKATOR NORMAL (4 BARIS) ========== --}}
                             
-                            {{-- BARIS 1: Identitas & Realisasi Tahapan --}}
                             <tr class="border-t border-gray-200">
-                                {{-- Kolom Identitas dengan Rowspan 4 (Untuk mengakomodir Tahapan, Target Tahapan, Output, Target Output) --}}
                                 <td class="px-4 py-4 align-top" rowspan="4">{{ $index + 1 }}</td>
                                 <td class="px-4 py-4 align-top font-semibold text-gray-700" rowspan="4">
                                     {{ $publication->publication_report }}
