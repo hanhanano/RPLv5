@@ -73,59 +73,121 @@
                             
                             <tbody class="divide-y divide-gray-200" id="target-table-body">
                                 @forelse($targets as $index => $item)
-                                {{-- BARIS 1: IDENTITAS + TAHAPAN --}}
+                                
+                                {{-- Cek apakah indikator spesial --}}
+                                @php
+                                    $isSpecial = $item->is_special ?? false;
+                                @endphp
+                                
+                                {{-- BARIS 1: IDENTITAS + TAHAPAN/POIN --}}
                                 <tr class="bg-white hover:bg-gray-50 transition border-t border-gray-200">
                                     
-                                    {{-- 1. No (Rowspan 2) --}}
                                     <td class="px-4 py-4 align-top" rowspan="2">{{ $index + 1 }}</td>
                                     
-                                    {{-- 2. Nama Laporan (Rowspan 2) --}}
                                     <td class="px-4 py-4 align-top font-semibold text-gray-700" rowspan="2">
                                         {{ $item->report_name }}
+                                        {{-- Badge untuk indikator spesial --}}
+                                        @if($isSpecial)
+                                            <span class="ml-2 px-2 py-0.5 text-xs bg-amber-100 text-amber-800 rounded-full">Spesial</span>
+                                        @endif
                                     </td>
                                     
-                                    {{-- 3. Nama Kegiatan (Rowspan 2) --}}
                                     <td class="px-4 py-4 align-top font-semibold text-gray-700" rowspan="2">
                                         {{ $item->activity_name }}
                                     </td>
                                     
-                                    {{-- 4. PIC / Team (Rowspan 2) --}}
                                     <td class="px-4 py-4 align-top font-semibold text-gray-700" rowspan="2">
                                         {{ $item->team_name }}
                                     </td>
 
-                                    {{-- 5. Jenis: Tahapan --}}
+                                    {{-- Jenis: Tahapan (Normal) atau Target Poin (Spesial) --}}
                                     <td class="px-4 py-4 align-top bg-blue-50 border-b border-white">
-                                        <div class="text-sm font-medium text-blue-900">Tahapan</div>
+                                        <div class="text-sm font-medium text-blue-900">
+                                            @if($isSpecial)
+                                                Poin
+                                            @else
+                                                Tahapan
+                                            @endif
+                                        </div>
                                     </td>
 
-                                    {{-- Rencana TAHAPAN Q1-Q4 --}}
-                                    <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
-                                        <div class="font-medium text-blue-900">{{ $item->q1_plan ?: '-' }}</div>
-                                    </td>
-                                    <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
-                                        <div class="font-medium text-blue-900">{{ $item->q2_plan ?: '-' }}</div>
-                                    </td>
-                                    <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
-                                        <div class="font-medium text-blue-900">{{ $item->q3_plan ?: '-' }}</div>
-                                    </td>
-                                    <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
-                                        <div class="font-medium text-blue-900">{{ $item->q4_plan ?: '-' }}</div>
-                                    </td>
+                                    {{-- Rencana/Target Q1-Q4 --}}
+                                    @if($isSpecial)
+                                        {{-- Indikator Spesial: Target poin per TW berbeda --}}
+                                        <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
+                                            <div class="font-medium text-blue-900">{{ number_format($item->output_real_q1 ?? 0, 2) }}</div>
+                                        </td>
+                                        <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
+                                            <div class="font-medium text-blue-900">{{ number_format($item->output_real_q2 ?? 0, 2) }}</div>
+                                        </td>
+                                        <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
+                                            <div class="font-medium text-blue-900">{{ number_format($item->output_real_q3 ?? 0, 2) }}</div>
+                                        </td>
+                                        <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
+                                            <div class="font-medium text-blue-900">{{ number_format($item->output_real_q4 ?? 0, 2) }}</div>
+                                        </td>
+                                    @else
+                                        {{-- Untuk q1_plan sampai q4_plan --}}
+                                        <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
+                                            <div class="font-medium text-blue-900">
+                                                {{ $item->q1_plan !== null && $item->q1_plan !== '' ? (int)$item->q1_plan : '-' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
+                                            <div class="font-medium text-blue-900">
+                                                {{ $item->q2_plan !== null && $item->q2_plan !== '' ? (int)$item->q2_plan : '-' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
+                                            <div class="font-medium text-blue-900">
+                                                {{ $item->q3_plan !== null && $item->q3_plan !== '' ? (int)$item->q3_plan : '-' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
+                                            <div class="font-medium text-blue-900">
+                                                {{ $item->q4_plan !== null && $item->q4_plan !== '' ? (int)$item->q4_plan : '-' }}
+                                            </div>
+                                        </td>
+                                    @endif
 
-                                    {{-- Realisasi TAHAPAN Q1-Q4 --}}
-                                    <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
-                                        <div class="font-medium text-emerald-700">{{ $item->q1_real ?: '-' }}</div>
-                                    </td>
-                                    <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
-                                        <div class="font-medium text-emerald-700">{{ $item->q2_real ?: '-' }}</div>
-                                    </td>
-                                    <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
-                                        <div class="font-medium text-emerald-700">{{ $item->q3_real ?: '-' }}</div>
-                                    </td>
-                                    <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
-                                        <div class="font-medium text-emerald-700">{{ $item->q4_real ?: '-' }}</div>
-                                    </td>
+                                    {{-- Realisasi Q1-Q4 --}}
+                                    @if($isSpecial)
+                                        {{-- Indikator Spesial: Realisasi poin dari actual_output_q1-q4 --}}
+                                        <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
+                                            <div class="font-medium text-emerald-700">{{ number_format($item->actual_output_q1 ?? 0, 2) }}</div>
+                                        </td>
+                                        <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
+                                            <div class="font-medium text-emerald-700">{{ number_format($item->actual_output_q2 ?? 0, 2) }}</div>
+                                        </td>
+                                        <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
+                                            <div class="font-medium text-emerald-700">{{ number_format($item->actual_output_q3 ?? 0, 2) }}</div>
+                                        </td>
+                                        <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
+                                            <div class="font-medium text-emerald-700">{{ number_format($item->actual_output_q4 ?? 0, 2) }}</div>
+                                        </td>
+                                    @else
+                                        {{-- Untuk q1_real sampai q4_real --}}
+                                        <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
+                                            <div class="font-medium text-emerald-700">
+                                                {{ $item->q1_real !== null && $item->q1_real !== '' ? (int)$item->q1_real : '-' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
+                                            <div class="font-medium text-emerald-700">
+                                                {{ $item->q2_real !== null && $item->q2_real !== '' ? (int)$item->q2_real : '-' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
+                                            <div class="font-medium text-emerald-700">
+                                                {{ $item->q3_real !== null && $item->q3_real !== '' ? (int)$item->q3_real : '-' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 text-center bg-blue-50 border-b border-white">
+                                            <div class="font-medium text-emerald-700">
+                                                {{ $item->q4_real !== null && $item->q4_real !== '' ? (int)$item->q4_real : '-' }}
+                                            </div>
+                                        </td>
+                                    @endif
 
                                     {{-- Aksi (Rowspan 2) --}}
                                     <td class="px-4 py-4 text-center align-middle" rowspan="2">
@@ -147,41 +209,63 @@
                                     </td>
                                 </tr>
 
-                                {{-- BARIS 2: OUTPUT --}}
+                                {{-- BARIS 2: OUTPUT (Normal) atau Kosong (Spesial - sudah dihandle di baris 1) --}}
                                 <tr class="target-row-item">                       
-                                    {{-- Jenis: Output (Baris 2 - Ungu) --}}
-                                    <td class="px-4 py-4 align-top bg-purple-50">
-                                        <div class="text-sm font-medium text-purple-900">Output</div>
-                                    </td>
+                                    @if($isSpecial)
+                                        {{-- Indikator Spesial: Baris 2 tidak diperlukan (merge semua ke baris 1) --}}
+                                        <td colspan="9" class="px-4 py-2 text-center bg-gray-50 text-xs text-gray-400 italic">
+                                            Indikator spesial hanya memiliki target & realisasi poin
+                                        </td>
+                                    @else
+                                        {{-- Indikator Normal: Output --}}
+                                        <td class="px-4 py-4 align-top bg-purple-50">
+                                            <div class="text-sm font-medium text-purple-900">Output</div>
+                                        </td>
 
-                                    {{-- Rencana OUTPUT Q1-Q4 --}}
-                                    <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="text-purple-900 font-medium">{{ $item->output_plan ?: '-' }}</div>
-                                    </td>
-                                    <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="text-purple-900 font-medium">{{ $item->output_plan ?: '-' }}</div>
-                                    </td>
-                                    <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="text-purple-900 font-medium">{{ $item->output_plan ?: '-' }}</div>
-                                    </td>
-                                    <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="text-purple-900 font-medium">{{ $item->output_plan ?: '-' }}</div>
-                                    </td>
+                                        {{-- Rencana OUTPUT Q1-Q4 --}}
+                                        <td class="px-4 py-4 text-center bg-purple-50">
+                                            <div class="text-purple-900 font-medium">
+                                                {{ $item->output_plan !== null && $item->output_plan !== '' ? (int)$item->output_plan : '-' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 text-center bg-purple-50">
+                                            <div class="text-purple-900 font-medium">
+                                                {{ $item->output_plan !== null && $item->output_plan !== '' ? (int)$item->output_plan : '-' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 text-center bg-purple-50">
+                                            <div class="text-purple-900 font-medium">
+                                                {{ $item->output_plan !== null && $item->output_plan !== '' ? (int)$item->output_plan : '-' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 text-center bg-purple-50">
+                                            <div class="text-purple-900 font-medium">
+                                                {{ $item->output_plan !== null && $item->output_plan !== '' ? (int)$item->output_plan : '-' }}
+                                            </div>
+                                        </td>
 
-                                    {{-- Realisasi OUTPUT Q1-Q4 --}}
-                                    <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="font-medium text-purple-900">{{ $item->output_real_q1 ?: '-' }}</div>
-                                    </td>
-                                    <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="font-medium text-purple-900">{{ $item->output_real_q2 ?: '-' }}</div>
-                                    </td>
-                                    <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="font-medium text-purple-900">{{ $item->output_real_q3 ?: '-' }}</div>
-                                    </td>
-                                    <td class="px-4 py-4 text-center bg-purple-50">
-                                        <div class="font-medium text-purple-900">{{ $item->output_real_q4 ?: '-' }}</div>
-                                    </td>
-                                    
+                                        {{-- Realisasi OUTPUT Q1-Q4 --}}
+                                        <td class="px-4 py-4 text-center bg-purple-50">
+                                            <div class="font-medium text-purple-900">
+                                                {{ $item->output_real_q1 !== null && $item->output_real_q1 !== '' ? (int)$item->output_real_q1 : '-' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 text-center bg-purple-50">
+                                            <div class="font-medium text-purple-900">
+                                                {{ $item->output_real_q2 !== null && $item->output_real_q2 !== '' ? (int)$item->output_real_q2 : '-' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 text-center bg-purple-50">
+                                            <div class="font-medium text-purple-900">
+                                                {{ $item->output_real_q3 !== null && $item->output_real_q3 !== '' ? (int)$item->output_real_q3 : '-' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 text-center bg-purple-50">
+                                            <div class="font-medium text-purple-900">
+                                                {{ $item->output_real_q4 !== null && $item->output_real_q4 !== '' ? (int)$item->output_real_q4 : '-' }}
+                                            </div>
+                                        </td>
+                                    @endif
                                 </tr>
                                 @empty
                                 <tr>
@@ -245,7 +329,6 @@
                             </div>
                         </form>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -287,56 +370,26 @@
     </main>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            
-            const monitoredInputs = [
-                'plan_tahapan', 'plan_output', 
-                't_q1', 't_q2', 't_q3', 't_q4',
-                'o_q1', 'o_q2', 'o_q3', 'o_q4' 
-            ];
+        const specialIndicators = [
+            'Tingkat Penyelenggaraan Pembinaan Statistik Sektoral sesuai Standar',
+            'Indeks Pelayanan Publik - Penilaian Mandiri',
+            'Nilai SAKIP oleh Inspektorat',
+            'Indeks Implementasi BerAKHLAK'
+        ];
 
-            document.body.addEventListener('input', function(e) {
-                const el = e.target;
-                const xModel = el.getAttribute('x-model');
-
-                if (xModel && monitoredInputs.includes(xModel)) {
-                    
-                    if (el.value < 0) {
-                        el.value = Math.abs(el.value); 
-                    }
-
-                    if (['plan_tahapan', 'plan_output'].includes(xModel)) {
-                        if (el.value.trim() === '') {
-                            el.classList.add('border-red-500', 'ring-2', 'ring-red-200');
-                            el.classList.remove('border-gray-300'); 
-                            
-                            el.setAttribute('placeholder', '⚠️ Wajib diisi!');
-                        } else {
-                            el.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
-                            el.classList.add('border-gray-300');
-                        }
-                    }
-                }
-            });
-
-            document.body.addEventListener('keydown', function(e) {
-                const el = e.target;
-                const xModel = el.getAttribute('x-model');
-
-                if (xModel && monitoredInputs.includes(xModel)) {
-                    if (e.key === '-' || e.key === 'e' || e.key === 'E') {
-                        e.preventDefault();
-                    }
-                }
-            });
-        });
+        function validateTargetForm(form) {
+            return true;
+        }
 
         function openEditModal(data, updateUrl) {
+            console.log('DEBUG - Data diterima:', data);
+            console.log('DEBUG - Data actual_output_q1:', data.actual_output_q1);
+            
             const modal = document.getElementById('editModal');
             const form = document.getElementById('editForm');
             
             if (!updateUrl) {
-                alert("Error: URL Update tidak ditemukan. Pastikan Route sudah benar.");
+                alert("Error: URL Update tidak ditemukan.");
                 return;
             }
             form.action = updateUrl;
@@ -353,35 +406,64 @@
             const setAlpineValue = (selector, value) => {
                 const el = form.querySelector(selector);
                 if (el) {
+                    // Pastikan value adalah number, bukan string
+                    if (typeof value === 'string') {
+                        value = parseFloat(value) || 0;
+                    }
                     el.value = value;
                     el.dispatchEvent(new Event('input', { bubbles: true }));
+                    console.log('Set value:', selector, '=', value);
+                } else {
+                    console.warn('Element not found:', selector);
                 }
             };
 
-            setAlpineValue('input[x-model="plan_tahapan"]', data.q1_plan || 0);
+            const isSpecial = specialIndicators.includes(data.report_name);
+            console.log('Is special indicator?', isSpecial);
 
-            setAlpineValue('input[x-model="t_q1"]', data.q1_real || 0);
-            setAlpineValue('input[x-model="t_q2"]', data.q2_real || 0);
-            setAlpineValue('input[x-model="t_q3"]', data.q3_real || 0);
-            setAlpineValue('input[x-model="t_q4"]', data.q4_real || 0);
+            if (isSpecial) {
+                // Indikator Spesial: Set target poin per TW
+                // HANYA set output_real_q1 sampai output_real_q4
+                setAlpineValue('input[x-model="o_q1"]', parseFloat(data.output_real_q1) || 0);
+                setAlpineValue('input[x-model="o_q2"]', parseFloat(data.output_real_q2) || 0);
+                setAlpineValue('input[x-model="o_q3"]', parseFloat(data.output_real_q3) || 0);
+                setAlpineValue('input[x-model="o_q4"]', parseFloat(data.output_real_q4) || 0);
 
-            setAlpineValue('input[x-model="plan_output"]', data.output_plan || 0);
+                // HAPUS bagian ini - karena tidak ada input actual_q di form
+                // setAlpineValue('input[x-model="actual_q1"]', parseFloat(data.actual_output_q1) || 0);
+                // setAlpineValue('input[x-model="actual_q2"]', parseFloat(data.actual_output_q2) || 0);
+                // setAlpineValue('input[x-model="actual_q3"]', parseFloat(data.actual_output_q3) || 0);
+                // setAlpineValue('input[x-model="actual_q4"]', parseFloat(data.actual_output_q4) || 0);
+                
+            } else {
+                // Indikator Normal
+                setAlpineValue('input[x-model="plan_tahapan"]', data.q1_plan || 0);
+                setAlpineValue('input[x-model="t_q1"]', data.q1_real || 0);
+                setAlpineValue('input[x-model="t_q2"]', data.q2_real || 0);
+                setAlpineValue('input[x-model="t_q3"]', data.q3_real || 0);
+                setAlpineValue('input[x-model="t_q4"]', data.q4_real || 0);
 
-            setAlpineValue('input[x-model="o_q1"]', data.output_real_q1 || 0);
-            setAlpineValue('input[x-model="o_q2"]', data.output_real_q2 || 0);
-            setAlpineValue('input[x-model="o_q3"]', data.output_real_q3 || 0);
-            setAlpineValue('input[x-model="o_q4"]', data.output_real_q4 || 0);
+                setAlpineValue('input[x-model="plan_output"]', data.output_plan || 0);
+                setAlpineValue('input[x-model="o_q1"]', data.output_real_q1 || 0);
+                setAlpineValue('input[x-model="o_q2"]', data.output_real_q2 || 0);
+                setAlpineValue('input[x-model="o_q3"]', data.output_real_q3 || 0);
+                setAlpineValue('input[x-model="o_q4"]', data.output_real_q4 || 0);
+            }
             
             const options = [
                 "Laporan Statistik Kependudukan dan Ketenagakerjaan",
-                "Laporan Statistik Statistik Kesejahteraan Rakyat"
+                "Laporan Statistik Statistik Kesejahteraan Rakyat",
+                ...specialIndicators
             ];
 
             const selectReport = form.querySelector('[name="publication_report"]');
             const manualInput = form.querySelector('[name="publication_report_other"]');
 
             if (selectReport) {
-                if (options.includes(data.report_name)) {
+                // Cari exact match atau use 'other'
+                const allOptions = Array.from(selectReport.options).map(o => o.value);
+                
+                if (allOptions.includes(data.report_name)) {
                     selectReport.value = data.report_name;
                     selectReport.dispatchEvent(new Event('change', { bubbles: true }));
                     if(manualInput) manualInput.value = '';
@@ -413,7 +495,7 @@
             const btnPrev = document.getElementById('btnPrev');
             const btnNext = document.getElementById('btnNext');
             const pageInfo = document.getElementById('pageInfo');
-            const searchInput = document.getElementById('searchInput'); // Ambil elemen search
+            const searchInput = document.getElementById('searchInput');
 
             const allRows = Array.from(tbody.querySelectorAll('tr'));
             let dataItems = [];
@@ -439,7 +521,6 @@
                     pageInfo.innerText = "0 data";
                     btnPrev.disabled = true;
                     btnNext.disabled = true;
-                    
                     return;
                 }
 
@@ -454,7 +535,7 @@
                 const pageItems = filteredData.slice(start, end);
 
                 pageItems.forEach(itemPair => {
-                    itemPair.forEach(tr => tr.style.display = ''); // Reset display ke default (table-row)
+                    itemPair.forEach(tr => tr.style.display = '');
                 });
 
                 pageInfo.innerText = `${start + 1}-${Math.min(end, totalItems)} dari ${totalItems} data`;
@@ -463,7 +544,6 @@
                 btnNext.disabled = (currentPage >= totalPages);
             }
 
-            // --- FITUR SEARCH ---
             searchInput.addEventListener('keyup', function() {
                 const query = this.value.toLowerCase();
 

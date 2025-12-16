@@ -13,26 +13,46 @@ return new class extends Migration
     {
         Schema::create('team_targets', function (Blueprint $table) {
             $table->id();
-            $table->string('team_name'); // Nama Tim (Sosial, Neraca, dll)
-            $table->string('activity_name'); // Nama Kegiatan
+            $table->string('team_name');
+            $table->string('activity_name');
+            $table->string('report_name')->nullable();
             
-            // --- Data TAHAPAN (Rencana) ---
+            // Tahapan - Rencana
             $table->integer('q1_plan')->default(0);
             $table->integer('q2_plan')->default(0);
             $table->integer('q3_plan')->default(0);
             $table->integer('q4_plan')->default(0);
 
-            // --- Data TAHAPAN (Realisasi) ---
+            // Tahapan - Realisasi
             $table->integer('q1_real')->default(0);
             $table->integer('q2_real')->default(0);
             $table->integer('q3_real')->default(0);
             $table->integer('q4_real')->default(0);
 
-            // Cukup 2 kolom ini karena angkanya berlaku setahun (sama tiap triwulan)
-            $table->integer('output_plan')->nullable()->default(0); 
-            $table->integer('output_real')->nullable()->default(0);
+            // Output - Target dan Realisasi (Total)
+            $table->decimal('output_plan', 8, 2)->default(0);
+            $table->decimal('output_real', 8, 2)->default(0);
+            
+            // Output - Realisasi per Quarter
+            $table->decimal('output_real_q1', 8, 2)->default(0);
+            $table->decimal('output_real_q2', 8, 2)->default(0);
+            $table->decimal('output_real_q3', 8, 2)->default(0);
+            $table->decimal('output_real_q4', 8, 2)->default(0);
+            
+            // Actual Output Points (untuk indikator spesial)
+            $table->decimal('actual_output_q1', 8, 2)->default(0);
+            $table->decimal('actual_output_q2', 8, 2)->default(0);
+            $table->decimal('actual_output_q3', 8, 2)->default(0);
+            $table->decimal('actual_output_q4', 8, 2)->default(0);
+            
+            // Flag untuk indikator spesial
+            $table->boolean('is_special_indicator')->default(false);
             
             $table->timestamps();
+            
+            $table->foreignId('publication_id')
+                ->constrained('publications', 'publication_id')
+                ->onDelete('cascade');
         });
     }
 

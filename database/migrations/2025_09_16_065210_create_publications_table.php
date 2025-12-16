@@ -12,19 +12,18 @@ return new class extends Migration
     public function up()
     {
         Schema::create('publications', function (Blueprint $table) {
-            $table->id('publication_id'); // Primary Key custom
+            $table->id('publication_id');
             $table->string('publication_name');
             $table->string('publication_report');
             $table->string('publication_pic');
+            $table->boolean('is_monthly')->default(0);
             $table->string('slug_publication')->unique();
-            $table->timestamp('created_at')->useCurrent();
-            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+            $table->timestamps();
             
-            // Foreign Key ke users table
             $table->foreignId('fk_user_id')
-                  ->constrained('users', 'id')
-                  ->onDelete('no action')
-                  ->onUpdate('no action');
+                ->constrained('users', 'id')
+                ->onDelete('no action')
+                ->onUpdate('no action');
         });
     }
 

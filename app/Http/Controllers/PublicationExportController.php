@@ -319,9 +319,259 @@ class PublicationExportController extends Controller
     public function exportTableSasaran()
     {
         $year = session('selected_year', now()->year);
-        // Panggil helper untuk ambil data Sasaran
-        $data = $this->getDataSasaran($year);
-        return $this->generateExcel($year, $data, 'laporan_kinerja_sasaran');
+        // Ambil data normal
+        $dataNormal = $this->getDataSasaran($year);
+        // Ambil data spesial
+        $dataSpesial = $this->getDataSpesialSasaran($year);
+        
+        // Generate Excel gabungan
+        return $this->generateExcelSasaranGabungan($year, $dataNormal, $dataSpesial, 'laporan_kinerja_sasaran');
+    }
+
+    private function generateExcelSasaranGabungan($year, $laporanNormal, $laporanSpesial, $fileNamePrefix) {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // --- Header Setup ---
+        $sheet->mergeCells('A1:A3')->setCellValue('A1', 'Nama Sasaran/Laporan');
+        $sheet->mergeCells('B1:B3')->setCellValue('B1', 'Jenis');
+        $sheet->mergeCells('C1:F2')->setCellValue('C1', 'Rencana Kegiatan');
+        $sheet->mergeCells('G1:J2')->setCellValue('G1', 'Realisasi Kegiatan');
+        $sheet->mergeCells('K1:R1')->setCellValue('K1', 'Capaian Kinerja (%)');
+        $sheet->mergeCells('K2:N2')->setCellValue('K2', 'Terhadap Target Triwulanan');
+        $sheet->mergeCells('O2:R2')->setCellValue('O2', 'Terhadap Target Setahun');
+
+        $headersTW = ['TW I', 'TW II', 'TW III', 'TW IV'];
+        foreach($headersTW as $idx => $txt) {
+            $sheet->setCellValue(chr(67+$idx).'3', $txt);
+            $sheet->setCellValue(chr(71+$idx).'3', $txt);
+            $sheet->setCellValue(chr(75+$idx).'3', $txt);
+            $sheet->setCellValue(chr(79+$idx).'3', $txt);
+        }
+
+        // Style Header
+        $headerStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => '000000']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'EEEEEE']]
+        ];
+        $sheet->getStyle('A1:R3')->applyFromArray($headerStyle);
+
+        $row = 4;
+
+        // ========== BAGIAN 1: DATA NORMAL (4 baris per item) ==========
+        foreach ($laporanNormal as $item) {
+            $startRow = $row;
+            
+            // Nama
+            $sheet->mergeCells("A{$row}:A".($row+3));
+            $sheet->setCellValue("A{$row}", $item['report_name']);
+            $sheet->getStyle("A{$row}")->getAlignment()->setWrapText(true)->setVertical(Alignment::VERTICAL_TOP);
+
+            // Row 1: Realisasi Tahapan
+            $sheet->setCellValue("B{$row}", "Realisasi Tahapan");
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(66+$i).$row, $item['row1_blue'][$i]??0);
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(70+$i).$row, $item['row1_green'][$i]??0);
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(74+$i).$row, number_format($item['capaian']['tahapan']['tw'][$i],0).'%');
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(78+$i).$row, number_format($item['capaian']['tahapan']['thn'][$i],0).'%');
+            $sheet->getStyle("B{$row}:R{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('EFF6FF');
+            $row++;
+
+            // Row 2: Target Tahapan
+            $sheet->setCellValue("B{$row}", "Target Tahapan");
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(66+$i).$row, $item['row2_blue'][$i]??0);
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(70+$i).$row, $item['row2_green'][$i]??0);
+            $row++;
+            
+            // Merge Capaian Row 1-2
+            for ($c = 75; $c <= 82; $c++) $sheet->mergeCells(chr($c)."{$startRow}:".chr($c).($startRow+1));
+
+            // Row 3: Realisasi Output
+            $outputStartRow = $row;
+            $sheet->setCellValue("B{$row}", "Realisasi Output");
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(66+$i).$row, $item['row3_blue'][$i]??0);
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(70+$i).$row, $item['row3_green'][$i]??0);
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(74+$i).$row, number_format($item['capaian']['output']['tw'][$i],0).'%');
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(78+$i).$row, number_format($item['capaian']['output']['thn'][$i],0).'%');
+            $sheet->getStyle("B{$row}:R{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FAF5FF');
+            $row++;
+
+            // Row 4: Target Output
+            $sheet->setCellValue("B{$row}", "Target Output");
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(66+$i).$row, $item['row4_blue'][$i]??0);
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(70+$i).$row, $item['row4_green'][$i]??0);
+            $row++;
+
+            // Merge Capaian Row 3-4
+            for ($c = 75; $c <= 82; $c++) $sheet->mergeCells(chr($c)."{$outputStartRow}:".chr($c).($outputStartRow+1));
+        }
+
+        // ========== BAGIAN 2: DATA SPESIAL (2 baris per item) ==========
+        // Tambah separator/header untuk bagian spesial
+        $sheet->mergeCells("A{$row}:R{$row}");
+        $sheet->setCellValue("A{$row}", "INDIKATOR SPESIAL");
+        $sheet->getStyle("A{$row}:R{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FEF3C7');
+        $sheet->getStyle("A{$row}")->getFont()->setBold(true);
+        $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $row++;
+
+        foreach ($laporanSpesial as $item) {
+            $startRow = $row;
+            
+            // Nama Laporan - merge 2 baris
+            $sheet->mergeCells("A{$row}:A".($row+1));
+            $sheet->setCellValue("A{$row}", $item['report_name'] . ' (Spesial)');
+            $sheet->getStyle("A{$row}")->getAlignment()->setWrapText(true)->setVertical(Alignment::VERTICAL_TOP);
+
+            // Row 1: Target Poin
+            // Row 1: Poin dan data (baris atas)
+            $sheet->setCellValue("B{$row}", "Poin");
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(66+$i).$row, number_format($item['target_q'][$i] ?? 0, 2)); // C-F: Target
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(70+$i).$row, number_format($item['actual_q'][$i] ?? 0, 2)); // G-J: Realisasi
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(74+$i).$row, number_format($item['capaian']['output']['tw'][$i], 1).'%'); // K-N: Capaian TW
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(78+$i).$row, number_format($item['capaian']['output']['thn'][$i], 1).'%'); // O-R: Capaian THN
+            $sheet->getStyle("B{$row}:R{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FEF3C7');
+
+            // Row 2: Data capaian (baris bawah)
+            $row++;
+            $sheet->setCellValue("B{$row}", ""); // Kolom B kosong
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(66+$i).$row, ''); // C-F kosong
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(70+$i).$row, ''); // G-J kosong
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(74+$i).$row, ''); // K-N: Capaian TW
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(78+$i).$row, ''); // O-R: Capaian THN
+            $sheet->getStyle("B{$row}:R{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('ECFDF5');
+
+            // Merge vertikal kolom B-J (B sampai J)
+            for($col = 66; $col <= 74; $col++) { // 66=B, 74=J
+                $sheet->mergeCells(chr($col).($row-1).":".chr($col).$row);
+            }
+
+            $row++;
+
+            // Merge Capaian Row 1-2
+            for ($c = 75; $c <= 82; $c++) {
+                $colChar = chr($c);
+                $sheet->mergeCells("{$colChar}{$startRow}:{$colChar}".($startRow+1));
+            }
+        }
+
+        // Global Styling
+        $lastRow = $row - 1;
+        $sheet->getStyle("A1:R{$lastRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle("B4:R{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
+        foreach (range('A', 'R') as $col) $sheet->getColumnDimension($col)->setAutoSize(true);
+        $sheet->getColumnDimension('A')->setWidth(40);
+
+        $fileName = $fileNamePrefix.'_'.$year.'.xlsx';
+        $writer = new Xlsx($spreadsheet);
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $fileName);
+    }
+
+    // --- EXPORT TABLE ---
+    public function exportTableIndikator()
+    {
+        $year = session('selected_year', now()->year);
+        $data = $this->getDataIndikator($year);
+        return $this->generateExcel($year, $data, 'laporan_kinerja_indikator');
+    }
+
+    private function generateExcel($year, $laporanKinerja, $fileNamePrefix) {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // --- Header Setup (Sama seperti sebelumnya) ---
+        $sheet->mergeCells('A1:A3')->setCellValue('A1', 'Nama Sasaran/Laporan');
+        $sheet->mergeCells('B1:B3')->setCellValue('B1', 'Jenis');
+        $sheet->mergeCells('C1:F2')->setCellValue('C1', 'Rencana Kegiatan');
+        $sheet->mergeCells('G1:J2')->setCellValue('G1', 'Realisasi Kegiatan');
+        $sheet->mergeCells('K1:R1')->setCellValue('K1', 'Capaian Kinerja (%)');
+        $sheet->mergeCells('K2:N2')->setCellValue('K2', 'Terhadap Target Triwulanan');
+        $sheet->mergeCells('O2:R2')->setCellValue('O2', 'Terhadap Target Setahun');
+
+        $headersTW = ['TW I', 'TW II', 'TW III', 'TW IV'];
+        foreach($headersTW as $idx => $txt) {
+            $sheet->setCellValue(chr(67+$idx).'3', $txt);
+            $sheet->setCellValue(chr(71+$idx).'3', $txt);
+            $sheet->setCellValue(chr(75+$idx).'3', $txt);
+            $sheet->setCellValue(chr(79+$idx).'3', $txt);
+        }
+
+        // Style Header
+        $headerStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => '000000']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'EEEEEE']]
+        ];
+        $sheet->getStyle('A1:R3')->applyFromArray($headerStyle);
+        $sheet->getStyle('C1')->getFont()->getColor()->setRGB('1E3A8A');
+        $sheet->getStyle('G1')->getFont()->getColor()->setRGB('064E3B');
+        $sheet->getStyle('K1')->getFont()->getColor()->setRGB('581C87');
+
+        // Isi Data
+        $row = 4;
+        foreach ($laporanKinerja as $item) {
+            $startRow = $row;
+            
+            // Nama Laporan - merge 4 baris
+            $sheet->mergeCells("A{$row}:A".($row+3));
+            $sheet->setCellValue("A{$row}", $item['report_name']);
+            $sheet->getStyle("A{$row}")->getAlignment()->setWrapText(true)->setVertical(Alignment::VERTICAL_TOP);
+
+            // Row 1: Realisasi Tahapan
+            $sheet->setCellValue("B{$row}", "Realisasi Tahapan");
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(66+$i).$row, $item['row1_blue'][$i]??0);
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(70+$i).$row, $item['row1_green'][$i]??0);
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(74+$i).$row, number_format($item['capaian']['tahapan']['tw'][$i],0).'%');
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(78+$i).$row, number_format($item['capaian']['tahapan']['thn'][$i],0).'%');
+            $sheet->getStyle("B{$row}:R{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('EFF6FF');
+            $row++;
+
+            // Row 2: Target Tahapan
+            $sheet->setCellValue("B{$row}", "Target Tahapan");
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(66+$i).$row, $item['row2_blue'][$i]??0);
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(70+$i).$row, $item['row2_green'][$i]??0);
+            $row++;
+            
+            // Merge Capaian Row 1-2
+            for ($c = 75; $c <= 82; $c++) $sheet->mergeCells(chr($c)."{$startRow}:".chr($c).($startRow+1));
+
+            // Row 3: Realisasi Output
+            $outputStartRow = $row;
+            $sheet->setCellValue("B{$row}", "Realisasi Output");
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(66+$i).$row, $item['row3_blue'][$i]??0);
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(70+$i).$row, $item['row3_green'][$i]??0);
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(74+$i).$row, number_format($item['capaian']['output']['tw'][$i],0).'%');
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(78+$i).$row, number_format($item['capaian']['output']['thn'][$i],0).'%');
+            $sheet->getStyle("B{$row}:R{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FAF5FF');
+            $row++;
+
+            // Row 4: Target Output
+            $sheet->setCellValue("B{$row}", "Target Output");
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(66+$i).$row, $item['row4_blue'][$i]??0);
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(70+$i).$row, $item['row4_green'][$i]??0);
+            $row++;
+
+            // Merge Capaian Row 3-4
+            for ($c = 75; $c <= 82; $c++) $sheet->mergeCells(chr($c)."{$outputStartRow}:".chr($c).($outputStartRow+1));
+        }
+
+        $lastRow = $row - 1;
+        $sheet->getStyle("A1:R{$lastRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle("B4:R{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
+        foreach (range('A', 'R') as $col) $sheet->getColumnDimension($col)->setAutoSize(true);
+        $sheet->getColumnDimension('A')->setWidth(40);
+
+        $fileName = $fileNamePrefix.'_'.$year.'.xlsx';
+        $writer = new Xlsx($spreadsheet);
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $fileName);
     }
 
     private function getSasaranStrategis() {
@@ -444,15 +694,132 @@ class PublicationExportController extends Controller
         ];
     }
 
-    private function generateExcel($year, $laporanKinerja, $fileNamePrefix) {
+    // Export indikator spesial level INDIKATOR (agregat)
+    public function exportTableSpesialIndikator()
+    {
+        $year = session('selected_year', now()->year);
+        $data = $this->getDataSpesialIndikator($year);
+        return $this->generateExcelSpesial($year, $data, 'laporan_kinerja_spesial_indikator');
+    }
+
+    // Export indikator spesial level SASARAN (per laporan)
+    public function exportTableSpesialSasaran()
+    {
+        $year = session('selected_year', now()->year);
+        $data = $this->getDataSpesialSasaran($year);
+        return $this->generateExcelSpesial($year, $data, 'laporan_kinerja_spesial_sasaran');
+    }
+
+    // Data untuk level INDIKATOR (agregat dari semua laporan dalam 1 indikator)
+    private function getDataSpesialIndikator($year) {
+        $dbData = Publication::with(['teamTarget'])
+            ->whereYear('created_at', $year)->get()->groupBy('publication_report');
+        
+        $result = [];
+        foreach ($this->getSasaranSpesial() as $namaSasaran => $daftarLaporan) {
+            $agg_targetQ = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
+            $agg_actualQ = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
+
+            foreach ($daftarLaporan as $reportName) {
+                $items = $dbData->get($reportName) ?? collect([]);
+                foreach ($items as $pub) {
+                    if ($pub->teamTarget) {
+                        $t = $pub->teamTarget;
+                        // Target poin per TW (dari output_real_q1-q4)
+                        $agg_targetQ[1] += $t->output_real_q1 ?? 0;
+                        $agg_targetQ[2] += $t->output_real_q2 ?? 0;
+                        $agg_targetQ[3] += $t->output_real_q3 ?? 0;
+                        $agg_targetQ[4] += $t->output_real_q4 ?? 0;
+                        // Realisasi poin per TW (dari actual_output_q1-q4)
+                        $agg_actualQ[1] += $t->actual_output_q1 ?? 0;
+                        $agg_actualQ[2] += $t->actual_output_q2 ?? 0;
+                        $agg_actualQ[3] += $t->actual_output_q3 ?? 0;
+                        $agg_actualQ[4] += $t->actual_output_q4 ?? 0;
+                    }
+                }
+            }
+            $result[] = $this->calculateSpesialItem($namaSasaran, $agg_targetQ, $agg_actualQ);
+        }
+        return $result;
+    }
+
+    // Data untuk level SASARAN (per laporan individual)
+    private function getDataSpesialSasaran($year) {
+        $dbData = Publication::with(['teamTarget'])
+            ->whereYear('created_at', $year)->get()->groupBy('publication_report');
+        
+        $result = [];
+        foreach ($this->getSasaranSpesial() as $namaSasaran => $daftarLaporan) {
+            foreach ($daftarLaporan as $reportName) {
+                $items = $dbData->get($reportName) ?? collect([]);
+                
+                $ind_targetQ = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
+                $ind_actualQ = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
+
+                foreach ($items as $pub) {
+                    if ($pub->teamTarget) {
+                        $t = $pub->teamTarget;
+                        $ind_targetQ[1] += $t->output_real_q1 ?? 0;
+                        $ind_targetQ[2] += $t->output_real_q2 ?? 0;
+                        $ind_targetQ[3] += $t->output_real_q3 ?? 0;
+                        $ind_targetQ[4] += $t->output_real_q4 ?? 0;
+                        
+                        $ind_actualQ[1] += $t->actual_output_q1 ?? 0;
+                        $ind_actualQ[2] += $t->actual_output_q2 ?? 0;
+                        $ind_actualQ[3] += $t->actual_output_q3 ?? 0;
+                        $ind_actualQ[4] += $t->actual_output_q4 ?? 0;
+                    }
+                }
+                $result[] = $this->calculateSpesialItem($reportName, $ind_targetQ, $ind_actualQ);
+            }
+        }
+        return $result;
+    }
+
+    // Perhitungan capaian untuk indikator spesial
+    private function calculateSpesialItem($name, $targetQ, $actualQ) {
+        $capaian = ['output' => ['tw' => [], 'thn' => []]];
+        $targetQ4 = $targetQ[4] ?? 0;
+
+        for ($i = 1; $i <= 4; $i++) {
+            $target = $targetQ[$i] ?? 0;
+            $actual = $actualQ[$i] ?? 0;
+
+            // Capaian per TW = (Realisasi / Target TW) * 100
+            if ($target > 0) {
+                $raw_TW = ($actual / $target) * 100;
+                $capaian['output']['tw'][$i] = ($raw_TW > 120) ? 120 : $raw_TW;
+            } else {
+                $capaian['output']['tw'][$i] = 0;
+            }
+
+            // Capaian terhadap Target Akhir Tahun (Q4)
+            if ($targetQ4 > 0) {
+                $raw_THN = ($actual / $targetQ4) * 100;
+                $capaian['output']['thn'][$i] = ($raw_THN > 120) ? 120 : $raw_THN;
+            } else {
+                $capaian['output']['thn'][$i] = 0;
+            }
+        }
+
+        return [
+            'report_name' => $name,
+            'target_q' => $targetQ,
+            'actual_q' => $actualQ,
+            'capaian' => $capaian
+        ];
+    }
+
+    // Generate Excel khusus untuk indikator spesial (hanya 2 baris: Target Poin & Realisasi Poin)
+    private function generateExcelSpesial($year, $laporanKinerja, $fileNamePrefix) {
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // --- Header Setup (Sama seperti sebelumnya) ---
+        // Header Setup (berbeda dari normal karena hanya poin, tidak ada tahapan)
         $sheet->mergeCells('A1:A3')->setCellValue('A1', 'Nama Sasaran/Laporan');
         $sheet->mergeCells('B1:B3')->setCellValue('B1', 'Jenis');
-        $sheet->mergeCells('C1:F2')->setCellValue('C1', 'Rencana Kegiatan');
-        $sheet->mergeCells('G1:J2')->setCellValue('G1', 'Realisasi Kegiatan');
+        $sheet->mergeCells('C1:F2')->setCellValue('C1', 'Target Poin');
+        $sheet->mergeCells('G1:J2')->setCellValue('G1', 'Realisasi Poin');
         $sheet->mergeCells('K1:R1')->setCellValue('K1', 'Capaian Kinerja (%)');
         $sheet->mergeCells('K2:N2')->setCellValue('K2', 'Terhadap Target Triwulanan');
         $sheet->mergeCells('O2:R2')->setCellValue('O2', 'Terhadap Target Setahun');
@@ -473,59 +840,55 @@ class PublicationExportController extends Controller
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'EEEEEE']]
         ];
         $sheet->getStyle('A1:R3')->applyFromArray($headerStyle);
+        $sheet->getStyle('C1')->getFont()->getColor()->setRGB('1E3A8A');
+        $sheet->getStyle('G1')->getFont()->getColor()->setRGB('064E3B');
+        $sheet->getStyle('K1')->getFont()->getColor()->setRGB('581C87');
 
-        // Isi Data
+        // Isi Data (hanya 2 baris per item: Target Poin & Realisasi Poin)
         $row = 4;
         foreach ($laporanKinerja as $item) {
             $startRow = $row;
-            // Nama
-            $sheet->mergeCells("A{$row}:A".($row+3));
+            
+            // Nama Laporan - merge 2 baris (bukan 4 seperti normal)
+            $sheet->mergeCells("A{$row}:A".($row+1));
             $sheet->setCellValue("A{$row}", $item['report_name']);
             $sheet->getStyle("A{$row}")->getAlignment()->setWrapText(true)->setVertical(Alignment::VERTICAL_TOP);
 
-            // Row 1
-            $sheet->setCellValue("B{$row}", "Realisasi Tahapan");
-            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(66+$i).$row, $item['row1_blue'][$i]??0);
-            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(70+$i).$row, $item['row1_green'][$i]??0);
-            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(74+$i).$row, number_format($item['capaian']['tahapan']['tw'][$i],0).'%');
-            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(78+$i).$row, number_format($item['capaian']['tahapan']['thn'][$i],0).'%');
-            $sheet->getStyle("B{$row}:R{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('EFF6FF');
+            $sheet->setCellValue("B{$row}", "Poin");
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(66+$i).$row, number_format($item['target_q'][$i] ?? 0, 2)); // C-F: Target
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(70+$i).$row, number_format($item['actual_q'][$i] ?? 0, 2)); // G-J: Realisasi
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(74+$i).$row, number_format($item['capaian']['output']['tw'][$i], 1).'%'); // K-N: Capaian TW
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(78+$i).$row, number_format($item['capaian']['output']['thn'][$i], 1).'%'); // O-R: Capaian THN
+            $sheet->getStyle("B{$row}:R{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FEF3C7');
+
+            // Row 2: Data capaian (baris bawah)
+            $row++;
+            $sheet->setCellValue("B{$row}", ""); // Kolom B kosong
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(66+$i).$row, ''); // C-F kosong
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(70+$i).$row, ''); // G-J kosong
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(74+$i).$row, ''); // K-N: Capaian TW
+            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(78+$i).$row, ''); // O-R: Capaian THN
+            $sheet->getStyle("B{$row}:R{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('ECFDF5');
+
+            // Merge vertikal kolom B-J (B sampai J)
+            for($col = 66; $col <= 74; $col++) { // 66=B, 74=J
+                $sheet->mergeCells(chr($col).($row-1).":".chr($col).$row);
+            }
+
             $row++;
 
-            // Row 2
-            $sheet->setCellValue("B{$row}", "Target Tahapan");
-            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(66+$i).$row, $item['row2_blue'][$i]??0);
-            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(70+$i).$row, $item['row2_green'][$i]??0);
-            $row++;
-            
             // Merge Capaian Row 1-2
-            for ($c = 75; $c <= 82; $c++) $sheet->mergeCells(chr($c)."{$startRow}:".chr($c).($startRow+1));
-
-            // Row 3
-            $outputStartRow = $row;
-            $sheet->setCellValue("B{$row}", "Realisasi Output");
-            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(66+$i).$row, $item['row3_blue'][$i]??0);
-            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(70+$i).$row, $item['row3_green'][$i]??0);
-            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(74+$i).$row, number_format($item['capaian']['output']['tw'][$i],0).'%');
-            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(78+$i).$row, number_format($item['capaian']['output']['thn'][$i],0).'%');
-            $sheet->getStyle("B{$row}:R{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FAF5FF');
-            $row++;
-
-            // Row 4
-            $sheet->setCellValue("B{$row}", "Target Output");
-            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(66+$i).$row, $item['row4_blue'][$i]??0);
-            for($i=1; $i<=4; $i++) $sheet->setCellValue(chr(70+$i).$row, $item['row4_green'][$i]??0);
-            $row++;
-
-            // Merge Capaian Row 3-4
-            for ($c = 75; $c <= 82; $c++) $sheet->mergeCells(chr($c)."{$outputStartRow}:".chr($c).($outputStartRow+1));
+            for ($c = 75; $c <= 82; $c++) {
+                $sheet->mergeCells(chr($c)."{$startRow}:".chr($c).($startRow+1));
+            }
         }
 
+        // Global Styling
         $lastRow = $row - 1;
         $sheet->getStyle("A1:R{$lastRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
         $sheet->getStyle("B4:R{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
         foreach (range('A', 'R') as $col) $sheet->getColumnDimension($col)->setAutoSize(true);
-        $sheet->getColumnDimension('A')->setWidth(40);
+        $sheet->getColumnDimension('A')->setWidth(50);
 
         $fileName = $fileNamePrefix.'_'.$year.'.xlsx';
         $writer = new Xlsx($spreadsheet);
@@ -534,7 +897,20 @@ class PublicationExportController extends Controller
             $writer->save('php://output');
         }, $fileName);
     }
-
     
-    
+    // Definisi 3 indikator spesial (4 laporan)
+    private function getSasaranSpesial() {
+        return [
+            "Terwujudnya Penguatan Penyelenggaraan Pembinaan Statistik Sektoral K/L/Pemda" => [
+                "Tingkat Penyelenggaraan Pembinaan Statistik Sektoral sesuai Standar"
+            ],
+            "Terwujudnya Kemudahan Akses Data BPS" => [
+                "Indeks Pelayanan Publik - Penilaian Mandiri"
+            ],
+            "Terwujudnya Dukungan Manajemen pada BPS Provinsi dan BPS Kabupaten/Kota" => [
+                "Nilai SAKIP oleh Inspektorat",
+                "Indeks Implementasi BerAKHLAK"
+            ]
+        ];
+    }
 }
