@@ -49,7 +49,7 @@ class TeamTarget extends Model
 
     public function publication()
     {
-        return $this->belongsTo(Publication::class, 'publication_id');
+        return $this->belongsTo(Publication::class, 'publication_id', 'publication_id');
     }
 
     /**

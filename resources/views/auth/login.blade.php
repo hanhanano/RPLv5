@@ -52,8 +52,8 @@
             <a href="#" class="flex items-center justify-center">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Lambang_Badan_Pusat_Statistik_%28BPS%29_Indonesia.svg/960px-Lambang_Badan_Pusat_Statistik_%28BPS%29_Indonesia.svg.png"
                     class="h-8 me-3" alt="BPS Logo" />
-                <span class="self-center text-lg font-medium tracking-normal sm:text-xl whitespace-nowrap text-gray-900 dark:text-white">
-                    Tim SAKIP BPS Kota Bekasi
+                <span class="self-center text-lg font-medium tracking-normal sm:text-xl whitespace-nowrap text-black-900 dark:text-white">
+                    <!-- BPS Kota Bekasi -->
                 </span>
             </a>
         </div>

@@ -266,7 +266,7 @@ class PublicationController extends Controller
         $selectedTriwulan = (int)$triwulan;
 
         // Pastikan 'publicationPlans' dimuat
-        $query = Publication::with(['user', 'stepsPlans.stepsFinals', 'publicationPlans']);
+        $query = Publication::with(['user', 'stepsPlans.stepsFinals', 'publicationPlans', 'teamTarget']);
         
         $query->whereYear('created_at', $year);
 
@@ -293,7 +293,38 @@ class PublicationController extends Controller
         $belumBerlangsungOutputKumulatif = 0; 
 
         foreach ($publications as $publication) {
-            
+            if ($publication->teamTarget && $publication->teamTarget->is_special_indicator) {
+                // Logika khusus untuk indikator spesial per triwulan
+                $actualQ1 = $publication->teamTarget->actual_output_q1 ?? 0;
+                $actualQ2 = $publication->teamTarget->actual_output_q2 ?? 0;
+                $actualQ3 = $publication->teamTarget->actual_output_q3 ?? 0;
+                $actualQ4 = $publication->teamTarget->actual_output_q4 ?? 0;
+                
+                // Cek apakah ada aktivitas sampai triwulan yang dipilih
+                $hasActivity = false;
+                if ($selectedTriwulan >= 1 && $actualQ1 > 0) $hasActivity = true;
+                if ($selectedTriwulan >= 2 && $actualQ2 > 0) $hasActivity = true;
+                if ($selectedTriwulan >= 3 && $actualQ3 > 0) $hasActivity = true;
+                if ($selectedTriwulan >= 4 && $actualQ4 > 0) $hasActivity = true;
+                
+                if ($hasActivity) {
+                    // Cek status berdasarkan triwulan terakhir yang dipilih
+                    $lastActual = 0;
+                    if ($selectedTriwulan >= 4) $lastActual = $actualQ4;
+                    elseif ($selectedTriwulan >= 3) $lastActual = $actualQ3;
+                    elseif ($selectedTriwulan >= 2) $lastActual = $actualQ2;
+                    else $lastActual = $actualQ1;
+                    
+                    if ($lastActual >= 100) {
+                        $sudahSelesaiPublikasi++;
+                    } else {
+                        $sedangBerlangsungPublikasi++;
+                    }
+                }
+                
+                continue; // Skip logika tahapan biasa
+            }
+
             // Variabel Scope untuk Publikasi Ini
             $plansInScope = 0;
             $completedPlansInScope = 0;
@@ -423,7 +454,7 @@ class PublicationController extends Controller
     // Logika Statistik Tahunan
     private function getStatistikPublikasiTahunan($user = null, $year = null)
     {  
-        $query = Publication::with(['user','stepsPlans.stepsFinals', 'publicationPlans']);
+        $query = Publication::with(['user', 'stepsPlans.stepsFinals', 'publicationPlans', 'teamTarget']);
         
         if($year) {
             $query->whereYear('created_at', $year);
@@ -441,7 +472,29 @@ class PublicationController extends Controller
         $sudahSelesaiPublikasi = 0;
 
         foreach ($publications as $publication) {
-            
+            if ($publication->teamTarget && $publication->teamTarget->is_special_indicator) {
+                // Logika khusus untuk indikator spesial
+                $actualQ1 = $publication->teamTarget->actual_output_q1 ?? 0;
+                $actualQ2 = $publication->teamTarget->actual_output_q2 ?? 0;
+                $actualQ3 = $publication->teamTarget->actual_output_q3 ?? 0;
+                $actualQ4 = $publication->teamTarget->actual_output_q4 ?? 0;
+                
+                // Jika Q4 >= 100, publikasi selesai
+                if ($actualQ4 >= 100) {
+                    $sudahSelesaiPublikasi++;
+                }
+                // Jika ada salah satu Q yang >= 0, sedang berlangsung
+                elseif ($actualQ1 > 0 || $actualQ2 > 0 || $actualQ3 > 0 || $actualQ4 > 0) {
+                    $sedangBerlangsungPublikasi++;
+                }
+                // Jika semua 0, belum berlangsung
+                else {
+                    $belumBerlangsungPublikasi++;
+                }
+                
+                continue; // Skip logika tahapan biasa
+            }
+
             $totalTahapan = count($publication->stepsPlans);
             $jumlahSelesaiTahapan = 0;
             $jumlahBelumAdaTanggal = 0;

@@ -21,8 +21,8 @@
                         <th class="px-3 py-2 min-w-[130px]" rowspan="2">Nama Kegiatan</th>
                         <th class="px-3 py-2" rowspan="2">PIC</th>
                         <th class="px-3 py-2 min-w-[120px]" rowspan="2">Jenis</th>
-                        <th class="px-3 py-2" colspan="4">Rencana Kegiatan</th>
-                        <th class="px-3 py-2" colspan="4">Realisasi Kegiatan</th>
+                        <th class="px-3 py-2" colspan="4">Jumlah Rencana Tahapan/Output (Y)</th>
+                        <th class="px-3 py-2" colspan="4">Jumlah Realisasi Tahapan/Output (X)</th>
                         <th class="px-3 py-2" rowspan="2">Aksi</th>
                     </tr>
                     <tr class="bg-gray-100 text-xs whitespace-nowrap">
@@ -91,7 +91,7 @@
                                 <td class="px-4 py-4 align-top" rowspan="2">{{ $index + 1 }}</td>
                                 <td class="px-4 py-4 align-top font-semibold text-gray-700" rowspan="2">
                                     {{ $publication->publication_report }}
-                                    <span class="block mt-1 px-2 py-0.5 text-xs bg-amber-100 text-amber-700 rounded-full w-fit">Indikator Spesial</span>
+                                    <span class="block mt-1 px-2 py-0.5 text-xs bg-amber-100 text-amber-700 rounded-full w-fit">T2 atau T3</span>
                                 </td>
                                 <td class="px-4 py-4 align-top font-semibold text-gray-700" rowspan="2">
                                     {{ $publication->publication_name }}
@@ -137,12 +137,21 @@
 
                             {{-- BARIS 2: Realisasi Poin (Label) --}}
                             <tr class="bg-emerald-50/50 border-b border-white">
+                                <!-- <td class="px-4 py-2 align-top bg-emerald-100">
+                                    <div class="text-sm font-medium text-emerald-800">Realisasi Poin</div>
+                                </td>
+                                {{-- Kolom Target (kosong untuk baris realisasi) --}}
+                                <td class="px-4 py-2 text-center text-gray-400 text-xs" colspan="4">221</td>
+                                {{-- Kolom Realisasi sudah di baris atas --}}
+                                <td class="px-4 py-2 text-center text-gray-400 text-xs" colspan="4">Lihat kolom realisasi di atas</td> -->
                             </tr>
 
                         @else
                             {{-- ========== TAMPILAN INDIKATOR NORMAL (4 BARIS) ========== --}}
                             
+                            {{-- BARIS 1: Identitas & Realisasi Tahapan --}}
                             <tr class="border-t border-gray-200">
+                                {{-- Kolom Identitas dengan Rowspan 4 (Untuk mengakomodir Tahapan, Target Tahapan, Output, Target Output) --}}
                                 <td class="px-4 py-4 align-top" rowspan="4">{{ $index + 1 }}</td>
                                 <td class="px-4 py-4 align-top font-semibold text-gray-700" rowspan="4">
                                     {{ $publication->publication_report }}

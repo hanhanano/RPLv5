@@ -28,15 +28,31 @@
             {{-- Tim/PIC --}}
             <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">Tim/PIC</label>
-                <select name="publication_pic" required class="w-full border-gray-300 rounded-lg text-sm p-2 focus:ring-blue-500 focus:border-blue-500">
+                <select name="publication_pic" required 
+                    class="w-full border-gray-300 rounded-lg text-sm p-2 focus:ring-blue-500 focus:border-blue-500" 
+                    {{ auth()->user()->role === 'ketua_tim' ? 'disabled' : '' }}>
                     <option value="">-- Pilih Tim --</option>
-                    <option value="Tim Neraca">Tim Neraca</option>
-                    <option value="Tim Produksi">Tim Produksi</option>
-                    <option value="Tim Distribusi">Tim Distribusi</option>
-                    <option value="Tim Sosial">Tim Sosial</option>
-                    <option value="Tim IPDS">Tim IPDS</option>
-                    <option value="Tim Tata Usaha">Tim Tata Usaha</option>
+                    
+                    @if(auth()->user()->role === 'admin')
+                        {{-- Admin bisa pilih semua tim --}}
+                        <option value="Umum">Tim Umum</option>
+                        <option value="Produksi">Tim Produksi</option>
+                        <option value="Distribusi">Tim Distribusi</option>
+                        <option value="Neraca">Tim Neraca</option>
+                        <option value="Sosial">Tim Sosial</option>
+                        <option value="IPDS">Tim IPDS</option>
+                    @else
+                        {{-- Ketua tim hanya bisa pilih timnya sendiri --}}
+                        <option value="{{ auth()->user()->team }}" selected>
+                            Tim {{ auth()->user()->team }}
+                        </option>
+                    @endif
                 </select>
+                
+                {{-- Hidden input untuk ketua tim --}}
+                @if(auth()->user()->role === 'ketua_tim')
+                    <input type="hidden" name="publication_pic" value="{{ auth()->user()->team }}">
+                @endif
             </div>
 
             {{-- Nama Sasaran/Laporan --}}
@@ -46,7 +62,7 @@
                     class="w-full border-gray-300 rounded-lg text-sm p-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="">-- Pilih Laporan --</option>
                     
-                    <optgroup label="Indikator Normal">
+                    <optgroup label="Indikator T1">
                         <option value="Laporan Statistik Kependudukan dan Ketenagakerjaan">Laporan Statistik Kependudukan dan Ketenagakerjaan</option>
                         <option value="Laporan Statistik Statistik Kesejahteraan Rakyat">Laporan Statistik Statistik Kesejahteraan Rakyat</option>
                         <option value="Laporan Statistik Ketahanan Sosial">Laporan Statistik Ketahanan Sosial</option>
@@ -62,7 +78,7 @@
                     </optgroup>
                     
                     {{-- Tambah optgroup untuk 4 Indikator Spesial --}}
-                    <optgroup label="Indikator Spesial">
+                    <optgroup label="Indikator T2 atau T3">
                         <option value="Tingkat Penyelenggaraan Pembinaan Statistik Sektoral sesuai Standar">Tingkat Penyelenggaraan Pembinaan Statistik Sektoral sesuai Standar</option>
                         <option value="Indeks Pelayanan Publik - Penilaian Mandiri">Indeks Pelayanan Publik - Penilaian Mandiri</option>
                         <option value="Nilai SAKIP oleh Inspektorat">Nilai SAKIP oleh Inspektorat</option>
@@ -94,9 +110,9 @@
                 <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
             </svg>
             <div>
-                <p class="font-semibold text-amber-800">Indikator Spesial Terdeteksi</p>
+                <p class="font-semibold text-amber-800">Indikator T2 atau T3 Terdeteksi</p>
                 <p class="text-amber-700 mt-1">
-                    Untuk indikator spesial, target dan realisasi dihitung berdasarkan <strong>POIN</strong> (bukan jumlah dokumen). 
+                    Untuk indikator T2 atau T3, target dan realisasi dihitung berdasarkan <strong>POIN</strong> (bukan jumlah dokumen). 
                     Target per triwulan bisa berbeda. <strong>Realisasi poin diinput di halaman Daftar Publikasi.</strong>
                 </p>
             </div>
@@ -138,7 +154,7 @@
     {{-- BAGIAN 3: TARGET OUTPUT/POIN (Unified untuk Normal & Spesial) --}}
     <div class="border-b pb-4">
         <h4 class="text-sm font-bold text-purple-800 mb-3" x-text="isSpecial ? 'Target Poin per Triwulan' : 'Target Kinerja Output'"></h4>
-        <p class="text-xs text-gray-500 mb-3" x-show="isSpecial">Masukkan target poin yang harus dicapai di setiap triwulan (bisa berbeda-beda). <strong>Gunakan titik (.) untuk desimal.</strong></p>
+        <p class="text-xs text-gray-500 mb-3" x-show="isSpecial">Masukkan target poin yang harus dicapai di setiap triwulan (kumulatif)</p>
         
         <div class="grid gap-4 items-end" :class="isSpecial ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-1 md:grid-cols-5'">
             {{-- Total Output (Hanya untuk Normal) --}}
@@ -182,7 +198,6 @@
         </div>
         
         <div class="mt-2 space-y-1">
-            <p class="text-xs text-gray-400 italic" x-show="isSpecial">* Gunakan titik (.) untuk pemisah desimal, contoh: 25.50</p>
             <p class="text-xs text-gray-400 italic" x-show="isSpecial">* Realisasi poin diinput melalui halaman Daftar Publikasi</p>
         </div>
     </div>

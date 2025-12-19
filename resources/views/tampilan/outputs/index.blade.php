@@ -240,7 +240,7 @@
                     <div class="p-6 bg-white">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div class="space-y-5">
-                                <h4 class="text-sm font-bold text-blue-600 tracking-wide border-b pb-2 mb-4">Rencana Kegiatan</h4>
+                                <h4 class="text-sm font-bold text-blue-600 tracking-wide border-b pb-2 mb-4">Jumlah Rencana Tahapan/Output (Y)</h4>
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Output</label>
                                     <input type="text" name="plan_name" id="modalOutputName" required
