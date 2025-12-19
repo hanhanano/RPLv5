@@ -37,6 +37,8 @@ class TeamTargetController extends Controller
             abort(403, 'Akses Ditolak');
         }
 
+        $userTeam = $user->team;
+
         $query = TeamTarget::with('publication'); 
 
         if ($request->has('search') && $request->search != '') {
@@ -267,7 +269,7 @@ class TeamTargetController extends Controller
         $target = TeamTarget::findOrFail($id);
 
         if (!self::isSpecialIndicator($target->report_name)) {
-            return redirect()->back()->with('error', 'Hanya indikator spesial yang bisa diupdate realisasi poinnya.');
+            return redirect()->back()->with('error', 'Hanya indikator T1 dan T2 yang bisa diupdate realisasi poinnya.');
         }
 
         $target->update([

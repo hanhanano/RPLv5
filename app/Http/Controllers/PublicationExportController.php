@@ -187,8 +187,8 @@ class PublicationExportController extends Controller
         $sheet->mergeCells('A1:A3')->setCellValue('A1', 'Nama Sasaran/Laporan');
         $sheet->mergeCells('B1:B3')->setCellValue('B1', 'Jenis');
         
-        $sheet->mergeCells('C1:F2')->setCellValue('C1', 'Rencana Kegiatan'); // Merge 2 baris (Kumulatif/Diskrit)
-        $sheet->mergeCells('G1:J2')->setCellValue('G1', 'Realisasi Kegiatan'); // Merge 2 baris
+        $sheet->mergeCells('C1:F2')->setCellValue('C1', 'Jumlah Rencana Tahapan/Output (Y)'); // Merge 2 baris (Kumulatif/Diskrit)
+        $sheet->mergeCells('G1:J2')->setCellValue('G1', 'Jumlah Tealisasi Tahapan/Output (X)'); // Merge 2 baris
 
         $sheet->mergeCells('K1:R1')->setCellValue('K1', 'Capaian Kinerja (%)');
         $sheet->mergeCells('K2:N2')->setCellValue('K2', 'Terhadap Target Triwulanan');
@@ -335,8 +335,8 @@ class PublicationExportController extends Controller
         // --- Header Setup ---
         $sheet->mergeCells('A1:A3')->setCellValue('A1', 'Nama Sasaran/Laporan');
         $sheet->mergeCells('B1:B3')->setCellValue('B1', 'Jenis');
-        $sheet->mergeCells('C1:F2')->setCellValue('C1', 'Rencana Kegiatan');
-        $sheet->mergeCells('G1:J2')->setCellValue('G1', 'Realisasi Kegiatan');
+        $sheet->mergeCells('C1:F2')->setCellValue('C1', 'Jumlah Rencana Tahapan/Output (Y)');
+        $sheet->mergeCells('G1:J2')->setCellValue('G1', 'Jumlah Realisasi Tahapan/Output (X)');
         $sheet->mergeCells('K1:R1')->setCellValue('K1', 'Capaian Kinerja (%)');
         $sheet->mergeCells('K2:N2')->setCellValue('K2', 'Terhadap Target Triwulanan');
         $sheet->mergeCells('O2:R2')->setCellValue('O2', 'Terhadap Target Setahun');
@@ -410,7 +410,7 @@ class PublicationExportController extends Controller
         // ========== BAGIAN 2: DATA SPESIAL (2 baris per item) ==========
         // Tambah separator/header untuk bagian spesial
         $sheet->mergeCells("A{$row}:R{$row}");
-        $sheet->setCellValue("A{$row}", "INDIKATOR SPESIAL");
+        $sheet->setCellValue("A{$row}", "INDIKATOR T2 atau T3");
         $sheet->getStyle("A{$row}:R{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FEF3C7');
         $sheet->getStyle("A{$row}")->getFont()->setBold(true);
         $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
@@ -486,8 +486,8 @@ class PublicationExportController extends Controller
         // --- Header Setup (Sama seperti sebelumnya) ---
         $sheet->mergeCells('A1:A3')->setCellValue('A1', 'Nama Sasaran/Laporan');
         $sheet->mergeCells('B1:B3')->setCellValue('B1', 'Jenis');
-        $sheet->mergeCells('C1:F2')->setCellValue('C1', 'Rencana Kegiatan');
-        $sheet->mergeCells('G1:J2')->setCellValue('G1', 'Realisasi Kegiatan');
+        $sheet->mergeCells('C1:F2')->setCellValue('C1', 'Jumlah Rencana Tahapan/Output (Y)');
+        $sheet->mergeCells('G1:J2')->setCellValue('G1', 'Jumlah Realisasi Tahapan/Output (X)');
         $sheet->mergeCells('K1:R1')->setCellValue('K1', 'Capaian Kinerja (%)');
         $sheet->mergeCells('K2:N2')->setCellValue('K2', 'Terhadap Target Triwulanan');
         $sheet->mergeCells('O2:R2')->setCellValue('O2', 'Terhadap Target Setahun');

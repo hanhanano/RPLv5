@@ -55,8 +55,8 @@
                                     <th class="px-3 py-2" rowspan="2">Nama Kegiatan</th>
                                     <th class="px-3 py-2" rowspan="2">PIC</th>
                                     <th class="px-3 py-2" rowspan="2">Jenis</th>
-                                    <th class="px-3 py-2 text-center" colspan="4">Rencana Kegiatan (Target)</th>
-                                    <th class="px-3 py-2 text-center" colspan="4">Realisasi Kegiatan</th>
+                                    <th class="px-3 py-2 text-center" colspan="4">Jumlah Rencana Tahapan/Output (Y)</th>
+                                    <th class="px-3 py-2 text-center" colspan="4">Jumlah Realisasi Tahapan/Output (X)</th>
                                     <th class="px-3 py-2" rowspan="2">Aksi</th>
                                 </tr>
                                 <tr class="bg-gray-100 text-xs whitespace-nowrap">
@@ -88,7 +88,7 @@
                                         {{ $item->report_name }}
                                         {{-- Badge untuk indikator spesial --}}
                                         @if($isSpecial)
-                                            <span class="ml-2 px-2 py-0.5 text-xs bg-amber-100 text-amber-800 rounded-full">Spesial</span>
+                                            <span class="ml-2 px-2 py-0.5 text-xs bg-amber-100 text-amber-800 rounded-full">T2 atau T3</span>
                                         @endif
                                     </td>
                                     
@@ -214,7 +214,7 @@
                                     @if($isSpecial)
                                         {{-- Indikator Spesial: Baris 2 tidak diperlukan (merge semua ke baris 1) --}}
                                         <td colspan="9" class="px-4 py-2 text-center bg-gray-50 text-xs text-gray-400 italic">
-                                            Indikator spesial hanya memiliki target & realisasi poin
+                                            Indikator T2 atau T3 hanya memiliki target & realisasi poin
                                         </td>
                                     @else
                                         {{-- Indikator Normal: Output --}}

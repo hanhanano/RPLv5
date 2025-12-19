@@ -140,7 +140,7 @@
                                 <path d="M8.75 2.75a.75.75 0 0 0-1.5 0v5.69L5.03 6.22a.75.75 0 0 0-1.06 1.06l3.5 3.5a.75.75 0 0 0 1.06 0l3.5-3.5a.75.75 0 0 0-1.06-1.06L8.75 8.44V2.75Z" />
                                 <path d="M3.5 9.75a.75.75 0 0 0-1.5 0v1.5A2.75 2.75 0 0 0 4.75 14h6.5A2.75 2.75 0 0 0 14 11.25v-1.5a.75.75 0 0 0-1.5 0v1.5c0 .69-.56 1.25-1.25 1.25h-6.5c-.69 0-1.25-.56-1.25-1.25v-1.5Z" />
                             </svg>
-                            Unduh Excel (Indikator Spesial)
+                            Unduh Excel (Indikator T2 & T3)
                         </a>
 
                         {{-- Tombol export untuk Tab Detail Sasaran (gabungan normal + spesial) --}}
@@ -159,12 +159,12 @@
                             <button @click="activeTab = 'indikator'" 
                                 :class="activeTab === 'indikator' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700'"
                                 class="flex-1 sm:flex-none justify-center px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 flex items-center">
-                                Indikator Normal
+                                Indikator T1
                             </button>
                             <button @click="activeTab = 'spesial'" 
                                 :class="activeTab === 'spesial' ? 'bg-white text-amber-700 shadow-sm ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700'"
                                 class="flex-1 sm:flex-none justify-center px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 flex items-center">
-                                Indikator Spesial
+                                Indikator T2 atau T3
                             </button>
                             <button @click="activeTab = 'sasaran'" 
                                 :class="activeTab === 'sasaran' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700'"
@@ -184,8 +184,8 @@
                                 <tr class="bg-gray-100 text-gray-700 font-semibold border-b h-[40px]">
                                     <th rowspan="3" class="px-4 py-2 min-w-[280px] w-[280px] text-left align-middle bg-gray-100 sticky-col-1 border-r border-gray-300">Nama Indikator</th> 
                                     <th rowspan="3" class="px-3 py-2 w-32 align-middle bg-gray-100 sticky-col-2 sticky-col-shadow border-r border-gray-300">Jenis</th>
-                                    <th colspan="4" class="px-2 py-1 border-r bg-blue-50 text-blue-900 border-b border-blue-200 sticky top-0 z-40">Rencana Kegiatan</th>
-                                    <th colspan="4" class="px-2 py-1 border-r bg-emerald-50 text-emerald-900 border-b border-emerald-200 sticky top-0 z-40">Realisasi Kegiatan</th>
+                                    <th colspan="4" class="px-2 py-1 border-r bg-blue-50 text-blue-900 border-b border-blue-200 sticky top-0 z-40">Jumlah Rencana Tahapan/Output (Y)</th>
+                                    <th colspan="4" class="px-2 py-1 border-r bg-emerald-50 text-emerald-900 border-b border-emerald-200 sticky top-0 z-40">Jumlah Realisasi Tahapan/Output (X)</th>
                                     <th colspan="8" class="px-2 py-1 bg-purple-50 text-purple-900 border-b border-purple-200 sticky top-0 z-40">Capaian Kinerja (%)</th>
                                 </tr>
                                 
@@ -201,7 +201,7 @@
                                     <th class="px-2 py-1 border-r bg-emerald-50 text-gray-600 min-w-[60px] sticky top-[40px] z-40" rowspan="2">Triwulan IV</th>
                                     
                                     <th colspan="4" class="px-2 py-1 border-r border-b bg-indigo-50 text-indigo-900 sticky top-[40px] z-40">Terhadap Target Triwulan</th>
-                                    <th colspan="4" class="px-2 py-1 border-b bg-emerald-100 text-emerald-900 sticky top-[40px] z-40">Terhadap Target THN</th>
+                                    <th colspan="4" class="px-2 py-1 border-b bg-emerald-100 text-emerald-900 sticky top-[40px] z-40">Terhadap Target Tahunan</th>
                                 </tr>
                                 <tr class="text-[10px] text-gray-500 font-medium border-b">
                                     <th class="px-1 py-1 border-r bg-indigo-50 sticky top-[75px] z-30">Triwulan I</th>
@@ -256,7 +256,7 @@
                                     </tr>
                                 </tbody>
                             @empty
-                                <tr><td colspan="18" class="text-center py-8 text-gray-500">Tidak ada data indikator normal</td></tr>
+                                <tr><td colspan="18" class="text-center py-8 text-gray-500">Tidak ada data indikator T1</td></tr>
                             @endforelse
                             </tbody>
                         </table>
@@ -267,8 +267,8 @@
                                 <tr class="bg-gray-100 text-gray-700 font-semibold border-b h-[40px]">
                                     <th rowspan="3" class="px-4 py-2 min-w-[280px] w-[280px] text-left align-middle bg-gray-100 sticky-col-1 border-r border-gray-300">Nama Indikator</th> 
                                     <th rowspan="3" class="px-3 py-2 w-32 align-middle bg-gray-100 sticky-col-2 sticky-col-shadow border-r border-gray-300">Jenis</th>
-                                    <th colspan="4" class="px-2 py-1 border-r bg-blue-50 text-blue-900 border-b border-blue-200 sticky top-0 z-40">Rencana Kegiatan</th>
-                                    <th colspan="4" class="px-2 py-1 border-r bg-emerald-50 text-emerald-900 border-b border-emerald-200 sticky top-0 z-40">Realisasi Kegiatan</th>
+                                    <th colspan="4" class="px-2 py-1 border-r bg-blue-50 text-blue-900 border-b border-blue-200 sticky top-0 z-40">Jumlah Rencana Tahapan/Output (Y)</th>
+                                    <th colspan="4" class="px-2 py-1 border-r bg-emerald-50 text-emerald-900 border-b border-emerald-200 sticky top-0 z-40">Jumlah Realisasi Tahapan/Output (X)</th>
                                     <th colspan="8" class="px-2 py-1 bg-purple-50 text-purple-900 border-b border-purple-200 sticky top-0 z-40">Capaian Kinerja (%)</th>
                                 </tr>
                                 
@@ -284,7 +284,7 @@
                                     <th class="px-2 py-1 border-r bg-emerald-50 text-gray-600 min-w-[60px] sticky top-[40px] z-40" rowspan="2">Triwulan IV</th>
                                     
                                     <th colspan="4" class="px-2 py-1 border-r border-b bg-indigo-50 text-indigo-900 sticky top-[40px] z-40">Terhadap Target Triwulan</th>
-                                    <th colspan="4" class="px-2 py-1 border-b bg-emerald-100 text-emerald-900 sticky top-[40px] z-40">Terhadap Target THN</th>
+                                    <th colspan="4" class="px-2 py-1 border-b bg-emerald-100 text-emerald-900 sticky top-[40px] z-40">Terhadap Target Tahunan</th>
                                 </tr>
                                 <tr class="text-[10px] text-gray-500 font-medium border-b">
                                     <th class="px-1 py-1 border-r bg-indigo-50 sticky top-[75px] z-30">Triwulan I</th>
@@ -306,7 +306,7 @@
                                         <div class="font-medium text-gray-800 text-xs whitespace-normal leading-snug">
                                             {{ $row['report_name'] }}
                                         </div>
-                                        <span class="inline-block mt-1 px-2 py-0.5 text-[10px] bg-amber-100 text-amber-800 rounded-full">Spesial</span>
+                                        <span class="inline-block mt-1 px-2 py-0.5 text-[10px] bg-amber-100 text-amber-800 rounded-full">T2 atau T3</span>
                                     </td>
                                     <td class="px-2 py-2 font-medium text-blue-900 bg-blue-50 text-[10px] sticky-col-2 sticky-col-shadow align-middle">Poin</td>
                                     
@@ -345,7 +345,7 @@
                                     @endfor
                                 </tr>
                             @empty
-                                <tr><td colspan="17" class="text-center py-8 text-gray-500">Tidak ada data indikator spesial</td></tr>
+                                <tr><td colspan="17" class="text-center py-8 text-gray-500">Tidak ada data indikator T2 atau T3</td></tr>
                             @endforelse
                             </tbody>
                         </table>
@@ -357,8 +357,8 @@
                                 <tr class="bg-gray-100 text-gray-700 font-semibold border-b h-[40px]">
                                     <th rowspan="3" class="px-4 py-2 min-w-[280px] w-[280px] text-left align-middle bg-gray-100 sticky-col-1 border-r border-gray-300">Nama Indikator</th> 
                                     <th rowspan="3" class="px-3 py-2 w-32 align-middle bg-gray-100 sticky-col-2 sticky-col-shadow border-r border-gray-300">Jenis</th>
-                                    <th colspan="4" class="px-2 py-1 border-r bg-blue-50 text-blue-900 border-b border-blue-200 sticky top-0 z-40">Rencana Kegiatan</th>
-                                    <th colspan="4" class="px-2 py-1 border-r bg-emerald-50 text-emerald-900 border-b border-emerald-200 sticky top-0 z-40">Realisasi Kegiatan</th>
+                                    <th colspan="4" class="px-2 py-1 border-r bg-blue-50 text-blue-900 border-b border-blue-200 sticky top-0 z-40">Jumlah Rencana Tahapan/Output (Y)</th>
+                                    <th colspan="4" class="px-2 py-1 border-r bg-emerald-50 text-emerald-900 border-b border-emerald-200 sticky top-0 z-40">Jumlah Realisasi Tahapan/Output (X)</th>
                                     <th colspan="8" class="px-2 py-1 bg-purple-50 text-purple-900 border-b border-purple-200 sticky top-0 z-40">Capaian Kinerja (%)</th>
                                 </tr>
                                 
@@ -374,7 +374,7 @@
                                     <th class="px-2 py-1 border-r bg-emerald-50 text-gray-600 min-w-[60px] sticky top-[40px] z-40" rowspan="2">Triwulan IV</th>
                                     
                                     <th colspan="4" class="px-2 py-1 border-r border-b bg-indigo-50 text-indigo-900 sticky top-[40px] z-40">Terhadap Target Triwulan</th>
-                                    <th colspan="4" class="px-2 py-1 border-b bg-emerald-100 text-emerald-900 sticky top-[40px] z-40">Terhadap Target THN</th>
+                                    <th colspan="4" class="px-2 py-1 border-b bg-emerald-100 text-emerald-900 sticky top-[40px] z-40">Terhadap Target Tahunan</th>
                                 </tr>
 
                                 <tr class="text-[10px] text-gray-500 font-medium border-b">
@@ -469,7 +469,7 @@
                                             <div class="font-medium text-gray-800 text-xs whitespace-normal leading-snug">{{ $row['report_name'] }}</div>
                                         </td>
                                         <td class="px-2 py-2 border-r align-middle sticky-col-2 sticky-col-shadow bg-white group-hover:bg-amber-50 transition-colors duration-200">
-                                            <span class="px-2 py-0.5 text-[10px] bg-amber-100 text-amber-800 rounded-full font-medium">Spesial</span>
+                                            <span class="px-2 py-0.5 text-[10px] bg-amber-100 text-amber-800 rounded-full font-medium">T2 atau T3</span>
                                         </td>
                                         
                                         {{-- Target Poin per TW --}}
@@ -518,11 +518,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-600">
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 bg-blue-100 rounded"></span>
-                            <span><strong>Indikator Normal:</strong> Target flat, realisasi dari count dokumen</span>
+                            <span><strong>Indikator T1:</strong> Target flat, realisasi dari count dokumen</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 bg-amber-100 rounded"></span>
-                            <span><strong>Indikator Spesial:</strong> Target berbeda per TW, realisasi input manual poin</span>
+                            <span><strong>Indikator T2 atau T3:</strong> Target berbeda per TW, realisasi input manual poin</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="text-green-600 font-medium">100%+</span>

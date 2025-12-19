@@ -8,6 +8,8 @@ use Illuminate\Support\Str;
 use App\Models\User;
 use App\Models\StepsPlan;
 use App\Models\PublicationFile;
+use App\Models\TeamTarget;
+use App\Models\PublicationPlan; 
 
 class Publication extends Model
 {

@@ -90,8 +90,8 @@
                                     <th class="px-3 py-2 border">No</th>
                                     <th class="px-3 py-2 border">Nama Publikasi</th>
                                     <th class="px-3 py-2 border">Tahapan</th>
-                                    <th class="px-3 py-2 border" colspan="4">Rencana Kegiatan</th>
-                                    <th class="px-3 py-2 border" colspan="4">Realisasi Kegiatan</th>
+                                    <th class="px-3 py-2 border" colspan="4">Jumlah Rencana Tahapan/Output (Y)</th>
+                                    <th class="px-3 py-2 border" colspan="4">Jumlah Realisasi Tahapan/Output (X)</th>
                                     <th class="px-3 py-2 border">Aksi</th>
                                 </tr>
                                 <tr class="bg-gray-50 text-gray-500 text-xs">
